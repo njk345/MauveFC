@@ -1,6 +1,11 @@
 # Mauve FC — architecture sketch
 
-Status: proposed starting point, not an implemented system.
+Status: the visual prototype and Supabase workflow implementation are complete in
+source. Captain auth, access policies, private drafts, and transactional publishing
+are tested locally and the hosted Supabase schema is connected. Auth dashboard
+configuration and the first captain’s real email verification remain pending.
+League imports remain a later step. See [backend setup](backend-setup.md). See
+[the project README](../README.md) for running and verifying the prototype.
 
 ## Product shape
 
@@ -128,59 +133,62 @@ and chart calculations in reusable queries rather than individual UI components.
 
 ## LeagueApps integration
 
-Treat the calendar subscription and API possibilities in the initial brief as
-leads to investigate, not confirmed access or verified endpoint behavior.
+### Verified public source (2026-11-10)
 
-### NYC Soccer source investigation
+The club maps to LeagueApps team `8032635`, **It’s Coming Home (Lilac)**,
+inside program `5162244`. The member API requires authentication, but the
+league’s intentional public web widgets expose the full standings and filtered
+schedule/results without credentials:
 
-The supplied URL identifies provider host `nycsoccer.leagueapps.com` and program
-ID `5162244`. Its slug suggests Thursday 7v7 coed at BBP, Group B; this description
-has not been verified against the page. Do not infer venue details, competition
-rules, season dates, or the team's provider ID from the slug.
+- `https://nycsoccer.leagueapps.com/widgets/standingsContent?lid=5162244`
+- `https://nycsoccer.leagueapps.com/ajax/loadSchedule?origin=site&scope=program&programId=5162244&publishedOnly=true&itemType=games_only&teamId=8032635`
 
-Inspection on 2026-10-31 could not retrieve the page: the web reader reported it
-inaccessible and the development environment's proxy rejected the HTTPS connection
-with 403. This establishes an access limitation here, not that the page requires
-login or that the league offers no feed/API. No fixtures or standings were imported.
+These back the owner-provided [standings](https://nycsoccer.leagueapps.com/leagues/5162244/standings)
+and [schedule](https://nycsoccer.leagueapps.com/leagues/5162244/schedule) pages.
+The first verified snapshot contains eight fixtures from September 17 through
+November 12, 2026, six final scores, and nine standings rows. The team is second:
+four wins, two draws, 23 goals for, five against, 14 points. October 29 has no
+published score; elapsed time alone never makes a fixture completed.
 
-Keep program ID and team ID separate in source configuration. Once access is
-available, resolve Mauve FC's actual provider team ID rather than depending on a
-display-name match on each sync. Verify any team calendar subscription URL and
-sample fixture fields before choosing the integration method.
-
-Treat fixtures and standings as independent source capabilities. A working calendar
-feed may provide fixtures but no scores or league table. Keep league ranking
-optional until standings access is verified; retain the club's locally computed
-record regardless. If importing standings later, store timestamped snapshots keyed
-by external team IDs, preserving the league's ranking and tie-break decisions.
-
-The initial local season can be labeled Fall 2026 from the conversation's current
-season context; actual start/end dates and rules remain to be confirmed.
+Calendar subscriptions are **not an import source**, per the owner’s instruction.
+The existing per-match calendar download is an optional user convenience.
 
 ### Import behavior
 
-Start with manual entry. Once a real feed is available, an importer fetches it
-on the server, normalizes fixtures, and updates local matches. Pages always read
-the local database, so a LeagueApps outage does not take the site down.
+The server-side `leagueapps-sync` Supabase Edge Function fetches only the two
+fixed HTTPS URLs, with timeouts, redirect rejection and bounded response sizes.
+A pinned Cheerio adapter verifies the known columns, exact program/team links,
+explicit completion states, scores and date context. Kickoffs convert from
+America/New_York to UTC with DST validation. Unknown markup, incomplete finals,
+login pages or transport failures reject the entire update and preserve the last
+successful data. These public pages are not a guaranteed versioned API, so
+adapter maintenance may be needed if LeagueApps changes its markup.
 
-The importer owns schedule fields such as kickoff, venue, opponent, and cancellation
-status. Captains own local results, attendance, stats, and editorial content.
-Explicit local schedule overrides survive imports until cleared by a captain.
+An atomic database RPC maps provider game IDs to stable local match UUIDs.
+Reschedules update existing matches; repeated imports do not change revisions.
+A missing source item is retained, never interpreted as cancellation. The
+provider’s full league table and ranking are preserved without guessing tie-breaks.
+Source changes retain before/after snapshots in a private audit table.
 
-Use provider IDs, or calendar UID plus recurrence instance, as deduplication keys.
-Never identify a match only by date and opponent. Handle source timezones,
-reschedules, cancellations, and recurring events with a maintained calendar parser.
-An item disappearing from a feed is not proof it was cancelled or should be deleted.
+The importer publishes official team scores with player capture marked
+unrecorded. It never creates player appearances, scorers or assists. A captain
+publishing a result takes ownership of that result and its player details. A
+conflicting future league score is shown for review without overwriting them.
+Captain fixture edits create an explicit metadata override; restoring league
+fixture details in the captain tools resumes automatic metadata updates.
 
-Keep the last good data on failure, show the last successful sync in admin, and
-provide a protected refresh action. Choose the polling cadence after checking feed
-behavior and hosting scheduler limits. A scheduled trigger and manual refresh call
-the same importer; repeated or overlapping runs must not create duplicates.
+`pg_cron` refreshes hourly at minute 17, using `pg_net`. Captain-only
+`request_league_sync` dispatches the same importer, rate-limited to five minutes.
+A source row lock prevents overlapping jobs. Each request carries a private,
+random, single-use job capability that expires after ten minutes. The function
+validates it via a service-only RPC before fetching. No long-lived credential is
+stored in cron SQL, and no capability or privileged key reaches the browser.
+Elevated database credentials come only from the Edge Function environment.
 
-Private calendar URLs and API credentials stay server-side and out of logs and
-public responses. Limit configured feed fetches to validated provider hosts.
-Scheduled endpoints require authentication. A future authorized API adapter can
-produce the same normalized fixture objects without changing the rest of the app.
+Pages read Supabase snapshots, never LeagueApps directly. Public snapshots include
+standings, source identity, last successful update and sanitized health status.
+Captain snapshots additionally expose score conflicts and fixture overrides.
+The site remains available with its last good data during a provider outage.
 
 ## Access and privacy
 
@@ -209,9 +217,10 @@ src/
     players/              # Profiles and roster
     stats/                # Queries, definitions, chart data
     availability/         # Added when RSVPs ship
-  integrations/leagueapps/ # Calendar/API adapters, normalization, sync
+  integrations/leagueapps/ # Reserved for additional provider adapters
   lib/                    # Supabase clients, auth, validation, shared utilities
 supabase/
+  functions/              # Public-page adapter and protected import worker
   migrations/             # Reviewed schema, access policies, database functions
   seed.sql                # Clearly fictional development data
 docs/
@@ -230,8 +239,8 @@ Keep a safe export/backup path for results and stats before real team data accum
 2. **First complete workflow:** migrations, captain auth, manual fixtures, roster,
    transactional result publishing, derived stats, and public/private access.
    Prove that correcting one match updates every affected view.
-3. **Scheduling integration:** inspect the actual LeagueApps source; add import,
-   deduplication, overrides, sync health, and verified reschedule behavior.
+3. **League integration:** automatic fixtures, official team scores and full league
+   standings; deduplication, captain overrides, sync health and hourly refresh.
 4. **Team features:** invitations, RSVPs, saved formations, historical season import,
    richer player cards, and home-screen installation.
 5. **Optional extras:** voting, awards, AI recap drafts based on recorded facts,
@@ -243,8 +252,7 @@ Include a mobile end-to-end check of the captain's entry flow before real use.
 
 ## Open decisions
 
-- Verify calendar/API/standings access for NYC Soccer program `5162244` and resolve
-  Mauve FC's external team ID.
+- Additional season/program IDs when this competition ends.
 - Playing formats and competition rules, including draws, playoffs, and forfeits?
 - Who enters stats, and what can they realistically record after each game?
 
