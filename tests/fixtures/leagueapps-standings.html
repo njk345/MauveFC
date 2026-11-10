@@ -1,0 +1,946 @@
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+		<title>LeagueApps Widget</title>
+
+		<script type="text/javascript" src="https://svite-league-apps-static.s3.amazonaws.com/_s/jquery-3.6.2.min.js?v=1794266010887"></script>
+		<script type="text/javascript" src="https://svite-league-apps-static.s3.amazonaws.com/_s/jquery-migrate-3.4.0.min.js?v=1794266010887"></script>
+    <script type="text/javascript" src="https://svite-league-apps-static.s3.amazonaws.com/_s/_site2.0/site.js?v=1794266010887"></script>
+
+		
+			
+			<link rel="stylesheet" type="text/css" media="screen" href="https://svite-league-apps-static.s3.amazonaws.com/_c/prod/vendor//reset.css?v=1794266010887" />
+			<link rel="stylesheet" type="text/css" media="screen" href="https://svite-league-apps-static.s3.amazonaws.com/_c/prod/widgets/default.css?v=1794266010887" />
+			<!--[if lte IE 8]>
+			<link rel="stylesheet" type="text/css" href="https://svite-league-apps-static.s3.amazonaws.com/_c/prod/06_utilities/default-ie.css?v=1794266010887" media="screen" />
+			<![endif]-->
+
+			<!--[if lt IE 8]>
+			<link rel="stylesheet" type="text/css" href="https://svite-league-apps-static.s3.amazonaws.com/_c/prod/06_utilities/default-ie7.css?v=1794266010887" media="screen" />
+			<![endif]-->
+
+			<style type="text/css" id="wizard-css">
+			/*  ----------------------------------------------------------
+	T H E M E   E D I T O R   S T Y L E S - All Colors Must Be Separate for	multiple theme support
+	USE THIS FOR THEME EDITOR - JAVIE 3/31/2025 - We need to remove the old one
+-------------------------------------------------------------- */
+/* CSS variables for using theme colors outside of this file */
+:root {
+  --account-nav-background-color: #00183d;
+  --alerts-color: #ffffdd;
+  --alternate-text-color: #aaaaaa;
+  --body-text-color: #888888;
+  --button-background-color: #54ba78;
+  --button-background-hover-color: #3b8153;
+  --button-text-color: #ffffff;
+  --button-text-hover-color: #ffffff;
+  --content-background-color: #ffffff;
+  --footer-background-color: #280808;
+  --footer-extra-background-color: ${footerExtraBackgroundColor};
+  --header-background-color: #2787ee;
+  --headings-color: #1860ad;
+  --links-color: #000000;
+  --links-hover-color: ffffff;
+  --logo-background-color: #ffffff;
+  --logo-color: #000000;
+  --main-nav-background-color: #646464;
+  --main-nav-links-color: #1a1a1a;
+  --main-nav-links-hover-color: #ffffff;
+  --newsletter-background-color: #00183d;
+  --newsletter-title-color: #dddddd;
+  --sidebar-background-color: #f6f6f6;
+}
+
+/* Core */
+body {
+    background-color: #6f727a;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: #888888;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+}
+#header .wrap {
+	background-color: #2787ee;
+	background-position: center top;
+	background-repeat: no-repeat;
+}
+#content .wrap {
+	background-color: #ffffff;
+}
+.aside {
+	background-color: #f6f6f6;
+}
+p, dt, dd, li {
+	font-size: 14px;
+}
+
+
+/* Links */
+a { color: #000000; }
+a:hover { color: ffffff; }
+.btn, .add-to-cart-btn, .btn.cart-btn {
+	background-color: #54ba78;
+	color: #ffffff;
+	padding: 8px 20px;
+	border-radius: 4px;
+}
+
+.btn:hover, .add-to-cart-btn:hover, .btn.cart-btn:hover  {
+	background-color: #3b8153;
+	color: #ffffff;
+}
+
+.svg-button path,
+.svg-button circle {
+	stroke: #000000
+}
+
+.svg-button:hover path,
+.svg-button:hover circle {
+	stroke: ffffff
+}
+
+
+/* Page Headings */
+#logo h1 {
+	color: #000000;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Lucida Sans, Geneva, Verdana, sans-serif;
+	font-size: 39px;
+}
+
+#logo h1 a { color: #000000; }
+
+h1#page-title {
+	color: #1860ad;
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 36px;
+}
+
+
+/* Main Nav */
+.la_global__header .la--header__banner, #nav .wrap, .la_nav {
+	background-color: #646464;
+}
+#nav li {
+	font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+	font-size: 12px;
+}
+#nav li a, .sub-nav dd, .sub-nav dd a, .social-icons a, .la_nav li a, .la_nav li .sub-nav dd a {
+	color: #1a1a1a;
+	font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+	font-size: 12px;
+}
+#nav li a:hover, .sub-nav dd a:hover, .social-icons a:hover , .la_nav li a:hover, .la_nav li .sub-nav dd a:hover {
+	color: #ffffff;
+	font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+	font-size: 12px;
+}
+.sub-nav dt {
+	background-color: #1a1a1a;
+	color: #646464
+}
+
+.la--footer .la_nav a:hover, .la--social li:hover a i {color:#ffffff;}
+
+/* Section Headings */
+h2, h3, h4 {
+	color: #1860ad;
+}
+h2 {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 24px;
+}
+
+/* Alternate Text */
+.tag, .aside h2 em, .aside h3 em, dl.basic dt, em.context, #page-title em.context a, .basic-form li label em, .basic-form p.fine-print, .main h1 .site-notice, .form-steps li.off, .base-meta h2 em, .base-listing.grouped h3, .base-listing.grouped h3 a, .base-schedule em, .base-fees em, .schedule span.tbd, .schedule abbr, .schedule .game p, .schedule .game .official em, .schedule .meta .game-note, .schedule .rescheduled, .schedule .rescheduled span.tbd, .schedule .rescheduled abbr, .schedule .rescheduled .game p, .schedule .team-result, .entity-listing .entity-meta, .entity-listing .entity-details, .sublocations li em {
+	color: #aaaaaa;
+}
+
+#page-title em.context a:hover, .base-listing.grouped h3 a:hover {
+	color: #888888;
+}
+
+
+/* Alerts */
+.alert, .site-notice {
+	background-color: #ffffdd;
+}
+
+/* Skins Support */
+#headline h1, #headline h2, #headline h3 {
+	color: #000000;
+}
+
+/* Logo Background */
+.la__logo #the-logo {
+	background-color: #ffffff;
+}
+
+/* account nav */
+.la--nav__account {
+	background-color: #00183d;
+}
+
+/* Footer */
+.la--footer{
+	background-color: #280808;
+}
+#footer-extras{
+	background-color: ${footerExtraBackgroundColor};
+}
+
+/* NewsLetter Background */
+.la__newsletter{
+	background-color: #00183d;
+}
+.la__newsletter h3, .newsletter-subscription-error-msg{
+	color: #dddddd !important;
+}
+
+.reg-highlight {
+    color: #1860ad;
+}
+
+#prod-details header{
+	background-color: var(--account-nav-background-color);
+}
+
+/* Member Dashboard */
+.nav-item.active .nav-link, .nav-item.active .nav-link-main {
+	background-color: #54ba78;
+	color: ${buttonTexColor};
+}
+
+.nav-link-main:hover, .nav-section-header:hover {
+	background-color: #3b8153;
+	color: ${buttonTexColor};
+}
+
+.edit-button, 
+.la-action-button {
+	background-color: #54ba78;
+	color: ${buttonColor};
+}
+
+.edit-button:hover, 
+.la-action-button:hover {
+	background-color: #3b8153;
+	color: ${buttonColorHoverColor};
+}
+			</style>
+			<style type="text/css" id="custom-css">
+			/* 1. IMPORT FONTS */
+/* Import the 'Inter' font to match nycsoccer.com */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+/* 2. GLOBAL STYLES */
+::backdrop {
+    --tw-border-spacing-x: 0;
+    --tw-border-spacing-y: 0;
+    --tw-translate-x: 0;
+    --tw-translate-y: 0;
+    --tw-rotate: 0;
+    --tw-skew-x: 0;
+    --tw-skew-y: 0;
+    --tw-scale-x: 1;
+    --tw-scale-y: 1;
+    --tw-pan-x: ;
+    --tw-pan-y: ;
+    --tw-pinch-zoom: ;
+    --tw-scroll-snap-strictness: proximity;
+    --tw-ordinal: ;
+    --tw-slashed-zero: ;
+    --tw-numeric-figure: ;
+    --tw-numeric-spacing: ;
+    --tw-numeric-fraction: ;
+    --tw-ring-inset: ;
+    --tw-ring-offset-width: 0px;
+    --tw-ring-offset-color: #fff;
+    --tw-ring-color: rgba(59, 130, 246, .5);
+    --tw-ring-offset-shadow: 0 0 #0000;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-shadow: 0 0 #0000;
+    --tw-shadow-colored: 0 0 #0000;
+    --tw-blur: ;
+    --tw-brightness: ;
+    --tw-contrast: ;
+    --tw-grayscale: ;
+    --tw-hue-rotate: ;
+    --tw-invert: ;
+    --tw-saturate: ;
+    --tw-sepia: ;
+    --tw-drop-shadow: ;
+    --tw-backdrop-blur: ;
+    --tw-backdrop-brightness: ;
+    --tw-backdrop-contrast: ;
+    --tw-backdrop-grayscale: ;
+    --tw-backdrop-hue-rotate: ;
+    --tw-backdrop-invert: ;
+    --tw-backdrop-opacity: ;
+    --tw-backdrop-saturate: ;
+    --tw-backdrop-sepia: ;
+}
+.py-4 {
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+}
+.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+.rounded-b-lg {
+    border-bottom-left-radius: .5rem;
+    border-bottom-right-radius: .5rem;
+}
+.w-40 {
+    width: 10rem;
+}
+body {
+    font-family: 'Inter', sans-serif !important;
+    color: #333;
+    background-color: #f8f9fa; /* Light grey background for contrast */
+}
+
+.bg-benny-blue {
+	--tw-bg-opacity: 1;
+    background-color: rgb(0 24 61 / var(--tw-bg-opacity));
+}
+
+/* Links - Use your Navy Brand Color */
+a {
+    color: #00183D;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+a:hover {
+    color: #2563eb; /* Lighter blue for hover state */
+}
+
+/* 3. HEADER & NAVIGATION */
+/* Force the top header bar to be your Navy Brand Color */
+#header, .navbar-inner, .la-header {
+    background-color: #00183D !important;
+    background-image: none !important; /* Remove default gradients */
+    border-bottom: none;
+}
+
+/* Navigation Links */
+#nav ul li a, .navbar .nav > li > a {
+    color: #ffffff !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+#nav ul li a:hover, .navbar .nav > li > a:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
+    border-radius: 4px;
+}
+
+/* 4. BUTTONS (The "Pill" Look) */
+/* Targets primary buttons, submit inputs, and 'btn' classes */
+.btn, input[type="submit"], button.primary, .action-button {
+    background-color: #54ba79 !important; /* Navy background */
+    color: #ffffff !important;
+    border-radius: 9999px !important; /* Fully rounded 'pill' shape */
+    border: none !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+}
+
+.btn:hover, input[type="submit"]:hover {
+    background-color: #54ba79 !important; /* Brighter blue on hover */
+    transform: translateY(-1px);
+}
+
+/* 5. CONTENT & CARDS */
+/* Make the main content area look like a 'card' */
+#content, .container-fluid {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    font-family: 'Inter', sans-serif !important;
+    color: #00183D !important; /* Navy headings */
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+/* 6. FOOTER */
+#footer {
+    background-color: #00183D !important;
+    color: #ffffff !important;
+    padding: 40px 0;
+}
+#footer a {
+    color: #cbd5e1 !important; /* Light slate text for footer links */
+}
+#content, .container-fluid {
+  padding: 0;
+  margin-top: 0;
+}
+#header-extras {
+  margin-top: -20px;
+}
+#footer-extras, #footer-extras * {
+ 	 background-color: #00183D !important;
+    color: #ffffff !important;
+}
+
+#footer-extras .grid  {
+    margin-left: 20px !important;
+}
+
+/* INCREASE FONT SIZES
+
+body {
+    font-size: 18px !important; 
+    line-height: 1.6 !important; /* Improves readability at larger sizes */
+}
+
+/* 2. Force Body Text to Inherit */
+/* The default theme forces '14px' on these. We reset them to 1em (100% of body size) */
+p, dt, dd, li, span, label, div, input, select, textarea {
+    font-size: 1em !important; 
+}
+
+/* 3. Scale Headings Relatively */
+/* Instead of fixed pixels (e.g. 36px), we use ems. 
+   2.2em = 2.2 x 18px = ~40px */
+h1, #page-title, .h1 {
+    font-size: 2.2em !important; 
+}
+
+h2, .h2 {
+    font-size: 1.75em !important; /* ~31px */
+}
+
+h3, .h3 {
+    font-size: 1.4em !important; /* ~25px */
+}
+
+h4, .h4 {
+    font-size: 1.2em !important; /* ~21px */
+}
+
+/* 4. Scale Buttons & Navigation */
+/* Keep buttons and nav slightly separate so they don't get too huge */
+.btn, input[type="submit"], button {
+    font-size: 1rem !important; /* Matches base size */
+}
+
+/* Nav is usually smaller, so we scale it to 0.9 of the base (approx 16px) */
+#nav ul li a, .navbar .nav > li > a, #footer a {
+    font-size: 0.9em !important; 
+}
+
+[data-id="Players"] {
+	display: none;
+}
+p.social-sub-title {
+    display: none;
+}
+
+.program-social-btns {
+    display: none;
+}
+[data-id="program-participants"] {
+  display: none;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0; /* Ensures no scrollbars from default margins */
+}
+
+#footer-extras {
+    flex-grow: 1;
+}
+.mod.site-notice {
+  display: none;
+}
+.aside {
+    padding-top: 0 !important;
+}
+
+.context--dashboard em.context {
+    font-size: 1rem !important;
+}
+.context--dashboard strong {
+    color: green;
+    font-size: 2rem;
+}
+.dash-intro h1.context {
+    font-size: 3rem !important;
+}
+			</style>
+			<link rel="stylesheet" type="text/css" media="screen" href="https://svite-league-apps-static.s3.amazonaws.com/_c/prod/widgets/widgets.css?v=1794266010887" />
+
+			
+
+		
+		
+	
+
+
+		<!-- Overrides -->
+		<link rel="stylesheet" type="text/css" media="screen" href="https://svite-league-apps-static.s3.amazonaws.com/_c/prod/shared/overrides.css?v=1794266010887" />
+
+	</head>
+
+	<body class="leagueapps-widget">
+
+		
+			<p>
+				<a href="/widgets/leagueListingContent">Back to Leagues Listing</a>
+			</p>
+		
+		
+			
+
+			
+				
+				
+					
+						
+					
+
+
+
+
+
+  <div class="mod standings">
+    <div class="sub-program--flex">
+      
+      
+        <div class="standings-scroll">
+        <table class="basic-table standings">
+          <thead>
+            <tr>
+            <th class="main-col team">Team</th>
+            
+              
+                <th><abbr title="Games Played">GP</abbr></th>
+              
+              
+                <th><abbr title="Wins">W</abbr></th>
+              
+              
+                <th><abbr title="Losses">L</abbr></th>
+              
+              
+                <th><abbr title="Ties">T</abbr></th>
+              
+              
+            
+            
+            
+              <th><abbr title="Points Scored">PS</abbr></th>
+            
+            
+              <th><abbr title="Points Scored Against">PSA</abbr></th>
+            
+            
+              <th><abbr title="Points Scored Differential">PSD</abbr></th>
+            
+            
+              <th><abbr title="Forfeits">DNP</abbr></th>
+            
+            
+              <th><abbr title="Points For">PF</abbr></th>
+            
+            
+            
+            
+          </tr>
+          </thead>
+          <tbody>
+            
+              
+              
+              
+              
+            
+
+
+
+
+
+	
+	
+		<tr class="">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8025650" target="_parent">Farcelona FC (Green)</a></td>
+			<td>6</td>
+			<td>5</td>
+			<td>0</td>
+			<td>1</td>
+			
+			<!--  -->
+			
+			
+			<td>20</td>
+			<td>6</td>
+			<td>14</td>
+			<td>0</td>
+			<td>16.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="alt">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8032635" target="_parent">It’s Coming Home (Lilac)</a></td>
+			<td>6</td>
+			<td>4</td>
+			<td>0</td>
+			<td>2</td>
+			
+			<!--  -->
+			
+			
+			<td>23</td>
+			<td>5</td>
+			<td>18</td>
+			<td>0</td>
+			<td>14.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8043406" target="_parent">Hey, You Up? (Silver)</a></td>
+			<td>5</td>
+			<td>3</td>
+			<td>1</td>
+			<td>1</td>
+			
+			<!--  -->
+			
+			
+			<td>21</td>
+			<td>8</td>
+			<td>13</td>
+			<td>0</td>
+			<td>10.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="alt">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8032545" target="_parent">Thottenham Hotgurls (Black)</a></td>
+			<td>5</td>
+			<td>3</td>
+			<td>2</td>
+			<td>0</td>
+			
+			<!--  -->
+			
+			
+			<td>12</td>
+			<td>11</td>
+			<td>1</td>
+			<td>0</td>
+			<td>9.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8097762" target="_parent">Loonatics (Gold)</a></td>
+			<td>6</td>
+			<td>2</td>
+			<td>3</td>
+			<td>1</td>
+			
+			<!--  -->
+			
+			
+			<td>14</td>
+			<td>22</td>
+			<td>-8</td>
+			<td>0</td>
+			<td>7.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="alt">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8051504" target="_parent">All Megan&#39;s Friends (Orange)</a></td>
+			<td>5</td>
+			<td>2</td>
+			<td>3</td>
+			<td>0</td>
+			
+			<!--  -->
+			
+			
+			<td>15</td>
+			<td>11</td>
+			<td>4</td>
+			<td>0</td>
+			<td>6.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8055934" target="_parent">BESS United (Red)</a></td>
+			<td>5</td>
+			<td>1</td>
+			<td>3</td>
+			<td>1</td>
+			
+			<!--  -->
+			
+			
+			<td>8</td>
+			<td>17</td>
+			<td>-9</td>
+			<td>0</td>
+			<td>4.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="alt">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8079527" target="_parent">Trashy Rats F.C. (Mint)</a></td>
+			<td>5</td>
+			<td>1</td>
+			<td>4</td>
+			<td>0</td>
+			
+			<!--  -->
+			
+			
+			<td>5</td>
+			<td>25</td>
+			<td>-20</td>
+			<td>0</td>
+			<td>3.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+		<tr class="">
+			<td class="main-col team"><a href="/leagues/5162244/teams/8121951" target="_parent">Le Grand et Les Petits FC (Light Blue)</a></td>
+			<td>5</td>
+			<td>0</td>
+			<td>5</td>
+			<td>0</td>
+			
+			<!--  -->
+			
+			
+			<td>3</td>
+			<td>16</td>
+			<td>-13</td>
+			<td>0</td>
+			<td>0.0</td>
+			
+			
+			
+			
+			
+			
+		</tr>
+	
+
+
+          </tbody>
+        </table>
+        </div>
+      
+
+      
+      
+    </div>
+
+    <dl class="key">
+      
+
+      
+        <dt>GP</dt>
+        <dd>Games Played</dd>
+
+        <dt>W</dt>
+        <dd>Wins</dd>
+
+        <dt>L</dt>
+        <dd>Losses</dd>
+
+        <dt>T</dt>
+        <dd>Ties</dd>
+
+        <dt>PCT</dt>
+        <dd>Winning Percentage</dd>
+      
+
+      <dt>PS</dt>
+      <dd>Points Scored</dd>
+
+      <dt>PSA</dt>
+      <dd>Points Scored Against</dd>
+
+      <dt>PSD</dt>
+      <dd>Points Scored Differential</dd>
+
+      <dt>DNP</dt>
+      <dd>Forfeits</dd>
+
+      <dt>PF</dt>
+      <dd>Points For</dd>
+
+      <dt>PA</dt>
+      <dd>Points Against</dd>
+
+      <dt>+/-</dt>
+      <dd>Point Differential</dd>
+
+      
+    </dl>
+
+    <p>
+      <a onclick="cOverlay('#tiebreaker-rules', 430);">View Tiebreaker Rules</a>
+    </p>
+
+    <!-- Overlays -->
+    
+
+
+
+	
+
+<div class="mod overlay program-reg">
+	<h3>Select an Option:</h3>
+	<div id="no-reg-options-available" class="alert sample-program" style="font-size: 1.5em; display: none;">
+		<strong>Nothing is open for registration here</strong>
+		<p style="font-size: 0.7em;">Registration may be closed, full, or by invitation only. Contact NYCSoccer.com if you expected to register.</p>
+	</div>
+	<ul class="clr reg-types" id="reglist" data-scope="https://svite-league-apps-static.s3.amazonaws.com">
+		
+			<li id="reg-fa">
+				<a id="reg-fa-url" href="#">
+					<img src="https://svite-league-apps-static.s3.amazonaws.com/_i/svg/player.png" alt="Free Agent image" />
+					<span class="reg-details">
+						<strong>Free Agent</strong>
+					</span>
+					<span id="reg-fa-price" class="price"><strong>$0.00</strong> <em class="extra-fees">+$0.00 processing fee</em></span>
+				</a>
+			</li>
+
+			<li id="reg-sg">
+				<a id="reg-sg-url" href="#">
+					<img src="https://svite-league-apps-static.s3.amazonaws.com/_i/svg/team.png" alt="Small Group image" />
+					<span class="reg-details">
+						<strong>Small Group Member</strong>
+					</span>
+					<span id="reg-sg-price" class="price"><strong>$0.00</strong> <em class="extra-fees">+$0.00 processing fee</em></span>
+				</a>
+			</li>
+
+			<li id="reg-captain">
+				<a id="reg-captain-url" href="#">
+					<img src="https://svite-league-apps-static.s3.amazonaws.com/_i/svg/captain.png" alt="Team Captain image" />
+					<span class="reg-details">
+						<strong>Team Captain</strong>
+					</span>
+					<span id="reg-captain-price" class="price"><strong>$0.00 <span class="tpp-type">per player</span></strong> <em class="extra-fees">+$0.00 processing fee per player</em></span>
+				</a>
+			</li>
+		
+
+		<li id="reg-team">
+			<a id="reg-team-url" href="#">
+				<img src="https://svite-league-apps-static.s3.amazonaws.com/_i/svg/team.png" alt="Team Player image" />
+				<span class="reg-details">
+					<strong>Team Player</strong>
+				</span>
+				<span id="reg-team-price" class="price"><strong>$0.00</strong> <em class="extra-fees">+$0.00 processing fee per player</em></span>
+			</a>
+		</li>
+	</ul>
+
+	<div class="form-btns">
+		<input type="button" onclick="cOverlayClose('.program-reg');" value="Cancel" class="btn neg right" />
+	</div>
+
+	<span id="close-overlay" class="close-overlay" onclick="cOverlayClose('.program-reg');"></span>
+</div>
+
+    <div class="mod overlay" id="tiebreaker-rules">
+      <h3>Tiebreaker Rules</h3>
+      <dl class="basic clr">
+        <dt>Primary:</dt>
+        <dd>Team with higher points scored differential</dd>
+        <dt>Secondary:</dt>
+        <dd>Head to head</dd>
+        <dt>Fallback:</dt>
+        <dd>Team with less points scored against</dd>
+      </dl>
+      <p class="form-btns">
+        <a onclick="cOverlayClose('#tiebreaker-rules')" class="btn">Got It, Thanks</a>
+      </p>
+    </div>
+    <!-- /END Overlays -->
+
+  </div>
+
+				
+			
+			
+		
+
+	</body>
+
+	
+
+
+</html>
