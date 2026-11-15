@@ -43,7 +43,7 @@ fictional sample data. `npm run build` produces a server deployment and
 ## Checks
 
 The private `/team/` area adds roster-linked player accounts, match RSVPs and
-captain-shared 7v7 lineups. `/captain/access/` manages private invitation links,
+captain-shared 7v7 lineups, member suggestions and local PNG formation export. `/captain/access/` manages private invitation links,
 account recovery, revocation and the captain’s own player link. Players set a
 password after accepting an invitation. No invitation email is sent automatically.
 Public profile approval is independent of team membership. See

@@ -504,6 +504,9 @@ export type Database = {
       get_public_club: { Args: { p_club_id: string }; Returns: Json }
       get_team_access: { Args: { p_club_id: string }; Returns: Json }
       get_team_club: { Args: { p_club_id: string }; Returns: Json }
+      get_lineup_posts: { Args: { p_club_id: string }; Returns: Json }
+      post_lineup_suggestion: { Args: { p_match_id: string; p_payload: Json }; Returns: string }
+      delete_lineup_suggestion: { Args: { p_post_id: string }; Returns: undefined }
       is_captain: { Args: { p_club_id: string }; Returns: boolean }
       link_captain_profile: {
         Args: { p_club_id: string; p_player_id: string }

@@ -27,6 +27,7 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
     "202611090002_hosted_permissions_and_captain_invites.sql",
     "20261110053440_leagueapps_sync.sql",
     "20261113162329_player_accounts_and_rsvps.sql",
+    "20261115215504_lineup_suggestions_and_official_history.sql",
   ])
     await db.exec(
       await readFile(
@@ -293,6 +294,115 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
     },
   );
   await t.test(
+    "member suggestions are private posts with ownership; official history stays captain-only",
+    async () => {
+      const posts = () => scalar("get_lineup_posts", [C]);
+      await role("authenticated", CAP);
+      let current = (await team()).lineups[0].revision;
+      await scalar("save_match_lineup", [
+        M,
+        current++,
+        JSON.stringify(payload),
+        true,
+      ]);
+      await scalar("save_match_lineup", [
+        M,
+        current++,
+        JSON.stringify({ ...payload, formation: "3-2-1" }),
+        true,
+      ]);
+      assert.equal(
+        (await posts()).filter((p: any) => p.kind === "official").length,
+        2,
+      );
+      assert.equal((await posts())[0].payload.formation, "3-2-1");
+      await scalar("save_match_lineup", [
+        M,
+        current++,
+        JSON.stringify({ ...payload, formation: "2-2-2" }),
+        false,
+      ]);
+      assert.equal((await posts()).length, 2);
+      await role("authenticated", A);
+      const id = await scalar("post_lineup_suggestion", [
+        M,
+        JSON.stringify({
+          ...payload,
+          formation: "2-2-2",
+          authorName: "Spoofed",
+          kind: "official",
+        }),
+      ]);
+      let data = await posts();
+      assert.equal(data.length, 3);
+      assert.equal(data[0].kind, "suggestion");
+      assert.equal(data[0].authorName, "Private Member 1");
+      assert.equal(data[0].canDelete, true);
+      assert.equal(data[0].payload.kind, undefined);
+      assert.equal((await team()).lineups[0].payload.formation, "3-2-1");
+      for (const publish of [true, false])
+        await assert.rejects(
+          scalar("save_match_lineup", [
+            M,
+            current,
+            JSON.stringify(payload),
+            publish,
+          ]),
+        );
+      for (const invalid of [
+        null,
+        {},
+        { ...payload, starters: [...ids.slice(0, 6), null] },
+        { ...payload, bench: [ids[0]] },
+        { ...payload, starters: [...ids.slice(0, 6), CAP2] },
+      ]) {
+        await assert.rejects(
+          scalar("post_lineup_suggestion", [M, JSON.stringify(invalid)]),
+        );
+      }
+      await assert.rejects(db.query("select * from private.lineup_posts"));
+      await role("authenticated", B);
+      assert.equal(
+        (await posts()).find((p: any) => p.id === id).canDelete,
+        false,
+      );
+      await assert.rejects(scalar("delete_lineup_suggestion", [id]));
+      await assert.rejects(
+        scalar("delete_lineup_suggestion", [
+          data.find((p: any) => p.kind === "official").id,
+        ]),
+      );
+      await role("authenticated", A);
+      await scalar("delete_lineup_suggestion", [id]);
+      assert.equal((await posts()).length, 2);
+      const own = await scalar("post_lineup_suggestion", [
+        M,
+        JSON.stringify(payload),
+      ]);
+      await role("authenticated", CAP);
+      assert.equal(
+        (await posts()).find((p: any) => p.id === own).canDelete,
+        true,
+      );
+      await scalar("delete_lineup_suggestion", [own]);
+      await scalar("unshare_match_lineup", [M, current]);
+      assert.equal((await posts()).length, 0);
+      await role("authenticated", CAP2);
+      await assert.rejects(posts());
+      await assert.rejects(
+        scalar("post_lineup_suggestion", [M, JSON.stringify(payload)]),
+      );
+      await role("anon");
+      await assert.rejects(posts());
+      await assert.rejects(
+        scalar("post_lineup_suggestion", [M, JSON.stringify(payload)]),
+      );
+      const publicData = await scalar("get_public_club", [C]);
+      assert.equal(publicData.players.length, 0);
+      assert.equal(publicData.lineupPosts, undefined);
+    },
+  );
+  await t.test(
     "revocation takes effect with the same identity; expired invites cannot recreate membership",
     async () => {
       await role("authenticated", CAP);
@@ -300,6 +410,10 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
       await role("authenticated", A);
       assert.equal((await access()).member, false);
       await assert.rejects(team());
+      await assert.rejects(scalar("get_lineup_posts", [C]));
+      await assert.rejects(
+        scalar("post_lineup_suggestion", [M, JSON.stringify(payload)]),
+      );
       await assert.rejects(scalar("save_match_rsvp", [M, "in"]));
       await role("postgres");
       await db.query(
@@ -324,15 +438,29 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
       await assert.rejects(team());
     },
   );
-  await t.test("the complete migration safely resumes without changing team data", async () => {
-    await role("postgres");
-    const counts = () => db.query("select (select count(*) from players) players,(select count(*) from club_memberships) members,(select count(*) from private.match_rsvps) replies,(select count(*) from private.match_lineups) lineups");
-    const before = (await counts()).rows;
-    await db.exec(await readFile(new URL("../supabase/migrations/20261113162329_player_accounts_and_rsvps.sql", import.meta.url), "utf8"));
-    assert.deepEqual((await counts()).rows, before);
-    await role("authenticated", CAP);
-    assert.equal((await access()).role, "captain");
-    assert.equal((await team()).players.length, 8);
-  });
+  await t.test(
+    "the complete migration safely resumes without changing team data",
+    async () => {
+      await role("postgres");
+      const counts = () =>
+        db.query(
+          "select (select count(*) from players) players,(select count(*) from club_memberships) members,(select count(*) from private.match_rsvps) replies,(select count(*) from private.match_lineups) lineups",
+        );
+      const before = (await counts()).rows;
+      await db.exec(
+        await readFile(
+          new URL(
+            "../supabase/migrations/20261113162329_player_accounts_and_rsvps.sql",
+            import.meta.url,
+          ),
+          "utf8",
+        ),
+      );
+      assert.deepEqual((await counts()).rows, before);
+      await role("authenticated", CAP);
+      assert.equal((await access()).role, "captain");
+      assert.equal((await team()).players.length, 8);
+    },
+  );
   await db.close();
 });

@@ -5000,6 +5000,8 @@ footer {
 /* Native selects keep keyboard and mobile picker support, with a shared club style. */
 .account-management select,
 .team-page select {
+  display:block;
+  overflow:hidden;
   appearance:none;
   -webkit-appearance:none;
   min-height:48px;
@@ -5067,3 +5069,24 @@ footer {
 }
 @media(max-width:900px){.team-roster-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.team-match-grid {grid-template-columns:minmax(0,1fr);}.availability-panel {order:2;}.lineup-panel {order:1;}.account-grid {grid-template-columns:minmax(0,1fr);}.account-intro {min-height:0;}}
 @media(max-width:600px){.team-toolbar .tabs {flex-wrap:wrap;}.team-fixture {align-items:start;flex-direction:column;padding:1.1rem;}.rsvp-control {min-width:0;width:100%;max-width:none;}.rsvp-buttons button {flex:1;}.team-roster-grid {grid-template-columns:minmax(0,1fr);}.team-match-heading .form-field {min-width:0;max-width:100%;width:100%;}.team-match-heading {align-items:start;flex-direction:column;}.availability-panel,.lineup-panel {padding:1.1rem;}.formation-pitch {min-height:420px;}.account-management select,.account-form input,.team-page .form-field select {font-size:1rem;}.team-page .formation-slot select {font-size:.7rem;}.bench-options {grid-template-columns:minmax(0,1fr);}.lineup-panel .button-row {gap:.6rem;flex-wrap:wrap;}.captain-navigation {align-items:start;gap:1rem;}.captain-navigation nav {gap:.7rem;}.account-grid {gap:1.5rem;}.account-grid .management-form {padding:1.5rem;}.account-list {--access-columns:minmax(0,1fr) 8.75rem;}.account-list-head,.account-list article {column-gap:1rem;}.account-list-head>span:last-child {display:none;}.account-list article {row-gap:.9rem;align-items:start;}.account-list .account-actions {grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:1rem;}}
+
+.lineup-selectors {display:grid;gap:1rem;margin:1.5rem 0 1rem;}
+.lineup-selectors .form-field {margin:0;min-width:0;}
+.lineup-selectors select {width:100%;min-width:0;}
+.lineup-source {margin-bottom:1.25rem;}
+.lineup-start-actions {margin:1.2rem 0 1.5rem;flex-wrap:wrap;}
+.lineup-actions {flex-wrap:wrap;gap:.75rem;margin-top:1.5rem;}
+.lineup-notice {padding:.75rem 1rem;background:#eaf0d6;border-radius:8px;font-size:.8rem;}
+.formation-slot strong {max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lineup-export-dialog {position:fixed;inset:0;width:min(640px,calc(100vw - 2rem));max-height:90dvh;overflow:auto;margin:auto;padding:1.5rem;border:1px solid var(--line);border-radius:16px;background:var(--paper);color:var(--plum);box-shadow:0 20px 70px #34223840;}
+.lineup-export-dialog::backdrop {background:#261b30a6;backdrop-filter:blur(3px);}
+.lineup-export-heading {display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+.lineup-export-heading h3 {font-size:1.75rem;margin:0;}
+.lineup-export-dialog .help-text {margin:1rem 0;}
+.lineup-export-dialog .button-row {flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;}
+.lineup-export-image {display:block;width:100%;height:auto;border-radius:8px;-webkit-touch-callout:default;user-select:auto;}
+@media(max-width:600px){.lineup-export-dialog {padding:1rem;}.lineup-actions>.button {max-width:100%;}.lineup-heading {align-items:flex-start;}.lineup-heading h3 {font-size:1.8rem;}}
+@supports(appearance:base-select){
+  .lineup-selectors select {position:relative;}
+  .lineup-selectors select::after {content:"";position:absolute;inset:0 0 0 auto;width:2.6rem;background:#f0e9f1 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23644965' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat;pointer-events:none;}
+}

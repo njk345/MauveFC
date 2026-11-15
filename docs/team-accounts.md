@@ -4,7 +4,7 @@ The public club pages and private team workspace use separate projections.
 Signing in is not sufficient for team access: the verified Auth identity must
 have a club membership. A player account links to exactly one roster profile in
 that club. All players can see the private roster, match availability and lineups
-the captain has shared. Only captains can manage access or edit lineups/results.
+the captain has shared. Only captains can manage access, save private lineup drafts, or publish official lineups/results. Members can build and post suggested lineups.
 
 ## Captain workflow
 
@@ -48,7 +48,31 @@ Captains can save 2-3-1, 3-2-1 or 2-2-2 lineups, choose seven starters and list
 substitutes. Drafts are captain-only. Saving changes as a draft preserves the
 previous shared lineup; sharing replaces it atomically. Duplicate and ineligible
 players are rejected, and all seven starters are required before sharing. Revision
-checks reject stale edits. Captains can unshare a lineup without losing its draft.
+checks reject stale edits. Each official publication is retained as a selectable version,
+with the latest official version shown by default. Unsharing removes all official
+versions for that match from the team area and keeps the captain draft.
+
+Separate **Official lineups** and **Team suggestions** selectors browse posted
+versions for the selected match. Any member can create a lineup from a selected
+version (or start empty), then post a complete seven-player suggestion. Suggestions
+never overwrite the captain's official lineup or draft. An author can remove their
+own suggestion; captains can remove any suggestion. Author labels use roster names,
+never account emails. Only captains can save and reopen an unposted draft. Member
+work stays in memory until posted; it is not stored in localStorage.
+
+**Export image** creates a PNG in the signed-in browser, including the current
+formation, names/numbers and substitutes. Incomplete, unposted formations can also
+be exported. Download PNG saves the file; compatible mobile browsers offer a file
+share sheet, and the image preview supports touch-and-hold saving. Exporting does
+not post the lineup, send notifications or upload player data. Image files contain
+player names, so recipients are chosen by the person exporting them.
+
+Backend: `private.lineup_posts` holds immutable official/suggested snapshots with
+RLS enabled and all direct client table access revoked. Three narrowly granted
+invoker RPCs delegate to membership-checked private functions. Captain-only official
+publishing retains the existing server-side authorization and revision checks.
+The official-publication trigger never records private draft edits. The additive
+migration preserves any currently shared official lineup as its first snapshot.
 
 The team area refreshes on focus and periodically while visible. Signing out or
 losing membership clears the private workspace. Private data is never embedded

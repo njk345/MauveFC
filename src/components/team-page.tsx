@@ -6,19 +6,14 @@ import { useAuth } from "./auth/auth-provider";
 import { usePrototype } from "./prototype-provider";
 import { PageHeading } from "./season-pages";
 import { date, time } from "@/lib/format";
-import { formations } from "@/lib/formations";
+import { LineupBoard } from "./lineup-board";
 import {
   readTeamClub,
   writeRsvp,
-  writeLineup,
-  unshareLineup,
   type TeamSnapshot,
 } from "@/lib/supabase/repository";
 import type {
-  Formation,
-  LineupPayload,
   Match,
-  MatchLineup,
   MatchRsvp,
   Player,
   RsvpResponse,
@@ -315,6 +310,7 @@ function TeamWorkspace() {
                   match={match}
                   lineup={data.lineups.find((l) => l.matchId === match.id)}
                   players={eligible}
+                  posts={data.lineupPosts.filter((p) => p.matchId === match.id)}
                   onRefresh={refresh}
                   onDirty={setDirty}
                 />
@@ -465,255 +461,6 @@ function Availability({
           )}
         </div>
       ))}
-    </article>
-  );
-}
-function LineupBoard({
-  match,
-  lineup,
-  players,
-  onRefresh,
-  onDirty,
-}: {
-  match: Match;
-  lineup?: MatchLineup;
-  players: Player[];
-  onRefresh: () => Promise<void>;
-  onDirty: (dirty: boolean) => void;
-}) {
-  const auth = useAuth(),
-    [payload, setPayload] = useState<LineupPayload>(
-      lineup?.payload || {
-        formation: "2-3-1",
-        starters: Array(7).fill(null),
-        bench: [],
-      },
-    ),
-    [revision, setRevision] = useState(lineup?.revision || 0),
-    [dirty, setDirty] = useState(false),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  useEffect(() => {
-    if (!dirty) {
-      setPayload(
-        lineup?.payload || {
-          formation: "2-3-1",
-          starters: Array(7).fill(null),
-          bench: [],
-        },
-      );
-      setRevision(lineup?.revision || 0);
-    }
-  }, [lineup, dirty]);
-  function change(next: LineupPayload) {
-    setPayload(next);
-    setDirty(true);
-    onDirty(true);
-    setError("");
-  }
-  async function save(publish: boolean) {
-    setBusy(true);
-    setError("");
-    try {
-      await writeLineup(match.id, revision, payload, publish);
-      setDirty(false);
-      onDirty(false);
-      await onRefresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save lineup.");
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function unshare() {
-    setBusy(true);
-    setError("");
-    try {
-      await unshareLineup(match.id, revision);
-      setDirty(false);
-      onDirty(false);
-      await onRefresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not unshare lineup.");
-    } finally {
-      setBusy(false);
-    }
-  }
-  if (!auth.captain && !lineup)
-    return (
-      <article className="lineup-panel team-empty">
-        <LockKeyhole size={25} />
-        <h3>The match plan is taking shape.</h3>
-        <p>Your captain hasn’t shared a lineup for this match yet.</p>
-      </article>
-    );
-  return (
-    <article className="lineup-panel">
-      <div className="lineup-heading">
-        <div>
-          <span className="eyebrow">SEVEN ON THE PITCH</span>
-          <h3>
-            {auth.captain
-              ? "Set the shape."
-              : `Our formation · ${payload.formation}`}
-          </h3>
-        </div>
-        <span className="pill">
-          {dirty
-            ? "UNSAVED"
-            : lineup?.hasDraft
-              ? "PRIVATE DRAFT"
-              : lineup?.shared
-                ? "SHARED WITH TEAM"
-                : "PRIVATE DRAFT"}
-        </span>
-      </div>
-      {auth.captain && (
-        <>
-          <label className="form-field">
-            <span>Formation</span>
-            <select
-              value={payload.formation}
-              onChange={(e) =>
-                change({ ...payload, formation: e.target.value as Formation })
-              }
-            >
-              {Object.keys(formations).map((f) => (
-                <option key={f}>{f}</option>
-              ))}
-            </select>
-          </label>
-          <p className="help-text">
-            {lineup?.shared && lineup.hasDraft
-              ? "The team still sees the previous shared lineup."
-              : "Drafts stay captain-only. Share when all seven starters are chosen."}
-          </p>
-        </>
-      )}
-      <div
-        className="formation-pitch"
-        aria-label={`${payload.formation} formation`}
-      >
-        <div className="pitch-boundary" />
-        <div className="pitch-halfway" />
-        <div className="pitch-circle" />
-        <div className="pitch-goal-area top" />
-        <div className="pitch-goal-area bottom" />
-        {formations[payload.formation].map((slot, i) => {
-          const player = players.find((p) => p.id === payload.starters[i]);
-          return (
-            <div
-              className="formation-slot"
-              style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-              key={i}
-            >
-              <span className="formation-position">{slot.label}</span>
-              <span className="formation-player-number">
-                {player?.number ?? "—"}
-              </span>
-              {auth.captain ? (
-                <select
-                  aria-label={`Starter ${slot.label}`}
-                  disabled={busy}
-                  value={payload.starters[i] || ""}
-                  onChange={(e) => {
-                    const starters = [...payload.starters];
-                    starters[i] = e.target.value || null;
-                    change({
-                      ...payload,
-                      starters,
-                      bench: payload.bench.filter(
-                        (id) => id !== e.target.value,
-                      ),
-                    });
-                  }}
-                >
-                  <option value="">Choose player</option>
-                  {players
-                    .filter(
-                      (p) =>
-                        p.id === payload.starters[i] ||
-                        !payload.starters.includes(p.id),
-                    )
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                </select>
-              ) : (
-                <strong>{player?.name || "Unassigned"}</strong>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="lineup-bench">
-        <h4>Substitutes</h4>
-        {auth.captain ? (
-          <div className="bench-options">
-            {players
-              .filter((p) => !payload.starters.includes(p.id))
-              .map((p) => (
-                <label key={p.id}>
-                  <input
-                    type="checkbox"
-                    checked={payload.bench.includes(p.id)}
-                    disabled={busy}
-                    onChange={(e) =>
-                      change({
-                        ...payload,
-                        bench: e.target.checked
-                          ? [...payload.bench, p.id]
-                          : payload.bench.filter((id) => id !== p.id),
-                      })
-                    }
-                  />
-                  #{p.number} {p.name}
-                </label>
-              ))}
-          </div>
-        ) : (
-          <p>
-            {payload.bench
-              .map((id) => players.find((p) => p.id === id)?.name)
-              .filter(Boolean)
-              .join(" · ") || "No substitutes named."}
-          </p>
-        )}
-      </div>
-      {error && (
-        <p className="auth-error" role="alert">
-          {error}
-        </p>
-      )}
-      {auth.captain && (
-        <div className="button-row">
-          <button
-            className="button secondary small"
-            disabled={busy}
-            onClick={() => void save(false)}
-          >
-            {busy ? "Saving…" : "Save lineup draft"}
-          </button>
-          <button
-            className="button small"
-            disabled={busy}
-            onClick={() => void save(true)}
-          >
-            Share lineup
-          </button>
-          {lineup?.shared && (
-            <button
-              className="text-link"
-              disabled={busy}
-              onClick={() => void unshare()}
-            >
-              Unshare lineup
-            </button>
-          )}
-        </div>
-      )}
     </article>
   );
 }
