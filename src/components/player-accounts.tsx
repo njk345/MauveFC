@@ -123,11 +123,11 @@ export function PlayerAccounts() {
             <section className="management-form">
               <KeyRound size={25} />
               <h2>A private invitation.</h2>
-              <p>
+              <p className="account-intro">
                 Choose the player and their email. Copy the invitation and share
                 it directly with that person. No email is sent automatically.
               </p>
-              <form onSubmit={invite}>
+              <form className="account-form" onSubmit={invite}>
                 <label className="form-field">
                   <span>Player</span>
                   <select
@@ -214,34 +214,36 @@ export function PlayerAccounts() {
             <section className="management-form">
               <UserCheck size={25} />
               <h2>Your place on the roster.</h2>
-              <p>
+              <p className="account-intro">
                 Link your captain account to yourself so you can RSVP without a
                 second account.
               </p>
-              <label className="form-field">
-                <span>Your roster profile</span>
-                <select
-                  value={ownProfile}
-                  onChange={(e) => setOwnProfile(e.target.value)}
+              <div className="account-form">
+                <label className="form-field">
+                  <span>Your roster profile</span>
+                  <select
+                    value={ownProfile}
+                    onChange={(e) => setOwnProfile(e.target.value)}
+                  >
+                    <option value="">Choose your name</option>
+                    {players.map((p) => (
+                      <option value={p.id} key={p.id}>
+                        #{p.number} {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="button secondary"
+                  disabled={busy || !ownProfile}
+                  onClick={() => void linkSelf()}
                 >
-                  <option value="">Choose your name</option>
-                  {players.map((p) => (
-                    <option value={p.id} key={p.id}>
-                      #{p.number} {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                className="button secondary"
-                disabled={busy || !ownProfile}
-                onClick={() => void linkSelf()}
-              >
-                Link my profile
-              </button>
-              <p className="help-text">
-                Only choose your own profile. Captain permissions stay in place.
-              </p>
+                  Link my profile
+                </button>
+                <p className="help-text">
+                  Only choose your own profile. Captain permissions stay in place.
+                </p>
+              </div>
             </section>
           </div>
           {error && (
@@ -256,6 +258,11 @@ export function PlayerAccounts() {
                 <h2>Who has access?</h2>
               </div>
             </div>
+            <div className="account-list-head" aria-hidden="true">
+              <span>Player</span>
+              <span>Status</span>
+              <span>Access</span>
+            </div>
             {!loaded && !error ? (
               <p role="status">Loading accounts…</p>
             ) : (
@@ -263,7 +270,7 @@ export function PlayerAccounts() {
                 const account = accounts.find((a) => a.playerId === p.id);
                 return (
                   <article key={p.id}>
-                    <div>
+                    <div className="account-identity">
                       <strong>
                         #{p.number} {p.name}
                       </strong>
@@ -281,7 +288,7 @@ export function PlayerAccounts() {
                             : "Not invited"}
                       {account?.role === "captain" ? " · Captain" : ""}
                     </span>
-                    <div>
+                    <div className="account-actions">
                       <button
                         className="text-link"
                         disabled={busy}
