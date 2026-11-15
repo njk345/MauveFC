@@ -23,7 +23,7 @@ with sync_playwright() as p:
  page.route('https://maupvkabgveqvwkivtyh.supabase.co/**',bridge)
  for width in [390,1440]:
   page.set_viewport_size({'width':width,'height':900})
-  for route in ['/','/schedule/','/results/','/players/','/stats/','/captain/','/captain/fixtures/','/captain/roster/','/login/']:
+  for route in ['/','/schedule/','/results/','/players/','/stats/','/team/','/captain/','/captain/fixtures/','/captain/roster/','/captain/access/','/login/']:
    page.goto(BASE+route,wait_until='networkidle')
    assert page.evaluate('document.documentElement.scrollWidth')<=width,(width,route)
    assert 'We couldn’t load the club.' not in page.locator('main').inner_text(),route
@@ -32,7 +32,8 @@ with sync_playwright() as p:
     expect(page.get_by_role('button',name='Save draft',exact=True)).to_have_count(0)
     expect(page.get_by_role('button',name='Add fixture',exact=True)).to_have_count(0)
     expect(page.get_by_role('button',name='Add player',exact=True)).to_have_count(0)
-   if route=='/login/':expect(page.get_by_role('button',name='Send sign-in link')).to_be_visible()
+   if route=='/login/':expect(page.get_by_role('button',name='Sign in',exact=True)).to_be_visible()
+   if route=='/team/':expect(page.get_by_role('link',name='Team sign-in',exact=True)).to_be_visible()
   print('PASS live public routes and signed-out captain access at',width,flush=True)
  assert page.evaluate("localStorage.getItem('mauve-fc-prototype-v1')") is None
  assert not errors,errors

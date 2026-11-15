@@ -1,5 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
-import type { LeagueConnection, Match, Player, Result, Season } from "../types";
+import type {
+  LeagueConnection,
+  Match,
+  Player,
+  Result,
+  Season,
+  MatchRsvp,
+  MatchLineup,
+  LineupPayload,
+  PlayerAccount,
+  RsvpResponse,
+} from "../types";
 import { clubId, publishableKey, supabaseUrl } from "./config";
 import { getBrowserClient } from "./client";
 export type ClubSnapshot = {
@@ -9,6 +20,86 @@ export type ClubSnapshot = {
   seasons: Season[];
   roster: { seasonId: string; playerId: string }[];
 };
+export type TeamSnapshot = ClubSnapshot & {
+  rsvps: MatchRsvp[];
+  lineups: MatchLineup[];
+};
+export async function readTeamClub(): Promise<TeamSnapshot> {
+  const { data, error } = await getBrowserClient().rpc("get_team_club", {
+    p_club_id: clubId,
+  });
+  if (error)
+    throw new Error(
+      "Team data could not be loaded. Check your membership and try again.",
+    );
+  return data as TeamSnapshot;
+}
+export async function readPlayerAccounts(): Promise<PlayerAccount[]> {
+  const { data, error } = await getBrowserClient().rpc("get_player_accounts", {
+    p_club_id: clubId,
+  });
+  if (error) throw new Error("Player accounts could not be loaded.");
+  return data as PlayerAccount[];
+}
+async function teamWrite(name: string, args: Record<string, unknown>) {
+  const { error } = await getBrowserClient().rpc(name, args);
+  if (error)
+    throw new Error(
+      error.code === "40001"
+        ? "The lineup changed. Reload the latest version before saving."
+        : error.message,
+    );
+}
+export const writeRsvp = (matchId: string, response: RsvpResponse | null) =>
+  teamWrite("save_match_rsvp", { p_match_id: matchId, p_response: response });
+export const writeLineup = (
+  matchId: string,
+  revision: number,
+  payload: LineupPayload,
+  publish: boolean,
+) =>
+  teamWrite("save_match_lineup", {
+    p_match_id: matchId,
+    p_expected_revision: revision,
+    p_payload: payload,
+    p_publish: publish,
+  });
+export const unshareLineup = (matchId: string, revision: number) =>
+  teamWrite("unshare_match_lineup", {
+    p_match_id: matchId,
+    p_expected_revision: revision,
+  });
+export const revokePlayerAccess = (playerId: string) =>
+  teamWrite("revoke_player_access", {
+    p_club_id: clubId,
+    p_player_id: playerId,
+  });
+export const linkCaptainProfile = (playerId: string) =>
+  teamWrite("link_captain_profile", {
+    p_club_id: clubId,
+    p_player_id: playerId,
+  });
+export async function createPlayerInvite(
+  playerId: string,
+  email: string,
+): Promise<{ link: string }> {
+  const { data, error } = await getBrowserClient().functions.invoke(
+    "player-invite",
+    { body: { clubId, playerId, email } },
+  );
+  if (error) {
+    let message = "The invitation could not be created. Please try again.";
+    if (error.context instanceof Response)
+      try {
+        message = (await error.context.json()).error || message;
+      } catch {
+        /* no unsafe transport error */
+      }
+    throw new Error(message);
+  }
+  if (!data?.link) throw new Error("The invitation could not be created.");
+  return data;
+}
 export async function requestLeagueSync() {
   const { error } = await getBrowserClient().rpc("request_league_sync", {
     p_club_id: clubId,

@@ -15,14 +15,17 @@ import { useState, type ReactNode } from "react";
 import { Modal } from "./modal";
 import { Crest } from "./brand";
 import { usePrototype } from "./prototype-provider";
+import { useAuth } from "./auth/auth-provider";
 const nav = [
   ["Home", "/"],
   ["Schedule", "/schedule/"],
   ["Results", "/results/"],
   ["Players", "/players/"],
   ["Stats", "/stats/"],
+  ["Team", "/team/"],
 ];
 export function SiteShell({ children }: { children: ReactNode }) {
+  const auth = useAuth();
   const pathname = usePathname(),
     {
       seasonId,
@@ -96,11 +99,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <ChevronDown size={13} />
             </label>
             <Link
-              href="/captain/"
+              href={auth.member && !auth.captain ? "/team/" : "/captain/"}
               className={`captain-link ${pathname.includes("captain") ? "active" : ""}`}
             >
               <ShieldCheck size={15} />
-              <span>Captain’s area</span>
+              <span>
+                {auth.member && !auth.captain ? "Team area" : "Captain’s area"}
+              </span>
               <ArrowUpRight size={14} />
             </Link>
             <button

@@ -252,6 +252,13 @@ Include a mobile end-to-end check of the captain's entry flow before real use.
 
 ## Open decisions
 
+The team-account workflow now lives in `/team/` and `/captain/access/`.
+See [private team accounts](team-accounts.md) for invitation, membership, RSVP,
+lineup sharing and deployment details. Team data uses member-scoped projections;
+it is never included in the public/static snapshot. A verified identity claims
+its pending roster invitation when checking team access. RSVPs and formations
+remain separate from recorded appearances and result statistics.
+
 - Additional season/program IDs when this competition ends.
 - Playing formats and competition rules, including draws, playoffs, and forfeits?
 - Who enters stats, and what can they realistically record after each game?

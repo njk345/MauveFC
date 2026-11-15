@@ -16,16 +16,19 @@ export type Database = {
     Tables: {
       club_memberships: {
         Row: {
+          player_id: string | null;
           club_id: string;
           role: string;
           user_id: string;
         };
         Insert: {
+          player_id?: string | null;
           club_id: string;
           role: string;
           user_id: string;
         };
         Update: {
+          player_id?: string | null;
           club_id?: string;
           role?: string;
           user_id?: string;
@@ -475,6 +478,16 @@ export type Database = {
       };
     };
     Functions: {
+      get_team_access: { Args: { p_club_id: string }; Returns: Json };
+      get_team_club: { Args: { p_club_id: string }; Returns: Json };
+      get_player_accounts: { Args: { p_club_id: string }; Returns: Json };
+      prepare_player_invite: { Args: { p_club_id: string; p_player_id: string; p_email: string }; Returns: Json };
+      cancel_player_invite: { Args: { p_club_id: string; p_player_id: string; p_generation: string }; Returns: undefined };
+      revoke_player_access: { Args: { p_club_id: string; p_player_id: string }; Returns: undefined };
+      link_captain_profile: { Args: { p_club_id: string; p_player_id: string }; Returns: undefined };
+      save_match_rsvp: { Args: { p_match_id: string; p_response: string | null }; Returns: undefined };
+      save_match_lineup: { Args: { p_match_id: string; p_expected_revision: number; p_payload: Json; p_publish: boolean }; Returns: undefined };
+      unshare_match_lineup: { Args: { p_match_id: string; p_expected_revision: number }; Returns: undefined };
       apply_league_sync: {
         Args: { p_snapshot: Json; p_token: string };
         Returns: Json;
