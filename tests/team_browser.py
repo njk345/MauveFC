@@ -12,6 +12,7 @@ players=[{'id':pid,'name':f'Private Member {i}','number':i+1,'position':'Midfiel
 public={'players':[],'seasons':[{'id':S,'name':'Test season','competition':'Test league','format':'7v7'}],'roster':[],'matches':[{'id':M,'seasonId':S,'opponent':'Future FC','opponentCode':'FFC','color':'#657293','kickoff':'2099-01-01T20:00:00Z','venue':'Test pitch','round':1,'home':True,'status':'scheduled','revision':0}]}
 team={**copy.deepcopy(public),'players':players,'roster':[{'seasonId':S,'playerId':pid} for pid in ids],'rsvps':[]}
 published={'formation':'2-3-1','starters':ids[:7],'bench':[ids[7]]};draft=None;revision=1;accounts=[{'playerId':pid,'status':'unlinked','email':None,'role':None,'expiresAt':None} for pid in ids]
+posts=[{'id':'official-initial','matchId':M,'kind':'official','payload':copy.deepcopy(published),'authorName':'Test Captain','createdAt':'2026-11-13T12:00:00Z','canDelete':False}]
 counts={'verify':0,'password':0,'rsvp':0,'invite':0};errors=[]
 def identity(kind):
  return {'id':'33333333-3333-4333-8333-333333333333' if kind=='captain' else '44444444-4444-4444-8444-444444444444','aud':'authenticated','role':'authenticated','email':kind+'@example.com','app_metadata':{},'user_metadata':{},'created_at':'2026-11-09T00:00:00Z'}
@@ -50,15 +51,24 @@ def new_context(browser,kind=None,width=390):
    team['rsvps']=[r for r in team['rsvps'] if r['playerId']!=state['profile']]
    if body['p_response'] is not None:team['rsvps'].append({'matchId':M,'playerId':state['profile'],'response':body['p_response'],'updatedAt':'2026-11-13T12:00:00Z','needsConfirmation':False})
    payload=None
+  elif path.endswith('/get_lineup_posts'):
+   payload=[{**copy.deepcopy(post),'canDelete':post['kind']=='suggestion' and (state['kind']=='captain' or post.get('owner')==state['kind'])} for post in posts] if state['kind'] else {};status=200 if state['kind'] else 403
+  elif path.endswith('/post_lineup_suggestion'):
+   assert state['kind'];assert len(set(body['p_payload']['starters']))==7
+   pid='suggestion-'+str(len(posts));posts.insert(0,{'id':pid,'matchId':M,'kind':'suggestion','payload':copy.deepcopy(body['p_payload']),'authorName':'Private Member 1','createdAt':'2026-11-15T22:00:00Z','owner':state['kind']});payload=pid
+  elif path.endswith('/delete_lineup_suggestion'):
+   post=next(post for post in posts if post['id']==body['p_post_id']);assert post['kind']=='suggestion' and (state['kind']=='captain' or post['owner']==state['kind']);posts.remove(post);payload=None
   elif path.endswith('/save_match_lineup'):
    assert state['kind']=='captain'
    if body['p_expected_revision']!=revision:status=409;payload={'code':'40001','message':'Lineup changed'}
    else:
     revision+=1
-    if body['p_publish']:published=copy.deepcopy(body['p_payload']);draft=None
+    if body['p_publish']:
+     published=copy.deepcopy(body['p_payload']);draft=None
+     posts.insert(0,{'id':'official-'+str(revision),'matchId':M,'kind':'official','payload':copy.deepcopy(published),'authorName':'Test Captain','createdAt':'2026-11-15T21:00:00Z','canDelete':False})
     else:draft=copy.deepcopy(body['p_payload'])
     payload=None
-  elif path.endswith('/unshare_match_lineup'):draft=draft or published;published=None;revision+=1;payload=None
+  elif path.endswith('/unshare_match_lineup'):draft=draft or published;published=None;revision+=1;posts[:]=[post for post in posts if post['kind']!='official'];payload=None
   elif path.endswith('/get_player_accounts'):assert state['kind']=='captain';payload=accounts
   elif path.endswith('/link_captain_profile'):state['profile']=body['p_player_id'];payload=None
   elif path.endswith('/revoke_player_access'):
@@ -95,9 +105,12 @@ with sync_playwright() as p:
  page.goto(BASE+'/team/',wait_until='networkidle');page.get_by_role('button',name='Sign out',exact=True).click();expect(page.get_by_role('link',name='Team sign-in',exact=True)).to_be_visible();assert 'Private Member' not in page.locator('main').inner_text()
  print('PASS explicit invite acceptance, password setup, player privacy, own RSVP, reschedule confirmation and sign-out',flush=True);context.close()
  context,page,state=new_context(browser,'captain')
- page.goto(BASE+'/team/',wait_until='networkidle');expect(page.get_by_role('button',name='Share lineup',exact=True)).to_be_visible();page.get_by_role('combobox',name='Formation',exact=True).select_option('3-2-1');page.get_by_role('button',name='Save lineup draft',exact=True).click();expect(page.get_by_text('PRIVATE DRAFT',exact=True)).to_be_visible()
+ page.goto(BASE+'/team/',wait_until='networkidle');page.get_by_role('button',name='Create a lineup from this',exact=True).click();page.get_by_role('combobox',name='Formation',exact=True).select_option('3-2-1');page.get_by_role('button',name='Save lineup draft',exact=True).click();expect(page.get_by_text('PRIVATE DRAFT',exact=True)).to_be_visible()
  assert published['formation']=='2-3-1' and draft['formation']=='3-2-1'
- page.get_by_role('button',name='Share lineup',exact=True).click();expect(page.get_by_text('SHARED WITH TEAM',exact=True)).to_be_visible();assert published['formation']=='3-2-1' and draft is None
+ page.get_by_role('button',name='Export image',exact=True).click();expect(page.get_by_role('dialog')).to_be_visible()
+ expect(page.locator('.lineup-export-image')).to_have_attribute('alt','Captain draft: 3-2-1 formation for Mauve FC versus Future FC')
+ page.get_by_role('button',name='Close image export',exact=True).click()
+ page.get_by_role('button',name='Publish official lineup',exact=True).click();expect(page.get_by_text('OFFICIAL',exact=True)).to_be_visible();assert published['formation']=='3-2-1' and draft is None
  assert page.evaluate('document.documentElement.scrollWidth')<=390
  page.screenshot(path='artifacts/team-captain-390.png',full_page=True)
  page.set_viewport_size({'width':1440,'height':1000});page.screenshot(path='artifacts/team-captain-1440.png',full_page=True)
@@ -107,6 +120,39 @@ with sync_playwright() as p:
  page.get_by_role('combobox',name='Your roster profile',exact=True).select_option(ids[0]);page.get_by_role('button',name='Link my profile',exact=True).click()
  print('PASS captain lineup drafts/sharing, responsive pitch, private invitation UI and access revocation',flush=True);context.close()
  context,page,state=new_context(browser,'player');page.goto(BASE+'/login/',wait_until='networkidle');page.evaluate('localStorage.clear()');context.close()
- context,page,state=new_context(browser);page.goto(BASE+'/login/',wait_until='networkidle');page.get_by_role('textbox',name='Invited email').fill('player@example.com');page.get_by_label('Password',exact=True).fill('wrong-password');page.get_by_role('button',name='Sign in',exact=True).click();expect(page.locator('.auth-error[role="alert"]')).to_contain_text('could not be verified');page.get_by_label('Password',exact=True).fill('a-good-test-password');page.get_by_role('button',name='Sign in',exact=True).click();expect(page.get_by_role('heading',name='Our club. Our corner.')).to_be_visible();expect(page.get_by_role('heading',name='Our formation · 3-2-1')).to_be_visible()
+ context,page,state=new_context(browser);page.goto(BASE+'/login/',wait_until='networkidle');page.get_by_role('textbox',name='Invited email').fill('player@example.com');page.get_by_label('Password',exact=True).fill('wrong-password');page.get_by_role('button',name='Sign in',exact=True).click();expect(page.locator('.auth-error[role="alert"]')).to_contain_text('could not be verified');page.get_by_label('Password',exact=True).fill('a-good-test-password');page.get_by_role('button',name='Sign in',exact=True).click();expect(page.get_by_role('heading',name='Our club. Our corner.')).to_be_visible();expect(page.get_by_role('heading',name='The captain’s match plan.')).to_be_visible()
+ expect(page.get_by_role('combobox',name='Official lineups',exact=True)).to_have_value('official-3')
+ expect(page.get_by_role('button',name='Save lineup draft',exact=True)).to_have_count(0)
+ page.get_by_role('button',name='Create a lineup from this',exact=True).click()
+ page.get_by_role('combobox',name='Formation',exact=True).select_option('2-2-2')
+ expect(page.get_by_role('button',name='Save lineup draft',exact=True)).to_have_count(0)
+ expect(page.get_by_role('button',name='Publish official lineup',exact=True)).to_have_count(0)
+ page.get_by_role('button',name='Post suggestion',exact=True).click()
+ expect(page.get_by_text('SUGGESTION',exact=True)).to_be_visible()
+ assert published['formation']=='3-2-1'
+ expect(page.get_by_role('combobox',name='Team suggestions',exact=True)).not_to_have_value('')
+ page.evaluate('Object.defineProperty(navigator,"canShare",{configurable:true,value:()=>true});Object.defineProperty(navigator,"share",{configurable:true,value:async data=>{window.sharedImageName=data.files[0].name}})')
+ page.get_by_role('button',name='Export image',exact=True).click()
+ expect(page.get_by_role('dialog')).to_be_visible()
+ page.get_by_role('button',name='Share image',exact=True).click();assert page.evaluate('window.sharedImageName').endswith('.png')
+ with page.expect_download() as info:page.get_by_role('link',name='Download PNG',exact=True).click()
+ download=info.value;download.save_as('artifacts/lineup-export-member.png')
+ import struct
+ raw=Path('artifacts/lineup-export-member.png').read_bytes();assert raw[:8]==b'\x89PNG\r\n\x1a\n';assert struct.unpack('>II',raw[16:24])==(1200,1720)
+ page.get_by_role('button',name='Close image export',exact=True).click()
+ assert page.evaluate('document.documentElement.scrollWidth')<=390
+ page.screenshot(path='artifacts/lineup-suggestions-390.png',full_page=True)
+ page.get_by_role('combobox',name='Official lineups',exact=True).select_option('official-initial')
+ expect(page.locator('.formation-pitch')).to_have_attribute('aria-label','2-3-1 formation')
+ page.reload(wait_until='networkidle')
+ expect(page.get_by_role('combobox',name='Official lineups',exact=True)).to_have_value('official-3')
+ page.set_viewport_size({'width':1440,'height':1000});page.screenshot(path='artifacts/lineup-selectors-1440.png',full_page=True)
+ assert page.evaluate('document.documentElement.scrollWidth')<=1440
+ page.get_by_role('button',name='Create a lineup from this',exact=True).click()
+ page.get_by_role('combobox',name='Starter GK',exact=True).select_option('')
+ expect(page.get_by_role('button',name='Post suggestion',exact=True)).to_be_disabled()
+ page.get_by_role('button',name='Export image',exact=True).click();expect(page.get_by_role('dialog')).to_be_visible()
+ page.get_by_role('button',name='Close image export',exact=True).click()
  assert not errors,errors
+ print('PASS member creation/posts, separate selectors, latest official default, draft restrictions, incomplete and complete PNG export',flush=True)
  print('PASS returning player password sign-in and shared formation; no browser errors',flush=True);browser.close()

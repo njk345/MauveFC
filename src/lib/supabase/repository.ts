@@ -7,6 +7,7 @@ import type {
   Season,
   MatchRsvp,
   MatchLineup,
+  LineupPost,
   LineupPayload,
   PlayerAccount,
   RsvpResponse,
@@ -23,17 +24,39 @@ export type ClubSnapshot = {
 export type TeamSnapshot = ClubSnapshot & {
   rsvps: MatchRsvp[];
   lineups: MatchLineup[];
+  lineupPosts: LineupPost[];
 };
 export async function readTeamClub(): Promise<TeamSnapshot> {
-  const { data, error } = await getBrowserClient().rpc("get_team_club", {
-    p_club_id: clubId,
-  });
-  if (error)
+  const client = getBrowserClient();
+  const [team, posts] = await Promise.all([
+    client.rpc("get_team_club", { p_club_id: clubId }),
+    client.rpc("get_lineup_posts", { p_club_id: clubId }),
+  ]);
+  if (team.error || posts.error)
     throw new Error(
       "Team data could not be loaded. Check your membership and try again.",
     );
-  return data as TeamSnapshot;
+  return {
+    ...(team.data as TeamSnapshot),
+    lineupPosts: posts.data as LineupPost[],
+  };
 }
+export async function postLineupSuggestion(
+  matchId: string,
+  payload: LineupPayload,
+) {
+  const { data, error } = await getBrowserClient().rpc(
+    "post_lineup_suggestion",
+    {
+      p_match_id: matchId,
+      p_payload: payload,
+    },
+  );
+  if (error) throw new Error(error.message);
+  return data;
+}
+export const deleteLineupSuggestion = (postId: string) =>
+  teamWrite("delete_lineup_suggestion", { p_post_id: postId });
 export async function readPlayerAccounts(): Promise<PlayerAccount[]> {
   const { data, error } = await getBrowserClient().rpc("get_player_accounts", {
     p_club_id: clubId,

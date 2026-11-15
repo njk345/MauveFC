@@ -37,6 +37,15 @@ export type MatchLineup = {
   revision?: number;
   hasDraft?: boolean;
 };
+export type LineupPost = {
+  id: string;
+  matchId: string;
+  kind: "official" | "suggestion";
+  payload: LineupPayload;
+  authorName: string;
+  createdAt: string;
+  canDelete: boolean;
+};
 export type PlayerAccount = {
   playerId: string;
   status: "active" | "invited" | "expired" | "unlinked";
