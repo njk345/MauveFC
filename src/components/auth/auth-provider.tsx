@@ -12,6 +12,12 @@ import { clubId, configured, liveMode } from "@/lib/supabase/config";
 type Auth = {
   user: User | null;
   captain: boolean;
+  member: boolean;
+  playerId: string | null;
+  passwordSetup: boolean;
+  startPasswordSetup: () => void;
+  finishPasswordSetup: () => void;
+  refreshAccess: () => Promise<void>;
   loading: boolean;
   error: string;
   live: boolean;
@@ -22,10 +28,21 @@ const Context = createContext<Auth | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null),
     [captain, setCaptain] = useState(false),
+    [member, setMember] = useState(false),
+    [playerId, setPlayerId] = useState<string | null>(null),
+    [passwordSetup, setPasswordSetup] = useState(false),
     [loading, setLoading] = useState(configured),
     [error, setError] = useState("");
   useEffect(() => {
     if (!configured) return;
+    const callbackType = new URLSearchParams(window.location.hash.slice(1)).get(
+      "type",
+    );
+    if (
+      ["invite", "recovery"].includes(callbackType || "") &&
+      !new URLSearchParams(window.location.hash.slice(1)).has("token_hash")
+    )
+      setPasswordSetup(true);
     const client = getBrowserClient();
     let active = true,
       sequence = 0;
@@ -33,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const current = ++sequence;
       setLoading(true);
       setCaptain(false);
+      setMember(false);
+      setPlayerId(null);
       setError("");
       try {
         const {
@@ -44,20 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw authError;
         setUser(user);
         if (user) {
-          const { data, error } = await client
-            .from("club_memberships")
-            .select("role")
-            .eq("club_id", clubId)
-            .eq("user_id", user.id)
-            .maybeSingle();
+          const { data, error } = await client.rpc("get_team_access", {
+            p_club_id: clubId,
+          });
           if (error) throw error;
-          if (active && current === sequence)
+          if (active && current === sequence) {
             setCaptain(data?.role === "captain");
+            setMember(Boolean(data?.member));
+            setPlayerId(data?.playerId || null);
+          }
         }
       } catch {
         if (active && current === sequence) {
           setUser(null);
           setCaptain(false);
+          setMember(false);
+          setPlayerId(null);
           setError("We could not verify your session. Please sign in again.");
         }
       } finally {
@@ -67,7 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void check();
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange(() => {
+    } = client.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setPasswordSetup(true);
       setTimeout(() => {
         if (active) void check();
       }, 0);
@@ -82,12 +104,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error("Could not sign out. Please try again.");
     setUser(null);
     setCaptain(false);
+    setMember(false);
+    setPlayerId(null);
+    setPasswordSetup(false);
+  }
+  async function refreshAccess() {
+    const { data, error } = await getBrowserClient().rpc("get_team_access", {
+      p_club_id: clubId,
+    });
+    if (error) throw new Error("Team access could not be verified.");
+    setMember(Boolean(data?.member));
+    setCaptain(data?.role === "captain");
+    setPlayerId(data?.playerId || null);
   }
   return (
     <Context.Provider
       value={{
         user,
         captain,
+        member,
+        playerId,
+        passwordSetup,
+        startPasswordSetup: () => setPasswordSetup(true),
+        finishPasswordSetup: () => setPasswordSetup(false),
+        refreshAccess,
         loading,
         error,
         live: liveMode,

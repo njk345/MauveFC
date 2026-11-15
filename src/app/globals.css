@@ -4900,3 +4900,89 @@ footer {
 .league-page-note {display:flex;justify-content:space-between;align-items:center;gap:.75rem;flex-wrap:wrap;margin:-.5rem 0 1.5rem;}
 .league-page-note .standings-note {padding:0;margin:0;}
 @media(max-width:600px) { .list-toolbar {flex-wrap:wrap;gap:.75rem;} .list-toolbar .tabs {flex-wrap:wrap;} }
+
+/* Private team workspace */
+.team-privacy {display:flex;align-items:center;gap:.75rem;padding:1rem 1.2rem;background:var(--lavender,#eee7ef);border:1px solid var(--line);border-radius:6px;margin:0 0 1.6rem;color:var(--plum,#35243c);}
+.team-privacy p {margin:0;font-size:.85rem;line-height:1.6;}
+.team-privacy svg {flex:none;}
+.team-toolbar,.team-match-heading,.lineup-heading {display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;}
+.team-toolbar {margin-bottom:2rem;}
+.team-upcoming {margin:2.5rem 0;}
+.team-upcoming .section-heading {margin-bottom:1rem;}
+.team-empty {padding:2rem;border:1px dashed #cdbecd;border-radius:7px;background:#fbf9f6;text-align:center;}
+.team-empty h3 {margin:.75rem 0 .5rem;font-size:1.35rem;}
+.team-empty p {margin:.5rem auto;max-width:36rem;color:#726777;line-height:1.6;}
+.team-fixture {display:flex;justify-content:space-between;align-items:center;gap:1.5rem;background:#fcfaf7;border:1px solid var(--line);border-radius:6px;padding:1.5rem;margin:1rem 0;}
+.team-fixture h3 {font-size:1.5rem;margin:.5rem 0;}
+.team-fixture p {font-size:.85rem;color:#726777;}
+.rsvp-control {min-width:240px;max-width:360px;}
+.rsvp-buttons {display:flex;gap:.4rem;margin:.65rem 0;}
+.rsvp-buttons button {display:flex;align-items:center;justify-content:center;gap:.25rem;background:transparent;border:1px solid #cfc5ce;border-radius:5px;font:inherit;font-size:.85rem;padding:.65rem 1rem;min-width:70px;}
+.rsvp-buttons .chosen {background:#e3edae;border-color:#9aa955;color:#283512;}
+.rsvp-buttons .rsvp-out.chosen {background:#eee2e3;border-color:#bd8d90;color:#75373c;}
+.rsvp-buttons .rsvp-maybe.chosen {background:#f1e6ca;border-color:#bc9e52;color:#725817;}
+.rsvp-control .help-text {display:block;font-size:.72rem;margin-top:.7rem;}
+.rsvp-reconfirm {background:#f1e6ca;padding:.6rem;border-radius:4px;}
+.team-match-section {padding-top:2rem;border-top:1px solid var(--line);}
+.team-match-heading h2 {margin:.4rem 0;font-size:2rem;}
+.team-match-heading .form-field {min-width:240px;max-width:390px;flex:1;}
+.team-match-grid {display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,1.4fr);gap:1.5rem;margin-top:1.4rem;align-items:start;}
+.availability-panel,.lineup-panel {border:1px solid var(--line);border-radius:7px;padding:1.5rem;background:#fcfaf7;min-width:0;}
+.availability-panel h3,.lineup-panel h3 {font-size:1.5rem;margin:.4rem 0;}
+.availability-counts {display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin:1.5rem 0;}
+.availability-counts>div {display:flex;flex-direction:column;text-align:center;background:#eee8ee;border-radius:4px;padding:.7rem .2rem;}
+.availability-counts strong {font-family:var(--font-display);font-size:1.8rem;}
+.availability-counts span {font-size:.7rem;text-transform:uppercase;}
+.availability-counts .count-in {background:#e5edc6;}
+.availability-group {border-top:1px solid var(--line);padding:.8rem 0;}
+.availability-group h4 {display:flex;justify-content:space-between;font-size:.8rem;margin:0 0 .6rem;text-transform:uppercase;letter-spacing:.04em;}
+.availability-group ul {list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.6rem;font-size:.82rem;}
+.availability-group li {display:flex;gap:.6rem;align-items:baseline;}
+.availability-group li .muted {min-width:25px;font-size:.7rem;}
+.availability-group>p {margin:0;font-size:.8rem;}
+.lineup-heading .pill {font-size:.6rem;}
+.lineup-panel .form-field {margin:1rem 0 .6rem;}
+.formation-pitch {position:relative;min-height:460px;background:repeating-linear-gradient(to bottom,#42344c 0px,#42344c 65px,#493b52 65px,#493b52 130px);border-radius:6px;overflow:hidden;margin:1.25rem 0;}
+.pitch-boundary {position:absolute;inset:13px;border:1px solid #bfaac175;}
+.pitch-halfway {position:absolute;top:50%;left:13px;right:13px;border-top:1px solid #bfaac175;}
+.pitch-circle {position:absolute;top:50%;left:50%;width:75px;height:75px;transform:translate(-50%,-50%);border:1px solid #bfaac175;border-radius:50%;}
+.pitch-goal-area {position:absolute;left:33%;width:34%;height:50px;border:1px solid #bfaac175;}
+.pitch-goal-area.top {top:13px;}
+.pitch-goal-area.bottom {bottom:13px;}
+.formation-slot {position:absolute;transform:translate(-50%,-50%);width:29%;display:flex;flex-direction:column;align-items:center;gap:.35rem;min-width:0;color:#fff;z-index:1;}
+.formation-position {font-size:.6rem;letter-spacing:.12em;color:#dfd3e0;}
+.formation-player-number {display:grid;place-items:center;width:34px;height:36px;background:#dfeea2;color:#35243c;border-radius:6px 6px 10px 10px;border:2px solid #f1f6cf;font-family:var(--font-display);font-size:1.1rem;font-weight:800;}
+.formation-slot select {font:inherit;width:100%;min-width:0;padding:.3rem .1rem;font-size:.65rem;color:#35243c;background:#fbf9f5;border:1px solid #cbbdce;border-radius:3px;}
+.formation-slot>strong {font-size:.75rem;line-height:1.3;text-align:center;overflow-wrap:anywhere;max-width:100%;}
+.lineup-bench {padding:.6rem 0 1.3rem;}
+.lineup-bench h4 {font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;}
+.lineup-bench p {font-size:.85rem;line-height:1.7;}
+.bench-options {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;}
+.bench-options label {display:flex;align-items:center;gap:.4rem;font-size:.75rem;}
+.bench-options input {accent-color:#70516d;}
+.team-roster-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;}
+.team-player-card {display:flex;gap:1rem;padding:1.2rem;background:#fcfaf7;border:1px solid var(--line);border-radius:6px;overflow-wrap:anywhere;}
+.team-shirt-number {display:grid;place-items:center;width:42px;height:50px;flex:none;background:#e9e0e9;color:#65425f;border-radius:6px 6px 14px 14px;font-family:var(--font-display);font-weight:800;font-size:1.5rem;}
+.team-player-card h2 {font-size:1.3rem;margin:.1rem 0 .5rem;}
+.team-player-card .pill {margin-left:.4rem;}
+.team-player-card p {font-size:.8rem;line-height:1.6;margin:.6rem 0;}
+.team-player-card small {font-size:.65rem;color:#867889;display:block;margin-top:1rem;}
+.account-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem;align-items:start;}
+.account-grid .management-form {min-width:0;}
+.account-grid p {font-size:.85rem;line-height:1.7;}
+.invite-result {padding:1rem;margin-top:1.5rem;background:#eaf0d6;border:1px solid #cdd8ad;border-radius:5px;}
+.invite-result h3 {font-size:1.3rem;}
+.invite-result input {font-size:.75rem;}
+.account-list {margin-top:3rem;}
+.account-list article {display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1.25rem 0;border-bottom:1px solid var(--line);}
+.account-list article>div {display:flex;flex-direction:column;gap:.45rem;min-width:0;}
+.account-list strong {font-size:.9rem;}
+.account-list article>div>span {font-size:.75rem;color:#867889;overflow-wrap:anywhere;}
+.account-status {font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;background:#ece7eb;padding:.5rem .7rem;border-radius:4px;}
+.status-active {background:#e4edc5;}
+.status-invited {background:#f2e7cb;}
+.revoke-access {color:#8d4c57;}
+.auth-tabs {margin-bottom:1.5rem;}
+.captain-navigation nav {flex-wrap:wrap;}
+@media(max-width:900px){.team-roster-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.team-match-grid {grid-template-columns:minmax(0,1fr);}.availability-panel {order:2;}.lineup-panel {order:1;}.account-grid {grid-template-columns:minmax(0,1fr);}}
+@media(max-width:600px){.team-toolbar .tabs {flex-wrap:wrap;}.team-fixture {align-items:start;flex-direction:column;padding:1.1rem;}.rsvp-control {min-width:0;width:100%;max-width:none;}.rsvp-buttons button {flex:1;}.team-roster-grid {grid-template-columns:minmax(0,1fr);}.team-match-heading .form-field {min-width:0;max-width:100%;width:100%;}.team-match-heading {align-items:start;flex-direction:column;}.availability-panel,.lineup-panel {padding:1.1rem;}.formation-pitch {min-height:420px;}.formation-slot select {font-size:.6rem;}.bench-options {grid-template-columns:minmax(0,1fr);}.lineup-panel .button-row {gap:.6rem;flex-wrap:wrap;}.captain-navigation {align-items:start;gap:1rem;}.captain-navigation nav {gap:.7rem;}.account-list article>div:last-child {flex-direction:row;flex-wrap:wrap;gap:1rem;width:100%;}}

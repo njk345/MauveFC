@@ -31,6 +31,7 @@ class Handler(BaseHTTPRequestHandler):
    email=body['email'];self.send(200,{'access_token':token(email),'token_type':'bearer','expires_in':3600,'expires_at':int(time.time())+3600,'refresh_token':'contract-test-refresh','user':user(email)})
   elif self.path.startswith('/auth/v1/logout'):self.send(200,{})
   elif self.path.endswith('/get_public_club'):self.send(200,snapshot)
+  elif self.path.endswith('/get_team_access'):self.send(200,{'member':email=='captain@example.com','role':'captain' if email=='captain@example.com' else None,'playerId':P if email=='captain@example.com' else None})
   elif self.path.endswith('/get_captain_club'):
    self.send(200,snapshot) if email=='captain@example.com' else self.send(403,{'code':'42501','message':'Captain required'})
   elif self.path.endswith('/save_match_result'):self.send(409,{'code':'40001','message':'Match changed in another session'})

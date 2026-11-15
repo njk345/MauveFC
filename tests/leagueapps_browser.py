@@ -61,6 +61,7 @@ with sync_playwright() as p:
   if route.request.method=='OPTIONS':pass
   elif path.startswith('/auth/v1/user'):payload=user
   elif path.startswith('/rest/v1/club_memberships'):payload=[{'role':'captain'}]
+  elif path.endswith('/get_team_access'):payload={'member':True,'role':'captain','playerId':None}
   elif path.startswith('/rest/v1/match_drafts'):payload=[]
   elif path.endswith('/get_public_club'):payload=snapshot
   elif path.endswith('/get_captain_club'):

@@ -25,3 +25,5 @@ content_path = "./templates/sign-in.html"
 [functions.leagueapps-sync]
 # pg_net jobs authenticate with private, short-lived, single-use capabilities.
 verify_jwt = false
+[functions.player-invite]
+verify_jwt = true

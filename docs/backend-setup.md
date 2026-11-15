@@ -1,5 +1,9 @@
 # Captain auth and the first complete workflow
 
+Player accounts, private team access, RSVPs and captain-shared lineups are
+described in [the team workflow guide](team-accounts.md). Deploy that complete
+migration and its `player-invite` function before publishing the new team UI.
+
 The application supports two explicit modes. `demo` is the default and preserves the fictional, browser-local workspace. `live` uses Supabase Auth and Postgres. Live mode never falls back to sample data or browser-local writes, including when configuration or the database is unavailable.
 
 ## Current hosted status

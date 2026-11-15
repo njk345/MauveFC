@@ -15,6 +15,35 @@ export type PlayerStat = {
   goals: number;
   assists: number | null;
 };
+export type RsvpResponse = "in" | "maybe" | "out";
+export type MatchRsvp = {
+  matchId: string;
+  playerId: string;
+  response: RsvpResponse;
+  updatedAt: string;
+  needsConfirmation: boolean;
+};
+export type Formation = "2-3-1" | "3-2-1" | "2-2-2";
+export type LineupPayload = {
+  formation: Formation;
+  starters: (string | null)[];
+  bench: string[];
+};
+export type MatchLineup = {
+  matchId: string;
+  payload: LineupPayload;
+  shared: boolean;
+  updatedAt: string;
+  revision?: number;
+  hasDraft?: boolean;
+};
+export type PlayerAccount = {
+  playerId: string;
+  status: "active" | "invited" | "expired" | "unlinked";
+  email: string | null;
+  role: "captain" | "player" | null;
+  expiresAt: string | null;
+};
 export type Result = {
   baseRevision?: number;
   home: number;
