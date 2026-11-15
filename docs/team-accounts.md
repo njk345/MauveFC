@@ -64,9 +64,11 @@ records into the Supabase migration ledger.
 
 Deploy `supabase/functions/player-invite/index.ts` with its `deno.json`, keeping
 `verify_jwt = true`. Then build and publish the existing Site. Preserve its audience:
-Sites access is a separate outer gate from Supabase membership. If the prototype
-is owner-only, teammates must also be given Site access before invitation links
-can be used from their devices.
+Sites access is a separate outer gate from Supabase membership. The owner approved
+public access on November 15, 2026, so teammates can reach the club pages and
+sign-in without the owner-only Sites gate. The private roster, RSVPs and lineups
+still require invited Supabase membership; captain tools still require captain
+authorization.
 
 `npm test` executes the migration in PGlite with simulated Auth roles. The
 `tests/team_browser.py` contract test intercepts all service calls and uses a

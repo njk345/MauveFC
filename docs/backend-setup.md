@@ -10,7 +10,7 @@ The application supports two explicit modes. `demo` is the default and preserves
 
 - Supabase project: `maupvkabgveqvwkivtyh` (**Mauve FC**), organization **njk345**, region **us-east-1**, quoted **$0/month** on the Free plan.
 - Club ID: `f400610f-fa22-48cf-bc81-837743bab2a3`; season ID: `acd5a8e5-79ca-4d54-bbee-de5c0d7bd652`.
-- Auth and LeagueApps migrations are applied. Production contains only verified league fixtures/results; the fictional seed is never used.
+- Auth, LeagueApps and team-account migrations are applied. Production contains only verified league fixtures/results; the fictional seed is never used.
 - The first captain has verified email and active membership. New captain preauthorizations are private and consumed once after email verification. Revoking membership does not recreate it later.
 - The owner completed the dashboard setup and confirmed captain auth works. Keep the Site URL on `/login/` and public sign-ups disabled. These Auth controls are not exposed by the current connection.
 - [Auth URL settings](https://supabase.com/dashboard/project/maupvkabgveqvwkivtyh/auth/url-configuration), [email templates](https://supabase.com/dashboard/project/maupvkabgveqvwkivtyh/auth/templates), [Auth users](https://supabase.com/dashboard/project/maupvkabgveqvwkivtyh/auth/users).
@@ -42,7 +42,7 @@ insert into public.club_memberships(club_id,user_id,role)
 values ('CLUB_UUID','INVITED_AUTH_USER_UUID','captain');
 ```
 
-The current private Sites deployment uses static hosting with **live Supabase data**, built with `npm run build:preview` and the saved public project settings. Initial public HTML is generated from a fresh public-only snapshot, then refreshed from Supabase in the browser. The preview build script clears the previous build’s fetch cache before exporting, so a new publication cannot reuse old club data. No captain session or draft is embedded in that snapshot. New player profiles use a stable query route on static hosting. Demo mode remains available locally when `NEXT_PUBLIC_MAUVE_MODE=demo`. Its hosting manifest declares static assets. For the planned server deployment, use Vercel and leave `MAUVE_STATIC_EXPORT` unset; build-time `NEXT_PUBLIC_*` settings require a rebuild after changes. Keep the existing demo URL private until an audience change is explicitly requested.
+The current public Sites deployment uses static hosting with **live Supabase data**, built with `npm run build:preview` and the saved public project settings. Initial public HTML is generated from a fresh public-only snapshot, then refreshed from Supabase in the browser. The preview build script clears the previous build’s fetch cache before exporting, so a new publication cannot reuse old club data. No captain session or draft is embedded in that snapshot. New player profiles use a stable query route on static hosting. Demo mode remains available locally when `NEXT_PUBLIC_MAUVE_MODE=demo`. Its hosting manifest declares static assets. For the planned server deployment, use Vercel and leave `MAUVE_STATIC_EXPORT` unset; build-time `NEXT_PUBLIC_*` settings require a rebuild after changes. The owner approved public access on November 15, 2026. Public club pages and captain/player sign-in are reachable without the Sites owner gate; private team data still requires invited Supabase membership.
 
 ## Data and authorization
 
