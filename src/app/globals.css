@@ -5090,3 +5090,32 @@ footer {
   .lineup-selectors select {position:relative;}
   .lineup-selectors select::after {content:"";position:absolute;inset:0 0 0 auto;width:2.6rem;background:#f0e9f1 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m4 6 4 4 4-4' stroke='%23644965' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat;pointer-events:none;}
 }
+
+/* Installation uses the live site; no service worker or offline data cache. */
+.install-grid {display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:3rem;align-items:start;margin-top:2.5rem;}
+.install-preview {padding:2.5rem;border:1px solid #ded0df;background:#eee6ef;border-radius:14px;}
+.install-preview>img {display:block;border-radius:22px;box-shadow:0 7px 20px #34223816;margin-bottom:1.5rem;}
+.install-preview h2 {font-size:2.8rem;margin:0 0 .75rem;}
+.install-preview>p {font-size:.9rem;line-height:1.8;}
+.install-preview ul {list-style:none;display:grid;gap:1rem;margin:2rem 0;padding:0;font-size:.8rem;line-height:1.6;}
+.install-preview li {display:flex;gap:.65rem;align-items:flex-start;}
+.install-preview li svg {flex-shrink:0;margin-top:.15rem;}
+.install-preview>.help-text {font-size:.75rem;margin:0;}
+.install-instructions {padding:2rem 0;min-width:0;}
+.install-instructions>.eyebrow,.install-ready {display:flex;align-items:center;gap:.6rem;}
+.install-instructions h2 {font-size:2.5rem;margin:1rem 0 1.5rem;}
+.install-instructions>p {line-height:1.8;}
+.install-native {margin-bottom:1.75rem;}
+.install-native .help-text {margin:.75rem 0 0;}
+.install-tabs {width:fit-content;max-width:100%;flex-wrap:wrap;}
+.install-steps {list-style:none;counter-reset:install;display:grid;gap:1.5rem;padding:0;margin:2rem 0;}
+.install-steps li {counter-increment:install;display:grid;grid-template-columns:2rem minmax(0,1fr);column-gap:.9rem;align-items:start;}
+.install-steps li::before {content:counter(install);grid-row:1/3;display:grid;place-items:center;min-height:2rem;border-radius:50%;background:#eee6ef;color:var(--plum);font-weight:600;}
+.install-steps strong {font-size:.875rem;line-height:1.6;}
+.install-steps strong svg {display:inline-block;vertical-align:text-bottom;}
+.install-steps span {grid-column:2;font-size:.8rem;line-height:1.85;color:var(--muted);margin-top:.35rem;}
+.install-steps b {color:var(--plum);font-weight:500;}
+.install-ready {font-size:.7rem;font-weight:600;letter-spacing:.1em;color:#506236;}
+.install-status {padding:1rem 1.2rem;background:#eaf0d6;border-radius:8px;font-size:.8rem;line-height:1.7;}
+@media(max-width:760px){.install-grid {grid-template-columns:minmax(0,1fr);gap:1.5rem;}.install-preview {padding:1.75rem;order:2;}.install-instructions {padding:1rem 0;order:1;}.install-tabs button {padding:.7rem .85rem;}.install-instructions h2 {font-size:2.1rem;}}
+@media(display-mode:standalone){body {padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);}}
