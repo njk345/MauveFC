@@ -40,6 +40,14 @@ for source verification and ownership rules. The default local mode still uses
 fictional sample data. `npm run build` produces a server deployment and
 `npm run build:preview` explicitly produces the static export used by Sites.
 
+## Add to home screen
+
+Open `/install/` from the footer or mobile menu. The Mauve FC icon launches the
+Team area in a standalone window, with browser-specific instructions for iPhone,
+iPad, Android and computers. Existing invited sign-in is required for private
+team tools. Installation needs an internet connection and adds no offline cache
+of roster, lineup or account data. See [installation details](docs/home-screen-installation.md).
+
 ## Checks
 
 The private `/team/` area adds roster-linked player accounts, match RSVPs and

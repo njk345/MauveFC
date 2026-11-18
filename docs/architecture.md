@@ -1,11 +1,13 @@
 # Mauve FC — architecture sketch
 
-Status: the visual prototype and Supabase workflow implementation are complete in
-source. Captain auth, access policies, private drafts, and transactional publishing
-are tested locally and the hosted Supabase schema is connected. Auth dashboard
-configuration and the first captain’s real email verification remain pending.
-League imports remain a later step. See [backend setup](backend-setup.md). See
-[the project README](../README.md) for running and verifying the prototype.
+Status: the public club site, captain workflow, LeagueApps imports, invited player
+accounts, RSVPs, private drafts, official lineups and member suggestions are live.
+The application uses Next.js and Supabase, published on Sites. Home-screen
+installation adds a club icon and standalone launch into the private Team area;
+it requires connectivity and never creates an offline cache of team data.
+See [installation details](home-screen-installation.md), [team accounts](team-accounts.md)
+and [backend setup](backend-setup.md). Historical season import and richer private
+player cards remain in the team-features phase.
 
 ## Product shape
 
@@ -27,19 +29,19 @@ Remaining working assumptions:
 - Published results and approved player stats are public; accounts and RSVPs are private.
 - Captains maintain results and stats; players need no account just to have a profile.
 - Start with simple match totals rather than requiring live event tracking.
-- LeagueApps access is unverified. Manual scheduling must work independently.
+- LeagueApps public widgets are verified below. Manual scheduling also works independently.
 
 ## System boundary and stack
 
 ```mermaid
 flowchart TD
-    Fans[Fans and teammates] --> App[Next.js web app on Vercel]
+    Fans[Fans and teammates] --> App[Next.js web app on Sites]
     Captains[Captain's admin area] --> App
     App --> Auth[Supabase Auth]
     App --> DB[(Supabase Postgres)]
     App --> Media[Supabase Storage: player images]
     Timer[Scheduled trigger or captain refresh] --> Import[Server-side schedule importer]
-    Feed[LeagueApps calendar feed or authorized API] --> Import
+    Feed[LeagueApps public schedule/results and standings widgets] --> Import
     Import --> DB
 ```
 
@@ -51,7 +53,7 @@ flowchart TD
 | Media | Supabase Storage | Player photos without storing image files in the database |
 | UI | Tailwind + shadcn/ui + Motion | Custom club identity, accessible controls, restrained animation |
 | Charts | Recharts; custom SVG for pitches | Familiar charts plus football-specific graphics |
-| Hosting | Vercel | Next.js deployment and preview environments |
+| Hosting | Sites | Existing public deployment; Next.js static export with live Supabase reads |
 
 Use server-rendered pages for initial content. Add client-side components for
 charts, filters, forms, and later the formation builder. Save the home-screen install

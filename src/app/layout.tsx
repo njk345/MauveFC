@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { PrototypeProvider } from "@/components/prototype-provider";
 import { SiteShell } from "@/components/site-shell";
 import "./globals.css";
@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/auth/auth-provider";
 import { configured, liveMode } from "@/lib/supabase/config";
 import { readPublicClub } from "@/lib/supabase/repository";
 import { connection } from "next/server";
+import { InstallProvider } from "@/components/install-provider";
 export const metadata: Metadata = {
   title: {
     default: "Mauve FC — Thursday nights. Mauve forever.",
@@ -13,7 +14,25 @@ export const metadata: Metadata = {
   },
   description:
     "Mauve FC: a Brooklyn football club. Fixtures, results, the squad, and season stats.",
-  icons: { icon: "/icon.svg" },
+  icons: {
+    icon: "/icon.svg",
+    apple: [
+      {
+        url: "/icons/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+  appleWebApp: { capable: true, title: "Mauve FC", statusBarStyle: "default" },
+  other: { "apple-mobile-web-app-capable": "yes" },
+};
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#342238",
+  colorScheme: "light",
 };
 export default async function RootLayout({
   children,
@@ -40,7 +59,9 @@ export default async function RootLayout({
         </a>
         <AuthProvider>
           <PrototypeProvider bootstrap={bootstrap}>
-            <SiteShell>{children}</SiteShell>
+            <InstallProvider>
+              <SiteShell>{children}</SiteShell>
+            </InstallProvider>
           </PrototypeProvider>
         </AuthProvider>
       </body>

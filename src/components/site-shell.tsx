@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Check,
   ChevronDown,
+  Download,
   FlaskConical,
   Menu,
   RotateCcw,
@@ -16,6 +17,7 @@ import { Modal } from "./modal";
 import { Crest } from "./brand";
 import { usePrototype } from "./prototype-provider";
 import { useAuth } from "./auth/auth-provider";
+import { useInstall } from "./install-provider";
 const nav = [
   ["Home", "/"],
   ["Schedule", "/schedule/"],
@@ -26,6 +28,7 @@ const nav = [
 ];
 export function SiteShell({ children }: { children: ReactNode }) {
   const auth = useAuth();
+  const { installed } = useInstall();
   const pathname = usePathname(),
     {
       seasonId,
@@ -129,6 +132,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <Link onClick={() => setMenu(false)} href="/captain/">
               Captain’s area <ShieldCheck size={17} />
             </Link>
+            {!installed && (
+              <Link onClick={() => setMenu(false)} href="/install/">
+                Add to home screen <Download size={17} />
+              </Link>
+            )}
           </nav>
         )}
       </header>
@@ -136,6 +144,8 @@ export function SiteShell({ children }: { children: ReactNode }) {
         {live &&
         pathname !== "/login/" &&
         pathname !== "/login" &&
+        pathname !== "/install/" &&
+        pathname !== "/install" &&
         (!ready || loadError || !seasons.length) ? (
           <div className="section page-section">
             <div className="access-panel" role="status">
@@ -192,6 +202,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <Link href="/captain/">
               Captain’s area <ArrowUpRight size={14} />
             </Link>
+            {!installed && (
+              <Link href="/install/">
+                Add to home screen <Download size={14} />
+              </Link>
+            )}
           </div>
         </div>
         <div className="footer-bottom">
