@@ -24,6 +24,8 @@ import { Crest, Jersey, OpponentBadge } from "./brand";
 import { date, time } from "@/lib/format";
 import type { Match } from "@/lib/types";
 import { LeaguePageNote } from "./league-connection";
+import { useAuth } from "./auth/auth-provider";
+import { PlayerDirectory } from "./player-directory";
 export function PageHeading({
   eyebrow,
   title,
@@ -397,6 +399,8 @@ export function ResultsPage() {
   );
 }
 export function PlayersPage() {
+  const auth = useAuth();
+  const [view, setView] = useState("season");
   const {
       matches,
       seasonId,
@@ -427,97 +431,123 @@ export function PlayersPage() {
       <PageHeading
         eyebrow="OUR COLOURS. OUR PEOPLE."
         title="Meet the Mauve."
-        description="Twelve different stories. One very good reason to show up."
+        description="The players behind the club, season after season."
       />
-      <div className="roster-toolbar">
-        <label className="search-field">
-          <Search size={17} />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Find a teammate"
-            aria-label="Search players"
-          />
-          {search && (
-            <button
-              className="icon-button"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </label>
-        <label className="position-filter">
-          <SlidersHorizontal size={15} />
-          <span className="sr-only">Filter by position</span>
-          <select
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
-          >
-            {[
-              "All positions",
-              "Forward",
-              "Midfielder",
-              "Defender",
-              "Goalkeeper",
-            ].map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
-        </label>
-        <span className="muted small-text">{filtered.length} players</span>
-      </div>
-      <div className="player-grid">
-        {filtered.map((p, i) => (
-          <Link className="player-card" href={playerHref(p.id)} key={p.id}>
-            <div className={`player-shirt jersey-tone-${i % 3}`}>
-              <span className="shirt-number">
-                {String(p.number).padStart(2, "0")}
-              </span>
-              <Jersey number={p.number} />
-              <span className="player-initials">{p.initials}</span>
-              <ArrowUpRight size={20} />
-            </div>
-            <div className="player-info">
-              <span className="eyebrow">{p.position}</span>
-              <h2>{p.name}</h2>
-              <div className="player-mini-stats">
-                <span>
-                  <b>{p.appearances}</b> APPS
-                </span>
-                <span>
-                  <b>{p.goals}</b> GOALS
-                </span>
-                <span>
-                  <b>{p.assistsKnown ? p.assists : "—"}</b> ASSISTS
-                </span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-      {!filtered.length && (
-        <div className="empty-state">
-          <h2>No teammates found.</h2>
-          <p>Try a different name or position.</p>
+      {auth.member && (
+        <div className="tabs player-directory-tabs" aria-label="Player views">
           <button
-            className="button secondary"
-            onClick={() => {
-              setSearch("");
-              setPosition("All positions");
-            }}
+            type="button"
+            className={view === "season" ? "selected" : ""}
+            aria-pressed={view === "season"}
+            onClick={() => setView("season")}
           >
-            Clear filters
+            Season profiles
+          </button>
+          <button
+            type="button"
+            className={view === "directory" ? "selected" : ""}
+            aria-pressed={view === "directory"}
+            onClick={() => setView("directory")}
+          >
+            Club directory
           </button>
         </div>
       )}
-      <p className="muted coverage-note">
-        {live
-          ? "Player profiles and shirt illustrations."
-          : "Sample profiles and shirt illustrations."}{" "}
-        Player totals reflect the selected season’s published results.
-      </p>
+      {auth.member && view === "directory" ? (
+        <PlayerDirectory key={auth.user?.id} />
+      ) : (
+        <>
+          <div className="roster-toolbar">
+            <label className="search-field">
+              <Search size={17} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Find a teammate"
+                aria-label="Search players"
+              />
+              {search && (
+                <button
+                  className="icon-button"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear search"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </label>
+            <label className="position-filter">
+              <SlidersHorizontal size={15} />
+              <span className="sr-only">Filter by position</span>
+              <select
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+              >
+                {[
+                  "All positions",
+                  "Forward",
+                  "Midfielder",
+                  "Defender",
+                  "Goalkeeper",
+                ].map((p) => (
+                  <option key={p}>{p}</option>
+                ))}
+              </select>
+            </label>
+            <span className="muted small-text">{filtered.length} players</span>
+          </div>
+          <div className="player-grid">
+            {filtered.map((p, i) => (
+              <Link className="player-card" href={playerHref(p.id)} key={p.id}>
+                <div className={`player-shirt jersey-tone-${i % 3}`}>
+                  <span className="shirt-number">
+                    {String(p.number).padStart(2, "0")}
+                  </span>
+                  <Jersey number={p.number} />
+                  <span className="player-initials">{p.initials}</span>
+                  <ArrowUpRight size={20} />
+                </div>
+                <div className="player-info">
+                  <span className="eyebrow">{p.position}</span>
+                  <h2>{p.name}</h2>
+                  <div className="player-mini-stats">
+                    <span>
+                      <b>{p.appearances}</b> APPS
+                    </span>
+                    <span>
+                      <b>{p.goals}</b> GOALS
+                    </span>
+                    <span>
+                      <b>{p.assistsKnown ? p.assists : "—"}</b> ASSISTS
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          {!filtered.length && (
+            <div className="empty-state">
+              <h2>No teammates found.</h2>
+              <p>Try a different name or position.</p>
+              <button
+                className="button secondary"
+                onClick={() => {
+                  setSearch("");
+                  setPosition("All positions");
+                }}
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+          <p className="muted coverage-note">
+            {live
+              ? "Player profiles and shirt illustrations."
+              : "Sample profiles and shirt illustrations."}{" "}
+            Player totals reflect the selected season’s published results.
+          </p>
+        </>
+      )}
     </div>
   );
 }

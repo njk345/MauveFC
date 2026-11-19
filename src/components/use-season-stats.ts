@@ -45,8 +45,15 @@ export function useSeasonStats() {
     return {
       data: sampleSeasonStats(
         matches.filter((m) => m.seasonId === seasonId),
-        players.filter((p) =>
-          roster.some((r) => r.seasonId === seasonId && r.playerId === p.id),
+        players.filter(
+          (p) =>
+            roster.some(
+              (r) => r.seasonId === seasonId && r.playerId === p.id,
+            ) ||
+            matches.some(
+              (m) =>
+                m.seasonId === seasonId && m.guestPlayerIds?.includes(p.id),
+            ),
         ),
       ),
       loading: false,

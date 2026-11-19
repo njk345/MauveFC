@@ -288,6 +288,7 @@ export function StatsPage() {
                         <strong>{p.name}</strong>
                         <small>
                           #{p.number} · {p.position}
+                          {p.isGuest ? " · Guest" : ""}
                         </small>
                       </span>
                     </div>
@@ -298,6 +299,7 @@ export function StatsPage() {
                         <strong>{p.name}</strong>
                         <small>
                           #{p.number} · {p.position}
+                          {p.isGuest ? " · Guest" : ""}
                         </small>
                       </span>
                     </Link>

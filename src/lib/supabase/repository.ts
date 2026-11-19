@@ -12,6 +12,8 @@ import type {
   PlayerAccount,
   RsvpResponse,
   SeasonStatsSnapshot,
+  DirectoryPlayer,
+  GuestChange,
 } from "../types";
 import { clubId, publishableKey, supabaseUrl } from "./config";
 import { getBrowserClient } from "./client";
@@ -172,13 +174,58 @@ export async function readCaptainClub(): Promise<ClubSnapshot> {
   if (error) throw new Error("Captain access could not be verified.");
   return data as ClubSnapshot;
 }
-export async function readSeasonStats(seasonId: string): Promise<SeasonStatsSnapshot> {
+export async function readSeasonStats(
+  seasonId: string,
+): Promise<SeasonStatsSnapshot> {
   const { data, error } = await getBrowserClient().rpc("get_season_stats", {
     p_club_id: clubId,
     p_season_id: seasonId,
   });
-  if (error) throw new Error("Player stats could not be loaded. Please try again.");
+  if (error)
+    throw new Error("Player stats could not be loaded. Please try again.");
   return data as SeasonStatsSnapshot;
+}
+export async function readPlayerDirectory(): Promise<DirectoryPlayer[]> {
+  const { data, error } = await getBrowserClient().rpc("get_player_directory", {
+    p_club_id: clubId,
+  });
+  if (error)
+    throw new Error(
+      "The player directory could not be loaded. Check your team access and try again.",
+    );
+  return data as DirectoryPlayer[];
+}
+export type GuestInput = {
+  playerId?: string;
+  player?: Pick<Player, "name" | "number" | "position">;
+  allowSameName?: boolean;
+  remove?: boolean;
+};
+export async function writeMatchGuest(
+  matchId: string,
+  revision: number,
+  input: GuestInput,
+): Promise<GuestChange> {
+  const { data, error } = input.remove
+    ? await getBrowserClient().rpc("remove_match_guest", {
+        p_match_id: matchId,
+        p_expected_revision: revision,
+        p_player_id: input.playerId!,
+      })
+    : await getBrowserClient().rpc("add_match_guest", {
+        p_match_id: matchId,
+        p_expected_revision: revision,
+        p_player_id: input.playerId || null,
+        p_player: input.player || null,
+        p_allow_same_name: input.allowSameName || false,
+      });
+  if (error)
+    throw new Error(
+      error.code === "40001"
+        ? "This match changed. Reload its latest record before changing guests; your unsaved edits are still here."
+        : error.message,
+    );
+  return data as GuestChange;
 }
 export async function readDrafts() {
   const { data, error } = await getBrowserClient()

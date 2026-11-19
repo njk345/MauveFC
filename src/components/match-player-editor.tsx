@@ -7,14 +7,27 @@ export function MatchPlayerEditor({
   players,
   result: r,
   onChange,
+  guestPlayerIds = [],
 }: {
   players: Player[];
   result: Result;
   onChange: (fields: Partial<Result>) => void;
+  guestPlayerIds?: string[];
 }) {
   function updatePlayer(id: string, fields: Partial<PlayerStat>) {
     onChange({
-      stats: r.stats.map((s) => (s.playerId === id ? { ...s, ...fields } : s)),
+      stats: r.stats.some((s) => s.playerId === id)
+        ? r.stats.map((s) => (s.playerId === id ? { ...s, ...fields } : s))
+        : [
+            ...r.stats,
+            {
+              playerId: id,
+              appeared: false,
+              goals: 0,
+              assists: r.assists === "complete" ? 0 : null,
+              ...fields,
+            },
+          ],
       ...(fields.appeared && r.attendance === "unrecorded"
         ? { attendance: "partial" as const }
         : {}),
@@ -100,7 +113,12 @@ export function MatchPlayerEditor({
           <span>ASSISTS</span>
         </div>
         {players.map((p) => {
-          const s = r.stats.find((s) => s.playerId === p.id)!;
+          const s = r.stats.find((s) => s.playerId === p.id) || {
+            playerId: p.id,
+            appeared: false,
+            goals: 0,
+            assists: r.assists === "complete" ? 0 : null,
+          };
           return (
             <div
               className={`roster-entry ${s.appeared ? "played" : ""}`}
@@ -108,7 +126,12 @@ export function MatchPlayerEditor({
             >
               <span>
                 <small>#{p.number}</small>
-                <strong>{p.name}</strong>
+                <strong>
+                  {p.name}
+                  {guestPlayerIds.includes(p.id) && (
+                    <span className="guest-player-badge">Guest</span>
+                  )}
+                </strong>
               </span>
               <label className="attendance-check">
                 <span className="sr-only">{p.name} played</span>

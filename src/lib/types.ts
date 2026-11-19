@@ -15,10 +15,22 @@ export type PlayerStat = {
   goals: number;
   assists: number | null;
 };
+export type DirectoryPlayer = Player & {
+  rosterSeasonIds: string[];
+  guestGames: number;
+  appearances: number;
+};
+export type GuestChange = {
+  matchId: string;
+  revision: number;
+  action: "add" | "remove";
+  player: Player;
+};
 export type PlayerSeasonStats = Pick<
   Player,
   "id" | "name" | "number" | "position" | "initials" | "isPublic"
 > & {
+  isGuest?: boolean;
   appearances: number;
   goals: number;
   assists: number;
@@ -92,6 +104,7 @@ export type Result = {
   updatedAt?: string;
 };
 export type Match = {
+  guestPlayerIds?: string[];
   source?: "leagueapps";
   externalId?: string;
   fixtureOverride?: boolean;

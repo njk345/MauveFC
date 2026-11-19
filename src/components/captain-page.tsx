@@ -23,6 +23,8 @@ import {
   blankResult as blank,
   expandResult as expand,
 } from "@/features/matches/player-stats";
+import { MatchGuests } from "./match-guests";
+import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 export function CaptainPage() {
   const {
       matches,
@@ -36,21 +38,21 @@ export function CaptainPage() {
       ready,
       resetVersion,
     } = usePrototype(),
-    players = allPlayers.filter((p) =>
-      roster.some((sr) => sr.seasonId === seasonId && sr.playerId === p.id),
-    ),
     fixtures = matches.filter(
       (m) => m.seasonId === seasonId && m.status !== "cancelled",
     ),
     [selectedId, setSelectedId] = useState(""),
-    [r, setR] = useState<Result>(() => blank(players)),
+    [r, setR] = useState<Result>(() => blank([])),
     [step, setStep] = useState(0),
     [errors, setErrors] = useState<string[]>([]),
     [success, setSuccess] = useState(false),
     [dirty, setDirty] = useState(false),
-    [saving, setSaving] = useState(false);
+    [saving, setSaving] = useState(false),
+    [guestBusy, setGuestBusy] = useState(false);
   const match = fixtures.find((m) => m.id === selectedId);
+  const players = matchPlayers(allPlayers, roster, match);
   function load(m: Match) {
+    const players = matchPlayers(allPlayers, roster, m);
     setSelectedId(m.id);
     setR({
       ...expand(drafts[m.id] || m.result || blank(players), players),
@@ -93,6 +95,7 @@ export function CaptainPage() {
     });
   }
   async function save(published: boolean) {
+    if (saving || guestBusy) return;
     const next = { ...r, published },
       issues = published
         ? validateResult(next, players)
@@ -226,6 +229,7 @@ export function CaptainPage() {
               <span className="eyebrow">CHOOSE A MATCH</span>
               <select
                 aria-label="Choose a match"
+                disabled={saving || guestBusy}
                 value={selectedId}
                 onChange={(e) => {
                   if (
@@ -251,6 +255,32 @@ export function CaptainPage() {
                 ))}
               </select>
             </label>
+            {match && (
+              <MatchGuests
+                key={match.id}
+                match={match}
+                players={allPlayers}
+                revision={r.baseRevision}
+                disabled={saving || guestBusy}
+                canRemove={!dirty}
+                onBusy={setGuestBusy}
+                onChange={(change) => {
+                  const pool = matchPlayers(
+                    [
+                      ...allPlayers.filter((p) => p.id !== change.player.id),
+                      change.player,
+                    ],
+                    roster,
+                    applyGuestToMatch(match, change),
+                  );
+                  setR((current) => ({
+                    ...expand(current, pool),
+                    baseRevision: change.revision,
+                  }));
+                  setErrors([]);
+                }}
+              />
+            )}
             <ol className="entry-steps">
               {["The score", "The squad", "Preview & publish"].map((s, i) => (
                 <li
@@ -397,6 +427,7 @@ export function CaptainPage() {
                 </p>
                 <MatchPlayerEditor
                   players={players}
+                  guestPlayerIds={match?.guestPlayerIds}
                   result={r}
                   onChange={patch}
                 />
@@ -479,7 +510,7 @@ export function CaptainPage() {
             <div className="entry-footer">
               <button
                 className="text-link"
-                disabled={saving}
+                disabled={saving || guestBusy}
                 onClick={() => void save(false)}
               >
                 <Save size={16} /> Save draft
@@ -503,7 +534,7 @@ export function CaptainPage() {
                   </button>
                 ) : (
                   <button
-                    disabled={saving}
+                    disabled={saving || guestBusy}
                     className="button"
                     onClick={() => void save(true)}
                   >

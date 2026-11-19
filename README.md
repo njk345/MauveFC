@@ -76,6 +76,34 @@ Run `MAUVE_BASE_URL=http://127.0.0.1:3000 python tests/player_stats_browser.py`
 against a served live-mode production export for isolated browser verification.
 The test intercepts all service requests and makes no production writes.
 
+## Guest substitutes and the player directory
+
+Captains can use **Guest substitutes** in the match’s Player stats, Results or
+Team & lineups screen. Search all known club players, including former season
+roster players, or create a new private player and add them to this game. The
+same person keeps their existing player ID across games and seasons. Matching
+names are shown before creation; a genuinely different person with the same name
+requires explicit confirmation and receives a distinct ID.
+
+Guest assignment does not add season-roster membership, create an account, or
+record an appearance. Check **Played** and enter stats separately. Registered
+guests are eligible for that game’s starters, bench, positioned substitutes,
+captain drafts, official lineups, member suggestions and image exports. Guests
+contribute once to season player stats, with the normal profile-privacy rules.
+Official team goals still come from match results; assists sum recorded players.
+
+**Players → Club directory** is available to signed-in team members. It includes
+current and past roster players and guests, with roster-season history, guest
+assignments and recorded appearances. Existing roster players already share this
+directory. Unused game assignments can be removed while keeping the person’s
+record. Recorded appearances, current lineup references and published lineup
+history protect used assignments from removal. Adding guests preserves unsaved
+stats/formations and advances the captain’s own saved result-draft revision.
+
+Run `python tests/guests_browser.py` against the production preview on port 3100
+for isolated guest creation/reuse, stats, lineups, exports, directory and privacy
+checks. All service requests are intercepted; tests make no production writes.
+
 ## Add to home screen
 
 Open `/install/` from the footer or mobile menu. The Mauve FC icon launches the
