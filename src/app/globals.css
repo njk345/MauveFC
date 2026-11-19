@@ -5157,6 +5157,8 @@ footer {
 
 /* Private captain match records */
 .captain-stats-page {max-width:1280px;}
+.captain-stats-page .page-heading p {font-size:1rem;line-height:1.7;}
+.captain-stats-page .button {font-size:.875rem;}
 .stats-privacy-note {display:flex;align-items:center;gap:.65rem;font-size:.875rem;color:#705568;line-height:1.6;margin:0 0 2rem;}
 .stats-privacy-note svg {flex-shrink:0;}
 .stats-season-summary {display:flex;align-items:center;justify-content:space-between;gap:2rem;margin-bottom:1.75rem;padding:1.5rem 0;border-block:1px solid #dfd2dc;}
@@ -5196,6 +5198,7 @@ footer {
 .match-player-editor .own-goals {display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;font-size:.875rem;line-height:1.6;padding-top:1.25rem;margin-top:.5rem;}
 .match-player-editor .own-goals label {font-size:.875rem;display:flex;align-items:center;gap:.75rem;}
 .match-player-editor .own-goals input {font-size:1rem;min-height:44px;width:60px;border-radius:7px;}
+.match-player-editor .own-goals>span {font-size:.75rem;}
 .stats-save-bar {display:flex;justify-content:space-between;align-items:center;gap:1rem;border-top:1px solid #dfd2dc;margin-top:1.5rem;padding-top:1.5rem;}
 .stats-save-bar p {font-size:.875rem;color:#705568;}
 .stats-save-note {font-size:.75rem;line-height:1.7;color:#705568;margin-top:1rem;}
