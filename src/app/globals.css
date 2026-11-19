@@ -5154,3 +5154,83 @@ footer {
 .lineup-image-feedback {flex-basis:100%;margin:.25rem 0;}
 .lineup-export-dialog>.help-text {font-size:.8rem;line-height:1.6;}
 .lineup-export-dialog>.help-text:first-of-type {font-size:1rem;line-height:1.65;}
+
+/* Private captain match records */
+.captain-stats-page {max-width:1280px;}
+.stats-privacy-note {display:flex;align-items:center;gap:.65rem;font-size:.875rem;color:#705568;line-height:1.6;margin:0 0 2rem;}
+.stats-privacy-note svg {flex-shrink:0;}
+.stats-season-summary {display:flex;align-items:center;justify-content:space-between;gap:2rem;margin-bottom:1.75rem;padding:1.5rem 0;border-block:1px solid #dfd2dc;}
+.stats-season-summary h2 {font-family:var(--display);font-size:1.75rem;margin:.35rem 0;}
+.stats-season-summary p {font-size:.875rem;line-height:1.6;max-width:42rem;color:#705568;}
+.stats-season-summary .button {flex-shrink:0;}
+.player-stats-layout {display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:2rem;align-items:start;}
+.player-stats-form {min-width:0;background:#fffdf9;border:1px solid #dfd2dc;border-radius:12px;padding:2rem;}
+.player-stats-form>.form-field {margin:0;}
+.player-stats-form .form-field>span {font-size:.875rem;}
+.player-stats-form .form-field select,.match-player-editor .capture-select select {font:inherit;font-size:1rem;min-height:46px;padding:.75rem 2rem .75rem .85rem;border:1px solid #cbbac6;border-radius:8px;background-color:#f8f4f6;color:#493443;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23705568' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .75rem center;}
+.player-stats-form select:focus-visible,.match-player-editor select:focus-visible,.match-player-editor input:focus-visible {outline:2px solid #815573;outline-offset:3px;}
+.stats-game-heading {padding:1.75rem 0 1.25rem;border-bottom:1px solid #e9e1e7;}
+.captain-stats-page .eyebrow {font-size:.75rem;}
+.stats-game-heading h2 {font-family:var(--display);font-size:clamp(1.6rem,3vw,2.2rem);line-height:1.2;margin:.65rem 0;overflow-wrap:anywhere;}
+.stats-game-heading p {font-size:.875rem;color:#705568;line-height:1.6;}
+.player-stats-form fieldset {padding:0;margin:0;min-width:0;border:0;}
+.match-player-editor .capture-controls {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:1.5rem 0 1rem;}
+.match-player-editor .capture-select {font-size:.875rem;gap:.5rem;min-width:0;}
+.match-player-editor .capture-select select {font-size:.875rem;width:100%;}
+.stats-recording-help {font-size:.875rem;line-height:1.7;color:#705568;margin-bottom:1.5rem;}
+.match-player-editor .roster-head,.match-player-editor .roster-entry {grid-template-columns:minmax(0,1fr) 64px 64px 64px;gap:1rem;}
+.match-player-editor .roster-head {font-size:.75rem;letter-spacing:.04em;}
+.match-player-editor .roster-entry {padding:1rem 0;}
+.match-player-editor .roster-entry>span {min-width:0;gap:.6rem;}
+.match-player-editor .roster-entry strong {font-size:1rem;white-space:normal;overflow-wrap:anywhere;line-height:1.4;}
+.match-player-editor .roster-entry small {font-size:.75rem;width:auto;}
+.match-player-editor .roster-entry>span>small {flex-shrink:0;}
+.match-player-editor .attendance-check {align-items:center;justify-content:center;min-width:44px;min-height:44px;}
+.match-player-editor .attendance-check input {width:44px;height:44px;z-index:1;}
+.match-player-editor .attendance-check>span:not(.sr-only) {width:30px;height:30px;border-radius:7px;}
+.player-stat-input {display:flex;align-items:center;justify-content:center;min-width:0;}
+.player-stat-input input {font:inherit;font-size:1rem;width:60px;min-height:44px;text-align:center;padding:.5rem .2rem;border:1px solid #cbbac6;border-radius:7px;background:#fffdf9;appearance:textfield;-moz-appearance:textfield;}
+.player-stat-input input::-webkit-inner-spin-button {appearance:none;}
+.player-stat-input input:disabled {background:#f3eff1;color:#9a8393;border-color:#e4dbe1;}
+.stats-mobile-label {display:none;}
+.match-player-editor .own-goals {display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;font-size:.875rem;line-height:1.6;padding-top:1.25rem;margin-top:.5rem;}
+.match-player-editor .own-goals label {font-size:.875rem;display:flex;align-items:center;gap:.75rem;}
+.match-player-editor .own-goals input {font-size:1rem;min-height:44px;width:60px;border-radius:7px;}
+.stats-save-bar {display:flex;justify-content:space-between;align-items:center;gap:1rem;border-top:1px solid #dfd2dc;margin-top:1.5rem;padding-top:1.5rem;}
+.stats-save-bar p {font-size:.875rem;color:#705568;}
+.stats-save-note {font-size:.75rem;line-height:1.7;color:#705568;margin-top:1rem;}
+.stats-save-note a {text-decoration:underline;text-underline-offset:3px;}
+.stats-save-success {display:flex;align-items:center;gap:.6rem;padding:1rem;background:#edf3df;color:#415033;border-radius:8px;font-size:.875rem;line-height:1.6;margin-top:1.25rem;}
+.stats-save-success svg {flex-shrink:0;}
+.stats-next-step {padding:2rem 0;}
+.stats-next-step h3 {font-family:var(--display);font-size:1.6rem;}
+.stats-next-step p {font-size:1rem;line-height:1.7;margin:.75rem 0 1.5rem;}
+.stats-match-history {padding:1.5rem;border-radius:12px;background:#eee6ec;}
+.stats-match-history h2 {font-family:var(--display);font-size:1.8rem;margin:.5rem 0;}
+.stats-match-history>p {font-size:.875rem;line-height:1.6;color:#705568;margin-bottom:1.5rem;}
+.stats-match-history button {width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem;border:1px solid transparent;border-bottom-color:#d9cbd5;border-radius:8px;background:transparent;color:#493443;cursor:pointer;}
+.stats-match-history button[aria-pressed="true"] {background:#fffdf9;border-color:#b99daf;}
+.stats-match-history button:hover {background:#f8f4f6;}
+.stats-match-history button span {display:flex;flex-direction:column;gap:.35rem;min-width:0;}
+.stats-match-history button strong {font-size:1rem;line-height:1.4;overflow-wrap:anywhere;}
+.stats-match-history button small {font-size:.75rem;line-height:1.5;color:#705568;}
+.stats-match-history button b {font-family:var(--display);font-size:1.5rem;white-space:nowrap;}
+@media(max-width:1000px){.player-stats-layout {grid-template-columns:minmax(0,1fr);}.stats-match-history {max-height:32rem;overflow-y:auto;}.stats-season-summary {align-items:start;}.player-stats-form {padding:1.5rem;}}
+@media(max-width:600px){
+  .stats-season-summary {flex-direction:column;gap:1rem;}
+  .player-stats-form {padding:1rem;}
+  .match-player-editor .capture-controls {grid-template-columns:minmax(0,1fr);gap:.85rem;}
+  .match-player-editor .capture-select {display:grid;grid-template-columns:6rem minmax(0,1fr);align-items:center;}
+  .match-player-editor .roster-head {display:none;}
+  .match-player-editor .roster-entry {grid-template-columns:repeat(3,minmax(0,1fr));gap:.85rem .5rem;padding:1.25rem .5rem;}
+  .match-player-editor .roster-entry>span {grid-column:1/-1;}
+  .match-player-editor .roster-entry.played {background:#f8f4f6;}
+  .stats-mobile-label {display:block;color:#705568;font-size:.75rem;line-height:1.4;}
+  .player-stat-input {flex-direction:column;gap:.4rem;}
+  .match-player-editor .attendance-check {flex-direction:column-reverse;gap:.4rem;}
+  .match-player-editor .attendance-check>span:not(.sr-only) {width:44px;height:44px;}
+  .match-player-editor .attendance-check input {bottom:0;}
+  .match-player-editor .own-goals {align-items:start;flex-direction:column;gap:.75rem;}
+  .stats-save-bar {align-items:stretch;flex-direction:column;}
+  .stats-save-bar .button {justify-content:center;}
+}

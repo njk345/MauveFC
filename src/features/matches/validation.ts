@@ -56,6 +56,13 @@ export function validateResult(
     );
   if (r.assists === "unrecorded" && r.stats.some((s) => s.assists !== null))
     errors.push("Unrecorded assists must remain unknown.");
+  if (
+    r.assists === "complete" &&
+    r.stats.some((s) => s.appeared && s.assists === null)
+  )
+    errors.push(
+      "Complete assists require a known total for every player who played.",
+    );
   return errors;
 }
 

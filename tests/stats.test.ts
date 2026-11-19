@@ -120,6 +120,34 @@ test("unknown assists remain distinct from a recorded zero", () => {
     true,
   );
 });
+
+test("complete assists reject unknown totals while partial historical records remain valid", () => {
+  const historical = basic({
+    basis: "played",
+    home: 3,
+    away: 0,
+    onFieldHome: 3,
+    onFieldAway: 0,
+    attendance: "partial",
+    scorers: "partial",
+    assists: "partial",
+    stats: [{ playerId: "alex", appeared: true, goals: 1, assists: null }],
+  });
+  assert.deepEqual(validateResult(historical), []);
+  assert.ok(
+    validateResult({ ...historical, assists: "complete" }).some((e) =>
+      e.includes("known total"),
+    ),
+  );
+  assert.deepEqual(
+    validateResult({
+      ...historical,
+      assists: "complete",
+      stats: [{ ...historical.stats[0], assists: 0 }],
+    }),
+    [],
+  );
+});
 test("invalid totals and ineligible players cannot publish", () => {
   assert.ok(validateResult(basic({ home: -1 })).length);
   assert.ok(

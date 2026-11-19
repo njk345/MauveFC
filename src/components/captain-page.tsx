@@ -7,78 +7,22 @@ import {
   ArrowUpRight,
   Check,
   CheckCircle2,
-  Circle,
   Eye,
   Info,
   Save,
   ShieldCheck,
 } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
-import type { Player } from "@/lib/types";
 import { date } from "@/lib/format";
-import type { Capture, Match, Result } from "@/lib/types";
+import type { Match, Result } from "@/lib/types";
 import { validateDraft, validateResult } from "@/features/matches/validation";
 import { PageHeading } from "./season-pages";
 import { Crest, OpponentBadge } from "./brand";
-function blank(players: Player[]): Result {
-  return {
-    home: 0,
-    away: 0,
-    onFieldHome: 0,
-    onFieldAway: 0,
-    basis: "played",
-    reason: "",
-    attendance: "unrecorded",
-    scorers: "unrecorded",
-    assists: "unrecorded",
-    ownGoals: 0,
-    stats: players.map((p) => ({
-      playerId: p.id,
-      appeared: false,
-      goals: 0,
-      assists: null,
-    })),
-    published: false,
-  };
-}
-function expand(r: Result, players: Player[]): Result {
-  return {
-    ...r,
-    stats: players.map(
-      (p) =>
-        r.stats.find((s) => s.playerId === p.id) || {
-          playerId: p.id,
-          appeared: false,
-          goals: 0,
-          assists: r.assists === "unrecorded" ? null : 0,
-        },
-    ),
-  };
-}
-function CaptureSelect({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: Capture;
-  onChange: (c: Capture) => void;
-}) {
-  return (
-    <label className="capture-select">
-      <span>{label}</span>
-      <select
-        aria-label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value as Capture)}
-      >
-        <option value="unrecorded">Not recorded</option>
-        <option value="partial">Partially recorded</option>
-        <option value="complete">Complete</option>
-      </select>
-    </label>
-  );
-}
+import { MatchPlayerEditor } from "./match-player-editor";
+import {
+  blankResult as blank,
+  expandResult as expand,
+} from "@/features/matches/player-stats";
 export function CaptainPage() {
   const {
       matches,
@@ -145,17 +89,6 @@ export function CaptainPage() {
       [side]: value,
       ...(r.basis === "played"
         ? { [side === "home" ? "onFieldHome" : "onFieldAway"]: value }
-        : {}),
-    });
-  }
-  function updatePlayer(id: string, fields: Partial<Result["stats"][number]>) {
-    patch({
-      stats: r.stats.map((s) => (s.playerId === id ? { ...s, ...fields } : s)),
-      ...(fields.appeared && r.attendance === "unrecorded"
-        ? { attendance: "partial" as const }
-        : {}),
-      ...((fields.goals ?? 0) > 0 && r.scorers === "unrecorded"
-        ? { scorers: "partial" as const }
         : {}),
     });
   }
@@ -462,137 +395,11 @@ export function CaptainPage() {
                 <p>
                   Record what you know. Leave the rest marked as not recorded.
                 </p>
-                <div className="capture-controls">
-                  <CaptureSelect
-                    label="Attendance"
-                    value={r.attendance}
-                    onChange={(attendance) =>
-                      patch({
-                        attendance,
-                        ...(attendance === "unrecorded"
-                          ? {
-                              stats: blank(players).stats,
-                              scorers: "unrecorded",
-                              assists: "unrecorded",
-                            }
-                          : {}),
-                      })
-                    }
-                  />
-                  <CaptureSelect
-                    label="Scorers"
-                    value={r.scorers}
-                    onChange={(scorers) =>
-                      patch({
-                        scorers,
-                        ...(scorers === "unrecorded"
-                          ? { stats: r.stats.map((s) => ({ ...s, goals: 0 })) }
-                          : {}),
-                      })
-                    }
-                  />
-                  <CaptureSelect
-                    label="Assists"
-                    value={r.assists}
-                    onChange={(assists) =>
-                      patch({
-                        assists,
-                        stats: r.stats.map((s) => ({
-                          ...s,
-                          assists:
-                            assists === "unrecorded" ? null : (s.assists ?? 0),
-                        })),
-                      })
-                    }
-                  />
-                </div>
-                <div className="entry-roster">
-                  <div className="roster-head">
-                    <span>PLAYER</span>
-                    <span>PLAYED</span>
-                    <span>GOALS</span>
-                    <span>ASSISTS</span>
-                  </div>
-                  {players.map((p) => {
-                    const s = r.stats.find((s) => s.playerId === p.id)!;
-                    return (
-                      <div
-                        className={`roster-entry ${s.appeared ? "played" : ""}`}
-                        key={p.id}
-                      >
-                        <span>
-                          <small>#{p.number}</small>
-                          <strong>{p.name}</strong>
-                        </span>
-                        <label className="attendance-check">
-                          <span className="sr-only">{p.name} played</span>
-                          <input
-                            type="checkbox"
-                            checked={s.appeared}
-                            onChange={(e) =>
-                              updatePlayer(p.id, {
-                                appeared: e.target.checked,
-                                ...(!e.target.checked
-                                  ? {
-                                      goals: 0,
-                                      assists:
-                                        r.assists === "unrecorded" ? null : 0,
-                                    }
-                                  : {}),
-                              })
-                            }
-                          />
-                          <span>{s.appeared ? <Check size={15} /> : null}</span>
-                        </label>
-                        <input
-                          aria-label={`${p.name} goals`}
-                          type="number"
-                          min="0"
-                          max="99"
-                          disabled={!s.appeared}
-                          value={s.goals}
-                          onChange={(e) =>
-                            updatePlayer(p.id, {
-                              goals: e.target.valueAsNumber,
-                            })
-                          }
-                        />
-                        <input
-                          aria-label={`${p.name} assists`}
-                          type="number"
-                          min="0"
-                          max="99"
-                          disabled={!s.appeared || r.assists === "unrecorded"}
-                          value={s.assists ?? ""}
-                          placeholder="—"
-                          onChange={(e) =>
-                            updatePlayer(p.id, {
-                              assists: e.target.valueAsNumber,
-                            })
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="own-goals">
-                  <label>
-                    Opposition own goals{" "}
-                    <input
-                      aria-label="Opposition own goals"
-                      type="number"
-                      min="0"
-                      max="99"
-                      value={r.ownGoals}
-                      onChange={(e) =>
-                        patch({ ownGoals: e.target.valueAsNumber })
-                      }
-                    />
-                  </label>
-                  <span>
-                    {goals + r.ownGoals} of {r.onFieldHome} goals attributed
-                  </span>
-                </div>
+                <MatchPlayerEditor
+                  players={players}
+                  result={r}
+                  onChange={patch}
+                />
               </div>
             )}
             {step === 2 && (
@@ -740,8 +547,9 @@ export function CaptainPage() {
               </p>
             </div>
             <p className="aside-note">
-              Demo drafts and corrections are saved in this browser. Reset the
-              demo any time.
+              {live
+                ? "Private drafts and corrections are saved to the club account."
+                : "Demo drafts and corrections are saved in this browser. Reset the demo any time."}
             </p>
           </aside>
         </div>

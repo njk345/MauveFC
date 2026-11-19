@@ -40,6 +40,28 @@ for source verification and ownership rules. The default local mode still uses
 fictional sample data. `npm run build` produces a server deployment and
 `npm run build:preview` explicitly produces the static export used by Sites.
 
+## Captain player stats
+
+Open **Captain’s area → Player stats** (`/captain/stats/`) to record attendance,
+goals and assists for an existing result, including historical games. Choose a
+season in the header and a game from the selector or match history. A played
+checkbox records an appearance, including substitute appearances. Mark each
+category partial or complete; an unrecorded assist remains unknown rather than
+zero. Unchecked players count as absent only when attendance is complete.
+
+For a missing historical game, use **Add a historical game**, enter its original
+date in Fixtures, and record its final score in Results. The Results workflow
+uses the same stats editor. Saved result drafts stay in Results until finished.
+Stats corrections replace that game’s entries and use the existing transactional
+result history and revision checks. The displayed score is retained; captain
+records are protected from automatic league changes and conflicts are flagged.
+Player privacy settings are preserved; the current private roster’s names and
+individual stats are excluded from public pages and the public API.
+
+Run `MAUVE_BASE_URL=http://127.0.0.1:3000 python tests/player_stats_browser.py`
+against a served live-mode production export for isolated browser verification.
+The test intercepts all service requests and makes no production writes.
+
 ## Add to home screen
 
 Open `/install/` from the footer or mobile menu. The Mauve FC icon launches the

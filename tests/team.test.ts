@@ -167,6 +167,9 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
       assert.equal(JSON.stringify(data).includes("editor_id"), false);
       await assert.rejects(scalar("get_player_accounts", [C]));
       await assert.rejects(scalar("get_captain_club", [C]));
+      await assert.rejects(
+        scalar("save_match_result", [M, 0, JSON.stringify({})]),
+      );
       await assert.rejects(scalar("revoke_player_access", [C, ids[2]]));
       await assert.rejects(scalar("link_captain_profile", [C, ids[0]]));
       await assert.rejects(
