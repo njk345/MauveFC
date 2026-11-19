@@ -81,12 +81,24 @@ boxes, with position substitutes directly below. The option follows the same
 saved-versus-local-view behavior as the first-name setting. Existing sheets keep
 showing numbers until the option is selected; roster numbers are unchanged.
 
-**Export image** creates a PNG in the signed-in browser, including the current
-formation, names/numbers and substitutes. Incomplete, unposted formations can also
-be exported. Download PNG saves the file; compatible mobile browsers offer a file
-share sheet, and the image preview supports touch-and-hold saving. Exporting does
-not post the lineup, send notifications or upload player data. Image files contain
-player names, so recipients are chosen by the person exporting them.
+**Save image** prepares the current PNG in the signed-in browser as lineup changes
+settle, so the click can open native save controls immediately. On supporting
+phones it opens a file-only image share sheet; on iPhone/iPad choose **Save Image**
+to add it to Photos. Android destinations depend on installed photo apps. No
+Downloads-folder step is required for this mobile flow.
+
+On supporting desktop browsers, Save image opens a location picker starting in
+Pictures. On other browsers it opens the image preview for right-click → Save
+Image As, or touch-and-hold on mobile. A website cannot silently write into the
+camera roll or a desktop Photos library: the device controls its save actions.
+**Preview image** is always available; Download PNG remains an optional fallback.
+Cancelling native save/share is quiet and never starts a download. If a native
+operation fails, the same image is shown in the preview for manual saving.
+
+The image includes the current formation, names/numbers and substitutes, including
+incomplete or unposted formations. The prepared file and object URL stay only in
+browser memory, regenerate when the sheet changes, and are cleared on unmount or
+sign-out. Saving never posts a lineup, sends notifications or uploads player data.
 
 Backend: `private.lineup_posts` holds immutable official/suggested snapshots with
 RLS enabled and all direct client table access revoked. Three narrowly granted
@@ -124,3 +136,10 @@ synthetic roster and future fixture. It covers explicit invite acceptance,
 password setup/login, private roster access, RSVP changes/reconfirmation, lineup
 drafts/sharing, private invite creation, revocation and mobile/desktop layouts.
 These browser tests create no production accounts, fixtures, invitations or emails.
+
+`tests/image_save_browser.py` also checks the direct mobile image action,
+transient user activation, image regeneration after edits, native cancellation,
+desktop Pictures-folder saving, write-failure cleanup and unsupported-browser
+previews. Native share/file-picker APIs are mocked, so no OS app receives an image
+and no real desktop file is written by the test. Available photo-library actions
+still depend on the device and browser.

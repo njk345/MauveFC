@@ -5151,3 +5151,6 @@ footer {
 .formation-no-numbers .formation-starter-name {display:grid;place-items:center;min-height:44px;background:#dfeea2;border-color:#f1f6cf;}
 .team-page .formation-no-numbers .formation-slot select {min-height:44px;height:auto;background-color:#dfeea2;border-color:#f1f6cf;font-family:var(--display);font-weight:600;font-size:1rem;}
 @media(max-width:600px){.team-page .formation-no-numbers .formation-slot select {font-size:.9rem;}}
+.lineup-image-feedback {flex-basis:100%;margin:.25rem 0;}
+.lineup-export-dialog>.help-text {font-size:.8rem;line-height:1.6;}
+.lineup-export-dialog>.help-text:first-of-type {font-size:1rem;line-height:1.65;}
