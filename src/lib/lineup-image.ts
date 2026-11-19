@@ -15,6 +15,8 @@ export async function createLineupImage(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Image export is unavailable in this browser.");
   const firstNames = payload.firstNamesOnly ?? false;
+  const hideNumbers = payload.hideNumbers ?? false;
+  const nameTop = hideNumbers ? 36 : 110;
   function wrap(value: string, size: number, width: number) {
     ctx!.font = `600 ${size}px Arial, sans-serif`;
     const lines: string[] = [];
@@ -55,7 +57,9 @@ export async function createLineupImage(
         },
       );
       const height =
-        110 + nameHeight + subs.reduce((sum, sub) => sum + sub.height + 8, 0);
+        nameTop +
+        nameHeight +
+        subs.reduce((sum, sub) => sum + sub.height + 8, 0);
       return { slot, player, nameLines, nameHeight, subs, height };
     });
     return { cells, height: Math.max(...cells.map((cell) => cell.height)) };
@@ -64,7 +68,7 @@ export async function createLineupImage(
     py = 260,
     pw = 1080;
   const ph = Math.max(
-    1050,
+    hideNumbers ? 780 : 1050,
     rows.reduce((sum, row) => sum + row.height, 0) +
       72 +
       (rows.length - 1) * 40,
@@ -76,11 +80,14 @@ export async function createLineupImage(
     bench
       .map((p) => {
         const index = payload.benchPositions?.[p.id];
-        return `#${p.number} ${sheetName(p, firstNames)}${index !== undefined ? ` (${formations[payload.formation][index].label})` : ""}`;
+        return `${hideNumbers ? "" : `#${p.number} `}${sheetName(p, firstNames)}${index !== undefined ? ` (${formations[payload.formation][index].label})` : ""}`;
       })
       .join("  ·  ") || "No substitutes named.";
   const benchLines = wrap(benchText, 24, 1080);
-  canvas.height = Math.max(1720, py + ph + 195 + benchLines.length * 36 + 100);
+  canvas.height = Math.max(
+    hideNumbers ? 1450 : 1720,
+    py + ph + 195 + benchLines.length * 36 + 100,
+  );
   const text = (
     value: string,
     x: number,
@@ -115,7 +122,8 @@ export async function createLineupImage(
   let opponentSize = 36;
   ctx.font = `600 ${opponentSize}px Arial, sans-serif`;
   while (ctx.measureText(opponent).width > 1080 && opponentSize > 14) {
-    opponentSize--;ctx.font = `600 ${opponentSize}px Arial, sans-serif`;
+    opponentSize--;
+    ctx.font = `600 ${opponentSize}px Arial, sans-serif`;
   }
   text(opponent, 60, 180, opponentSize, "#38273f");
   text(
@@ -146,24 +154,32 @@ export async function createLineupImage(
     for (const cell of row.cells) {
       const x = px + (pw * cell.slot.x) / 100;
       text(cell.slot.label, x, top + 20, 20, "#ded5e1", "center");
-      box(x - 31, top + 36, 62, 58, "#e3edb8", 12);
-      text(
-        String(cell.player?.number ?? "—"),
-        x,
-        top + 76,
-        31,
-        "#38273f",
-        "center",
+      if (!hideNumbers) {
+        box(x - 31, top + 36, 62, 58, "#e3edb8", 12);
+        text(
+          String(cell.player?.number ?? "—"),
+          x,
+          top + 76,
+          31,
+          "#38273f",
+          "center",
+        );
+      }
+      box(
+        x - 140,
+        top + nameTop,
+        280,
+        cell.nameHeight,
+        hideNumbers ? "#e3edb8" : "#faf8f2",
       );
-      box(x - 140, top + 110, 280, cell.nameHeight, "#faf8f2");
       cell.nameLines.forEach((line, i) =>
-        text(line, x, top + 144 + i * 30, 24, "#38273f", "center"),
+        text(line, x, top + nameTop + 34 + i * 30, 24, "#38273f", "center"),
       );
-      let subTop = top + 110 + cell.nameHeight + 8;
+      let subTop = top + nameTop + cell.nameHeight + 8;
       for (const sub of cell.subs) {
         box(x - 140, subTop, 280, sub.height, "#65516c", 9);
         text(
-          `SUB · #${sub.player.number}`,
+          hideNumbers ? "SUB" : `SUB · #${sub.player.number}`,
           x,
           subTop + 20,
           14,

@@ -64,7 +64,8 @@ export function LineupBoard({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [nameOverride, setNameOverride] = useState<boolean | null>(null);
+    [nameOverride, setNameOverride] = useState<boolean | null>(null),
+    [numbersOverride, setNumbersOverride] = useState<boolean | null>(null);
   const official = posts.filter((p) => p.kind === "official"),
     suggestions = posts.filter((p) => p.kind === "suggestion"),
     selected =
@@ -75,6 +76,7 @@ export function LineupBoard({
         : null,
     payload = composer || savedDraft || selected?.payload || empty(),
     firstNames = nameOverride ?? payload.firstNamesOnly ?? false,
+    hideNumbers = numbersOverride ?? payload.hideNumbers ?? false,
     editing = composer !== null,
     complete = payload.starters.every(Boolean),
     label = editing
@@ -111,6 +113,7 @@ export function LineupBoard({
   }, [view, lineup, auth.captain, composer]);
   function clearChanges() {
     setNameOverride(null);
+    setNumbersOverride(null);
     setDirty(false);
     onDirty(false);
     setError("");
@@ -126,7 +129,9 @@ export function LineupBoard({
     clearChanges();
   }
   function begin() {
-    setComposer(structuredClone({ ...payload, firstNamesOnly: firstNames }));
+    setComposer(
+      structuredClone({ ...payload, firstNamesOnly: firstNames, hideNumbers }),
+    );
     setRevision(lineup?.revision || 0);
     clearChanges();
   }
@@ -348,8 +353,26 @@ export function LineupBoard({
           </small>
         </span>
       </label>
+      <label className="sheet-name-toggle">
+        <input
+          type="checkbox"
+          checked={hideNumbers}
+          disabled={busy}
+          onChange={(e) =>
+            editing
+              ? change({ ...payload, hideNumbers: e.target.checked })
+              : setNumbersOverride(e.target.checked)
+          }
+        />
+        <span>
+          Hide jersey numbers
+          <small>
+            Starter names take the main boxes, with substitutes beneath.
+          </small>
+        </span>
+      </label>
       <div
-        className="formation-pitch formation-team-sheet"
+        className={`formation-pitch formation-team-sheet${hideNumbers ? " formation-no-numbers" : ""}`}
         aria-label={`${payload.formation} formation`}
       >
         <div className="pitch-boundary" />
@@ -366,9 +389,11 @@ export function LineupBoard({
               return (
                 <div className="formation-slot" key={i} data-slot={slot.label}>
                   <span className="formation-position">{slot.label}</span>
-                  <span className="formation-player-number">
-                    {player?.number ?? "—"}
-                  </span>
+                  {!hideNumbers && (
+                    <span className="formation-player-number">
+                      {player?.number ?? "—"}
+                    </span>
+                  )}
                   {editing ? (
                     <select
                       aria-label={`Starter ${slot.label}`}
@@ -399,7 +424,8 @@ export function LineupBoard({
                         )
                         .map((p) => (
                           <option key={p.id} value={p.id}>
-                            #{p.number} {sheetName(p, firstNames)}
+                            {hideNumbers ? "" : `#${p.number} `}
+                            {sheetName(p, firstNames)}
                           </option>
                         ))}
                     </select>
@@ -416,7 +442,7 @@ export function LineupBoard({
                       {subs.map((sub) => (
                         <li key={sub.id}>
                           <span className="position-sub-label">
-                            SUB · #{sub.number}
+                            {hideNumbers ? "SUB" : `SUB · #${sub.number}`}
                           </span>
                           <span>{sheetName(sub, firstNames)}</span>
                         </li>
@@ -462,7 +488,8 @@ export function LineupBoard({
                           })
                         }
                       />
-                      #{p.number} {sheetName(p, firstNames)}
+                      {hideNumbers ? "" : `#${p.number} `}
+                      {sheetName(p, firstNames)}
                     </label>
                     {payload.bench.includes(p.id) && (
                       <label className="bench-position-field">
@@ -505,7 +532,9 @@ export function LineupBoard({
               const index = payload.benchPositions?.[id];
               return (
                 <li key={id}>
-                  <span className="bench-shirt">#{player.number}</span>
+                  {!hideNumbers && (
+                    <span className="bench-shirt">#{player.number}</span>
+                  )}
                   <span>{sheetName(player, firstNames)}</span>
                   {index !== undefined && (
                     <span className="bench-role">
@@ -562,7 +591,7 @@ export function LineupBoard({
         <LineupExport
           key={`${match.id}:${view}:${editing}`}
           match={match}
-          payload={{ ...payload, firstNamesOnly: firstNames }}
+          payload={{ ...payload, firstNamesOnly: firstNames, hideNumbers }}
           players={players}
           label={label}
         />
