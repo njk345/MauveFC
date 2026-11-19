@@ -502,6 +502,7 @@ export type Database = {
       get_captain_club: { Args: { p_club_id: string }; Returns: Json }
       get_player_accounts: { Args: { p_club_id: string }; Returns: Json }
       get_public_club: { Args: { p_club_id: string }; Returns: Json }
+      get_season_stats: { Args: { p_club_id: string; p_season_id: string }; Returns: Json }
       get_team_access: { Args: { p_club_id: string }; Returns: Json }
       get_team_club: { Args: { p_club_id: string }; Returns: Json }
       get_lineup_posts: { Args: { p_club_id: string }; Returns: Json }

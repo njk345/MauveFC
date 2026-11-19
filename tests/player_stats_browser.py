@@ -54,6 +54,10 @@ def context_for(browser, kind='captain', width=1440):
         elif path == '/auth/v1/user': payload = user if kind else None
         elif path.endswith('/get_team_access'): payload = dict(member=bool(kind), role=kind, playerId=ids[0] if kind else None)
         elif path.endswith('/get_public_club'): payload = public()
+        elif path.endswith('/get_season_stats'):
+            member = kind in ['captain', 'player']
+            payload = dict(teamView=member, privatePlayerCount=0 if member else len(players), assistsTotal=None, assistsRecordedMatches=0, assistsCompleteMatches=0,
+                players=[{**p, 'goals':0, 'assists':0, 'appearances':0, 'goalsKnown':False, 'assistsKnown':False, 'appearancesKnown':False} for p in players] if member else [])
         elif path.endswith('/get_captain_club'):
             assert kind == 'captain'
             payload = data
@@ -167,7 +171,10 @@ with sync_playwright() as p:
         expect(page.get_by_role('checkbox', name=names[0]+' played')).to_have_count(0)
         for path in ['/players/', '/stats/', '/results/']:
             page.goto(BASE+path, wait_until='networkidle')
-            for name in names: assert name not in page.locator('main').inner_text()
+            if path=='/stats/' and kind=='player':
+                expect(page.locator('.leaderboard-table')).to_contain_text(names[0])
+            else:
+                for name in names: assert name not in page.locator('main').inner_text()
         context.close()
     assert not errors, errors
     print('PASS responsive captain stats, historical season, corrections, partial/unknown records, validation, concurrency, draft protection, Results integration and private access')

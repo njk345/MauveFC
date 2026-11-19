@@ -2,7 +2,13 @@
 import Link from "next/link";
 import { playerHref } from "@/lib/player-link";
 import { useState } from "react";
-import { ArrowDownRight, ArrowUpRight, Info, TrendingUp } from "lucide-react";
+import {
+  ArrowUpRight,
+  Info,
+  LockKeyhole,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -13,26 +19,36 @@ import {
   YAxis,
 } from "recharts";
 import { usePrototype } from "./prototype-provider";
-import {
-  playerStats,
-  publishedMatches,
-  teamStats,
-} from "@/features/stats/queries";
+import { publishedMatches, teamStats } from "@/features/stats/queries";
 import { PageHeading } from "./season-pages";
 import { LeaguePageNote } from "./league-connection";
+import { useSeasonStats } from "./use-season-stats";
+import { useAuth } from "./auth/auth-provider";
 export function StatsPage() {
-  const { matches, seasonId, seasons, players, live } = usePrototype(),
+  const { matches, seasonId, seasons } = usePrototype(),
+    auth = useAuth(),
+    { data, loading, error, reload } = useSeasonStats(),
     [metric, setMetric] = useState<"goals" | "assists" | "appearances">(
       "goals",
     ),
     fixtures = matches.filter((m) => m.seasonId === seasonId),
     stats = teamStats(fixtures),
-    leaders = playerStats(
-      fixtures,
-      players.filter((p) => p.isPublic !== false),
-    ).sort((a, b) => b[metric] - a[metric] || b.goals - a.goals),
+    leaders = [...(data?.players || [])].sort((a, b) => {
+      const known =
+        metric === "goals"
+          ? "goalsKnown"
+          : metric === "assists"
+            ? "assistsKnown"
+            : "appearancesKnown";
+      return (
+        Number(b[known]) - Number(a[known]) ||
+        b[metric] - a[metric] ||
+        b.goals - a.goals ||
+        a.name.localeCompare(b.name)
+      );
+    }),
     played = publishedMatches(fixtures),
-    season = seasons.find((s) => s.id === seasonId)!;
+    season = seasons.find((s) => s.id === seasonId);
   const chart = played.map((m) => ({
     name: `MD ${m.round}`,
     opponent: m.opponent,
@@ -40,9 +56,9 @@ export function StatsPage() {
     "Goals against": m.result!.away,
   }));
   return (
-    <div className="section page-section">
+    <div className="section page-section stats-page">
       <PageHeading
-        eyebrow={`${season.name} / BEHIND THE NUMBERS`}
+        eyebrow={`${season?.name || "Season"} / BEHIND THE NUMBERS`}
         title="Our game, by the numbers."
         description="The big picture. The little contributions. The season we’re building together."
       >
@@ -57,6 +73,17 @@ export function StatsPage() {
             `${stats.goalDifference > 0 ? "+" : ""}${stats.goalDifference}`,
             "GOAL DIFFERENCE",
             `${stats.goalsAgainst} conceded`,
+          ],
+          [
+            data?.assistsTotal ?? "—",
+            "ASSISTS RECORDED",
+            loading
+              ? "Loading recorded assists…"
+              : error
+                ? "Temporarily unavailable"
+                : data?.assistsTotal === null
+                  ? "Not recorded yet"
+                  : "Sum of all recorded player assists",
           ],
           [
             stats.played
@@ -195,7 +222,45 @@ export function StatsPage() {
           ))}
         </div>
       </div>
-      <div className="table-scroll leaderboard-table">
+      <div className="stats-visibility-note">
+        <p>
+          <LockKeyhole size={17} />
+          {data?.teamView
+            ? "Team view · All players’ individual stats are visible to signed-in teammates."
+            : "Public view · Private players’ identities and individual stats are hidden."}
+        </p>
+        <div className="button-row">
+          {!auth.user && (
+            <Link className="text-link" href="/login/">
+              Team sign-in
+            </Link>
+          )}
+          <button
+            type="button"
+            className="text-link"
+            disabled={loading}
+            onClick={reload}
+          >
+            <RefreshCw size={15} />
+            Refresh stats
+          </button>
+        </div>
+      </div>
+      {loading && (
+        <p role="status" className="stats-loading">
+          Loading player stats…
+        </p>
+      )}
+      {error && (
+        <div role="alert" className="form-errors">
+          <p>{error}</p>
+          <button type="button" className="text-link" onClick={reload}>
+            Try again
+          </button>
+        </div>
+      )}
+      <p className="stats-table-hint">Swipe the table to see all stats.</p>
+      <div className="table-scroll leaderboard-table" aria-busy={loading}>
         <table>
           <thead>
             <tr>
@@ -216,19 +281,31 @@ export function StatsPage() {
                   </span>
                 </td>
                 <td>
-                  <Link className="table-player" href={playerHref(p.id)}>
-                    <span className="initial-avatar">{p.initials}</span>
-                    <span>
-                      <strong>{p.name}</strong>
-                      <small>
-                        #{p.number} · {p.position}
-                      </small>
-                    </span>
-                  </Link>
+                  {p.isPublic === false ? (
+                    <div className="table-player">
+                      <span className="initial-avatar">{p.initials}</span>
+                      <span>
+                        <strong>{p.name}</strong>
+                        <small>
+                          #{p.number} · {p.position}
+                        </small>
+                      </span>
+                    </div>
+                  ) : (
+                    <Link className="table-player" href={playerHref(p.id)}>
+                      <span className="initial-avatar">{p.initials}</span>
+                      <span>
+                        <strong>{p.name}</strong>
+                        <small>
+                          #{p.number} · {p.position}
+                        </small>
+                      </span>
+                    </Link>
+                  )}
                 </td>
-                <td>{p.appearances}</td>
+                <td>{p.appearancesKnown ? p.appearances : "—"}</td>
                 <td className={metric === "goals" ? "metric-highlight" : ""}>
-                  {p.goals}
+                  {p.goalsKnown ? p.goals : "—"}
                 </td>
                 <td className={metric === "assists" ? "metric-highlight" : ""}>
                   {p.assistsKnown ? p.assists : "—"}
@@ -244,18 +321,65 @@ export function StatsPage() {
                 </td>
               </tr>
             ))}
+            {Array.from({ length: data?.privatePlayerCount || 0 }, (_, i) => (
+              <tr
+                className="private-stats-row"
+                key={`private-${i}`}
+                aria-label="Private player · individual stats hidden"
+              >
+                <td>
+                  <span className="rank">—</span>
+                </td>
+                <td>
+                  <div className="table-player">
+                    <span className="initial-avatar">
+                      <LockKeyhole size={17} />
+                    </span>
+                    <span>
+                      <strong>Private player</strong>
+                      <small>Team members only</small>
+                    </span>
+                  </div>
+                </td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td className="bar-column">
+                  <span className="leader-bar" />
+                </td>
+              </tr>
+            ))}
+            {!loading &&
+              !error &&
+              !leaders.length &&
+              !data?.privatePlayerCount && (
+                <tr>
+                  <td colSpan={6}>No players in this season yet.</td>
+                </tr>
+              )}
           </tbody>
         </table>
       </div>
+      {!!data?.privatePlayerCount && (
+        <p className="stats-ranking-note">
+          Rankings show public players only. Private players are excluded from
+          public rankings.
+        </p>
+      )}
       <div className="coverage-panel">
         <Info size={22} />
         <div>
           <h3>The numbers need context.</h3>
           <p>
-            Assists fully recorded for {stats.assistsCovered} of {stats.played}{" "}
-            matches. Unknown totals stay unknown; recorded goals and assists are
-            shown even when a match’s attribution is partial. Team totals use
-            official scores. League position remains unverified.
+            Matches, team goals and goal difference come exclusively from final
+            match results. Assists are the sum of recorded player assists,
+            including players with private profiles.{" "}
+            {data
+              ? `Assists fully recorded for ${data.assistsCompleteMatches} of ${stats.played} matches; at least partially recorded for ${data.assistsRecordedMatches}.`
+              : "Assist recording coverage is currently unavailable."}{" "}
+            Unknown counts stay unknown. Individual goal totals can differ from
+            the team score when attribution is incomplete, own goals are
+            recorded, or the result is adjusted.
           </p>
         </div>
       </div>
