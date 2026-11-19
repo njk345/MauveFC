@@ -79,7 +79,8 @@ These are conceptual entities, not a finalized SQL schema.
 | `club_memberships` | Auth user, club, role: captain or player; optional player link |
 | `players` | Stable player identity and public profile; independent of login |
 | `seasons` | Competition name, dates, format, match length, points rules |
-| `season_roster` | Player participation in a season, shirt number, preferred positions |
+| `season_roster` | Official membership of a player in a season |
+| `private.match_guests` | Club player assigned to one game as a non-roster substitute |
 | `matches` | Season, opponent, venue, kickoff, fixture status, publication state |
 | `match_results` | Official and on-field scores, result basis, forfeit/adjustment reason |
 | `match_player_stats` | Player appearance, goals, assists, optional minutes and keeper details |
@@ -89,8 +90,12 @@ These are conceptual entities, not a finalized SQL schema.
 
 One season has many matches and roster entries. One player can appear across
 seasons. A match has at most one current result and one stats row per player.
-Stats entries must refer to a player eligible for that match's club/season;
-guest players can be added to the roster explicitly. Internal UUIDs remain stable
+Stats and lineups accept that season’s official roster plus guests explicitly
+assigned to that match. A guest assignment reuses the club-wide player identity
+without adding roster membership, an account or an appearance. Members can view
+the complete club player directory under Players; public responses exclude private
+guest identities. Promoting a guest to a season roster preserves their player ID
+and does not duplicate any totals. Internal UUIDs remain stable
 when the schedule provider changes its identifiers or kickoff times.
 
 Add `availability` when introducing RSVPs, and `lineups`/`lineup_slots` when

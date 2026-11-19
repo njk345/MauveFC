@@ -9,6 +9,8 @@ import { captureSummary, expandResult } from "@/features/matches/player-stats";
 import { validateResult } from "@/features/matches/validation";
 import type { Match, Result } from "@/lib/types";
 import { date } from "@/lib/format";
+import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
+import { MatchGuests } from "./match-guests";
 
 export function CaptainPlayerStats() {
   const { ready, seasonId, resetVersion } = usePrototype();
@@ -60,9 +62,6 @@ function SeasonStatsEditor({
     refresh,
     setNotice,
   } = usePrototype();
-  const players = allPlayers.filter((p) =>
-    roster.some((sr) => sr.seasonId === seasonId && sr.playerId === p.id),
-  );
   const fixtures = matches
     .filter((m) => m.seasonId === seasonId && m.status !== "cancelled")
     .sort(
@@ -84,6 +83,7 @@ function SeasonStatsEditor({
     );
   });
   const match = fixtures.find((m) => m.id === selectedId);
+  const players = matchPlayers(allPlayers, roster, match);
   const [result, setResult] = useState<Result | null>(() =>
     match?.result?.published
       ? {
@@ -97,6 +97,7 @@ function SeasonStatsEditor({
   const [errors, setErrors] = useState<string[]>([]),
     [saved, setSaved] = useState(false);
   const [stale, setStale] = useState(false);
+  const [guestBusy, setGuestBusy] = useState(false);
   const errorBox = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (errors.length) errorBox.current?.focus();
@@ -112,7 +113,10 @@ function SeasonStatsEditor({
     setSelectedId(m.id);
     setResult(
       m.result?.published
-        ? { ...expandResult(m.result, players), baseRevision: m.revision ?? 0 }
+        ? {
+            ...expandResult(m.result, matchPlayers(allPlayers, roster, m)),
+            baseRevision: m.revision ?? 0,
+          }
         : null,
     );
     setDirty(false);
@@ -123,6 +127,7 @@ function SeasonStatsEditor({
   function choose(m: Match) {
     if (
       saving ||
+      guestBusy ||
       (dirty && !window.confirm("Leave these unsaved player stats?"))
     )
       return;
@@ -130,7 +135,7 @@ function SeasonStatsEditor({
   }
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!result || !match || saving || drafts[match.id]) return;
+    if (!result || !match || saving || guestBusy || drafts[match.id]) return;
     const issues = validateResult(result, players);
     if (issues.length) {
       setErrors(issues);
@@ -223,7 +228,7 @@ function SeasonStatsEditor({
               <span>Choose a game</span>
               <select
                 aria-label="Choose a game"
-                disabled={saving}
+                disabled={saving || guestBusy}
                 value={selectedId}
                 onChange={(e) => {
                   const next = fixtures.find((m) => m.id === e.target.value);
@@ -251,6 +256,36 @@ function SeasonStatsEditor({
                 </h2>
                 <p>{match.venue}</p>
               </div>
+            )}
+            {match && (
+              <MatchGuests
+                key={match.id}
+                match={match}
+                players={allPlayers}
+                revision={result?.baseRevision ?? match.revision}
+                disabled={saving || stale}
+                canRemove={!dirty}
+                onBusy={setGuestBusy}
+                onChange={(change) => {
+                  const pool = matchPlayers(
+                    [
+                      ...allPlayers.filter((p) => p.id !== change.player.id),
+                      change.player,
+                    ],
+                    roster,
+                    applyGuestToMatch(match, change),
+                  );
+                  setResult((current) =>
+                    current
+                      ? {
+                          ...expandResult(current, pool),
+                          baseRevision: change.revision,
+                        }
+                      : null,
+                  );
+                  setSaved(false);
+                }}
+              />
             )}
             {match && drafts[match.id] ? (
               <div className="stats-next-step">
@@ -327,6 +362,7 @@ function SeasonStatsEditor({
                   </legend>
                   <MatchPlayerEditor
                     players={players}
+                    guestPlayerIds={match?.guestPlayerIds}
                     result={result}
                     onChange={(fields) => {
                       setResult({ ...result, ...fields });
@@ -341,7 +377,7 @@ function SeasonStatsEditor({
                   <button
                     className="button"
                     type="submit"
-                    disabled={saving || !dirty || stale}
+                    disabled={saving || guestBusy || !dirty || stale}
                   >
                     <Save size={17} />
                     {saving ? "Saving…" : "Save player stats"}

@@ -19,6 +19,7 @@ import type {
   PrototypeData,
   Result,
   Season,
+  GuestChange,
 } from "@/lib/types";
 import { validateDraft, validateResult } from "@/features/matches/validation";
 import { useAuth } from "./auth/auth-provider";
@@ -30,7 +31,10 @@ import {
   writeFixture,
   writePlayer,
   type ClubSnapshot,
+  writeMatchGuest,
+  type GuestInput,
 } from "@/lib/supabase/repository";
+import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 const KEY = "mauve-fc-prototype-v1";
 const initial: PrototypeData = {
   version: 1,
@@ -55,6 +59,11 @@ type Context = {
   saveResult: (id: string, result: Result) => Promise<void>;
   saveFixture: (match: Match) => Promise<void>;
   savePlayer: (player: Player) => Promise<void>;
+  changeGuest: (
+    matchId: string,
+    revision: number,
+    input: GuestInput,
+  ) => Promise<GuestChange>;
   refresh: () => Promise<void>;
   reset: () => void;
   notice: string;
@@ -208,11 +217,7 @@ export function PrototypeProvider({
   async function saveResult(id: string, result: Result) {
     const match = data.matches.find((m) => m.id === id);
     if (!match) throw new Error("Fixture not found.");
-    const eligible = (data.players || []).filter((p) =>
-      data.roster?.some(
-        (sr) => sr.seasonId === match.seasonId && sr.playerId === p.id,
-      ),
-    );
+    const eligible = matchPlayers(data.players || [], data.roster || [], match);
     const errors = result.published
       ? validateResult(result, eligible)
       : validateDraft(result, eligible);
@@ -247,6 +252,45 @@ export function PrototypeProvider({
         history: [...previous.history, { matchId: id, at, before, after }],
       };
     });
+  }
+  async function changeGuest(
+    matchId: string,
+    revision: number,
+    input: GuestInput,
+  ) {
+    if (!auth.live || !auth.captain)
+      throw new Error("Captain access is required to manage game guests.");
+    const owner = identity.current;
+    const change = await writeMatchGuest(matchId, revision, input);
+    if (owner !== identity.current)
+      throw new Error(
+        "Guest change saved. Sign in again to load the latest team record.",
+      );
+    setData((previous) => {
+      if (owner !== identity.current) return previous;
+      const players = [
+        ...(previous.players || []).filter((p) => p.id !== change.player.id),
+        change.player,
+      ];
+      const drafts = { ...(previous.drafts || {}) };
+      const draft = drafts[matchId];
+      if (draft && draft.baseRevision === revision)
+        drafts[matchId] = {
+          ...draft,
+          baseRevision: change.revision,
+          stats:
+            change.action === "remove"
+              ? draft.stats.filter((s) => s.playerId !== change.player.id)
+              : draft.stats,
+        };
+      return {
+        ...previous,
+        players,
+        drafts,
+        matches: previous.matches.map((m) => applyGuestToMatch(m, change)),
+      };
+    });
+    return change;
   }
   async function saveFixture(match: Match) {
     if (auth.live) {
@@ -302,6 +346,7 @@ export function PrototypeProvider({
         saveResult,
         saveFixture,
         savePlayer,
+        changeGuest,
         refresh,
         reset,
         notice,

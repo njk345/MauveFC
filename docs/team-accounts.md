@@ -44,6 +44,14 @@ future fixture on their season roster. A kickoff change marks existing replies
 as needing confirmation. Cancelled, completed and past fixtures are closed.
 RSVPs and lineup selections never create appearances, goals or assists.
 
+Captains can assign non-roster guest substitutes to individual games from the
+match’s stats editor or Team & lineups. Guests use the same club player directory
+as roster players, so former teammates keep their existing identity and history.
+Only assigned games accept their stats and lineup selections. New guest profiles
+are private and create no team account; guest assignment itself records no RSVP
+or appearance. Members can use assigned guests in lineup suggestions and exports.
+Players → Club directory lists all known club players for signed-in members.
+
 Captains can save 2-3-1, 3-2-1 or 2-2-2 lineups, choose seven starters and list
 substitutes. Drafts are captain-only. Saving changes as a draft preserves the
 previous shared lineup; sharing replaces it atomically. Duplicate and ineligible

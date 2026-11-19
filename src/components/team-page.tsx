@@ -7,17 +7,14 @@ import { usePrototype } from "./prototype-provider";
 import { PageHeading } from "./season-pages";
 import { date, time } from "@/lib/format";
 import { LineupBoard } from "./lineup-board";
+import { MatchGuests } from "./match-guests";
+import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 import {
   readTeamClub,
   writeRsvp,
   type TeamSnapshot,
 } from "@/lib/supabase/repository";
-import type {
-  Match,
-  MatchRsvp,
-  Player,
-  RsvpResponse,
-} from "@/lib/types";
+import type { Match, MatchRsvp, Player, RsvpResponse } from "@/lib/types";
 const choices = [
   ["in", "In"],
   ["maybe", "Maybe"],
@@ -74,7 +71,8 @@ function TeamWorkspace() {
     [tab, setTab] = useState("matches"),
     [selected, setSelected] = useState(""),
     [dirty, setDirty] = useState(false),
-    [refreshing, setRefreshing] = useState(false);
+    [refreshing, setRefreshing] = useState(false),
+    [guestBusy, setGuestBusy] = useState(false);
   async function refresh() {
     setRefreshing(true);
     try {
@@ -119,6 +117,7 @@ function TeamWorkspace() {
     };
   }, []);
   function switchView(action: () => void) {
+    if (guestBusy) return;
     if (dirty && !window.confirm("Discard unsaved lineup changes?")) return;
     setDirty(false);
     action();
@@ -150,9 +149,10 @@ function TeamWorkspace() {
     upcoming = fixtures.filter(rsvpsOpen),
     match =
       fixtures.find((m) => m.id === selected) || upcoming[0] || fixtures.at(-1),
-    eligible = data.players.filter((p) =>
+    rosterPlayers = data.players.filter((p) =>
       data.roster.some((r) => r.seasonId === seasonId && r.playerId === p.id),
-    );
+    ),
+    eligible = matchPlayers(data.players, data.roster, match);
   return (
     <div className="section page-section team-page">
       <PageHeading
@@ -189,7 +189,7 @@ function TeamWorkspace() {
             aria-pressed={tab === "roster"}
             onClick={() => switchView(() => setTab("roster"))}
           >
-            Private roster ({eligible.length})
+            Private roster ({rosterPlayers.length})
           </button>
         </div>
         <button
@@ -203,7 +203,7 @@ function TeamWorkspace() {
       </div>
       {tab === "roster" ? (
         <div className="team-roster-grid">
-          {eligible.map((p) => (
+          {rosterPlayers.map((p) => (
             <article key={p.id} className="team-player-card">
               <div className="team-shirt-number">{p.number}</div>
               <div>
@@ -220,7 +220,7 @@ function TeamWorkspace() {
               </div>
             </article>
           ))}
-          {!eligible.length && (
+          {!rosterPlayers.length && (
             <p>No players have been added to this season.</p>
           )}
         </div>
@@ -265,7 +265,7 @@ function TeamWorkspace() {
                     reply={data.rsvps.find(
                       (r) => r.matchId === m.id && r.playerId === auth.playerId,
                     )}
-                    eligible={eligible.some((p) => p.id === auth.playerId)}
+                    eligible={rosterPlayers.some((p) => p.id === auth.playerId)}
                     onRefresh={refresh}
                   />
                 </article>
@@ -283,6 +283,7 @@ function TeamWorkspace() {
                   <span>Match</span>
                   <select
                     value={match.id}
+                    disabled={guestBusy}
                     onChange={(e) =>
                       switchView(() => setSelected(e.target.value))
                     }
@@ -300,9 +301,34 @@ function TeamWorkspace() {
                 {date(match.kickoff, "long")} · {time(match.kickoff)} ·{" "}
                 {match.venue}
               </p>
+              <MatchGuests
+                key={`guests-${match.id}`}
+                match={match}
+                players={data.players}
+                canRemove={!dirty}
+                onBusy={setGuestBusy}
+                onChange={(change) => {
+                  setData((current) =>
+                    current
+                      ? {
+                          ...current,
+                          players: [
+                            ...current.players.filter(
+                              (p) => p.id !== change.player.id,
+                            ),
+                            change.player,
+                          ],
+                          matches: current.matches.map((m) =>
+                            applyGuestToMatch(m, change),
+                          ),
+                        }
+                      : current,
+                  );
+                }}
+              />
               <div className="team-match-grid">
                 <Availability
-                  players={eligible}
+                  players={rosterPlayers}
                   rsvps={data.rsvps.filter((r) => r.matchId === match.id)}
                 />
                 <LineupBoard
