@@ -23,13 +23,14 @@ with sync_playwright() as p:
  page.route('https://maupvkabgveqvwkivtyh.supabase.co/**',bridge)
  for width in [390,1440]:
   page.set_viewport_size({'width':width,'height':900})
-  for route in ['/','/schedule/','/results/','/players/','/stats/','/team/','/captain/','/captain/fixtures/','/captain/roster/','/captain/access/','/login/']:
+  for route in ['/','/schedule/','/results/','/players/','/stats/','/team/','/captain/','/captain/stats/','/captain/fixtures/','/captain/roster/','/captain/access/','/login/']:
    page.goto(BASE+route,wait_until='networkidle')
    assert page.evaluate('document.documentElement.scrollWidth')<=width,(width,route)
    assert 'We couldn’t load the club.' not in page.locator('main').inner_text(),route
    if route.startswith('/captain'):
     expect(page.get_by_role('link',name='Captain sign-in',exact=True)).to_be_visible()
     expect(page.get_by_role('button',name='Save draft',exact=True)).to_have_count(0)
+    expect(page.get_by_role('button',name='Save player stats',exact=True)).to_have_count(0)
     expect(page.get_by_role('button',name='Add fixture',exact=True)).to_have_count(0)
     expect(page.get_by_role('button',name='Add player',exact=True)).to_have_count(0)
    if route=='/login/':expect(page.get_by_role('button',name='Sign in',exact=True)).to_be_visible()

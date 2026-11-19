@@ -71,6 +71,7 @@ export function CaptainAccess({ children }: { children: ReactNode }) {
       <div className="section captain-navigation">
         <nav aria-label="Captain tools">
           <Link href="/captain/">Results</Link>
+          <Link href="/captain/stats/">Player stats</Link>
           <Link href="/captain/fixtures/">Fixtures</Link>
           <Link href="/captain/roster/">Roster</Link>
           <Link href="/captain/access/">Player accounts</Link>

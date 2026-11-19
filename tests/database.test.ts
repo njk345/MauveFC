@@ -319,5 +319,89 @@ test("database authorization and transactional workflow", async (t) => {
       await assert.rejects(db.query("select * from pending_captain_invites"));
     },
   );
+  await t.test(
+    "historical private player stats can be added and corrected without exposing names",
+    async () => {
+      const historicalSeason = "66666666-6666-4666-8666-666666666667";
+      const historicalMatch = "88888888-8888-4888-8888-888888888887";
+      await db.exec("reset role");
+      await db.query("update public.players set is_public=false where id=$1", [
+        PRIVATE,
+      ]);
+      await db.query(
+        "insert into public.seasons(id,club_id,name,competition,format) values($1,$2,'Historical season','Test','7v7')",
+        [historicalSeason, C],
+      );
+      await db.query(
+        "insert into public.season_roster(club_id,season_id,player_id) values($1,$2,$3)",
+        [C, historicalSeason, PRIVATE],
+      );
+      await db.query(
+        "insert into public.matches(id,club_id,season_id,opponent,opponent_code,venue,round,kickoff) values($1,$2,$3,'Historic FC','HFC','Test pitch',1,'2024-06-01T20:00:00Z')",
+        [historicalMatch, C, historicalSeason],
+      );
+      const stats = {
+        ...result,
+        home: 3,
+        onFieldHome: 3,
+        attendance: "partial",
+        scorers: "partial",
+        stats: [{ playerId: PRIVATE, appeared: true, goals: 1, assists: null }],
+      };
+      const saveHistorical = (payload: unknown, revision: number) =>
+        db.query("select public.save_match_result($1,$2,$3::jsonb)", [
+          historicalMatch,
+          revision,
+          JSON.stringify(payload),
+        ]);
+      await as("authenticated", SECOND);
+      await saveHistorical(stats, 0);
+      await saveHistorical(
+        {
+          ...stats,
+          stats: [{ ...stats.stats[0], goals: 2, assists: 0 }],
+          assists: "complete",
+        },
+        1,
+      );
+      const captain = (
+        await db.query<any>("select public.get_captain_club($1) data", [C])
+      ).rows[0].data;
+      const saved = captain.matches.find((m: any) => m.id === historicalMatch);
+      assert.equal(saved.result.stats.length, 1);
+      assert.equal(saved.result.stats[0].goals, 2);
+      assert.equal(saved.result.stats[0].assists, 0);
+      assert.equal(saved.result.stats[0].appeared, true);
+      assert.equal(saved.result.home, 3);
+      await as("authenticated", STRANGER);
+      await assert.rejects(saveHistorical(stats, 2));
+      await as("anon");
+      const visible = await snapshot();
+      assert.deepEqual(
+        visible.matches.find((m: any) => m.id === historicalMatch).result.stats,
+        [],
+      );
+      assert.ok(!visible.players.some((p: any) => p.id === PRIVATE));
+      await db.exec("reset role");
+      assert.equal(
+        (
+          await db.query<any>(
+            "select count(*)::int n from public.match_player_stats where match_id=$1",
+            [historicalMatch],
+          )
+        ).rows[0].n,
+        1,
+      );
+      assert.equal(
+        (
+          await db.query<any>(
+            "select count(*)::int n from public.result_history where match_id=$1",
+            [historicalMatch],
+          )
+        ).rows[0].n,
+        2,
+      );
+    },
+  );
   await db.close();
 });
