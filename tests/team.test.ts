@@ -29,6 +29,7 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
     "20261113162329_player_accounts_and_rsvps.sql",
     "20261115215504_lineup_suggestions_and_official_history.sql",
     "20261119193825_lineup_position_substitutes.sql",
+    "20261119201750_hide_lineup_numbers.sql",
   ])
     await db.exec(
       await readFile(
@@ -303,6 +304,7 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
         ...payload,
         benchPositions: { [ids[7]]: 4 },
         firstNamesOnly: true,
+        hideNumbers: true,
       };
       await scalar("save_match_lineup", [
         M,
@@ -334,7 +336,12 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
       );
       assert.deepEqual(post.payload.benchPositions, sheet.benchPositions);
       assert.equal(post.payload.firstNamesOnly, true);
+      assert.equal(post.payload.hideNumbers, true);
+      assert.equal((await team()).lineups[0].payload.hideNumbers, true);
       const invalid = [
+        { hideNumbers: "true" },
+        { hideNumbers: null },
+        { hideNumbers: 0 },
         { firstNamesOnly: "true" },
         { firstNamesOnly: null },
         { benchPositions: [] },
@@ -422,6 +429,7 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
       assert.equal(data[0].authorName, "Private Member 1");
       assert.equal(data[0].canDelete, true);
       assert.equal(data[0].payload.kind, undefined);
+      assert.equal(data[0].payload.hideNumbers, false);
       assert.equal((await team()).lineups[0].payload.formation, "3-2-1");
       for (const publish of [true, false])
         await assert.rejects(

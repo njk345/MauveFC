@@ -30,6 +30,7 @@ export type LineupPayload = {
   bench: string[];
   benchPositions?: Record<string, number>;
   firstNamesOnly?: boolean;
+  hideNumbers?: boolean;
 };
 export type MatchLineup = {
   matchId: string;

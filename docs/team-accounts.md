@@ -75,6 +75,12 @@ or post. When viewing a posted sheet, anyone can change their local display/expo
 without editing the saved lineup or roster names. Existing lineups default to
 full names and a general bench. These display options do not publish player data.
 
+**Hide jersey numbers** removes the starter number blocks and all substitute
+number labels from the team sheet and PNG. Starter names move into the lime main
+boxes, with position substitutes directly below. The option follows the same
+saved-versus-local-view behavior as the first-name setting. Existing sheets keep
+showing numbers until the option is selected; roster numbers are unchanged.
+
 **Export image** creates a PNG in the signed-in browser, including the current
 formation, names/numbers and substitutes. Incomplete, unposted formations can also
 be exported. Download PNG saves the file; compatible mobile browsers offer a file

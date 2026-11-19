@@ -45,13 +45,40 @@ with sync_playwright() as p:
         expect(page.locator('.sheet-bench-list')).not_to_contain_text('Anderson')
         page.locator('.formation-pitch').screenshot(path=f'artifacts/sheet-first-names-{width}.png')
         check_geometry(page,width)
+        numbered_height=page.locator('.formation-pitch').bounding_box()['height']
+        jersey_top=page.locator('[data-slot="ST"] .formation-player-number').bounding_box()['y']
+        page.get_by_role('checkbox',name='Hide jersey numbers').check()
+        expect(page.locator('.formation-player-number')).to_have_count(0)
+        expect(page.locator('.formation-pitch')).not_to_contain_text('#')
+        expect(page.locator('.sheet-bench-list')).not_to_contain_text('#')
+        assert page.locator('.formation-pitch').bounding_box()['height']<numbered_height
+        assert abs(page.locator('[data-slot="ST"] .formation-starter-name').bounding_box()['y']-jersey_top)<2
+        assert page.locator('[data-slot="ST"] .formation-starter-name').evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(223, 238, 162)'
+        check_geometry(page,width)
+        page.locator('.formation-pitch').screenshot(path=f'artifacts/sheet-no-numbers-{width}.png')
         page.get_by_role('checkbox',name='First names only on team sheet').uncheck()
+        check_geometry(page,width)
+        page.get_by_role('checkbox',name='Hide jersey numbers').uncheck()
+        expect(page.locator('.formation-player-number')).to_have_count(7)
     page.get_by_role('checkbox',name='First names only on team sheet').check()
     page.get_by_role('button',name='Export image',exact=True).click()
     expect(page.get_by_role('dialog')).to_be_visible()
     with page.expect_download() as normal:page.get_by_role('link',name='Download PNG',exact=True).click()
     normal.value.save_as('artifacts/team-sheet-export.png')
     page.get_by_role('button',name='Close image export',exact=True).click()
+    page.get_by_role('checkbox',name='Hide jersey numbers').check()
+    page.evaluate('window.sheetText=[]')
+    page.get_by_role('button',name='Export image',exact=True).click()
+    expect(page.get_by_role('dialog')).to_be_visible()
+    with page.expect_download() as no_numbers:page.get_by_role('link',name='Download PNG',exact=True).click()
+    no_numbers.value.save_as('artifacts/team-sheet-no-numbers-export.png')
+    small=struct.unpack('>II',Path('artifacts/team-sheet-no-numbers-export.png').read_bytes()[16:24])
+    normal_size=struct.unpack('>II',Path('artifacts/team-sheet-export.png').read_bytes()[16:24])
+    assert small[0]==1200 and small[1]<normal_size[1]
+    text=page.evaluate('window.sheetText')
+    assert not any('#' in t or t in [str(i) for i in range(1,16)] for t in text)
+    page.get_by_role('button',name='Close image export',exact=True).click()
+    page.get_by_role('checkbox',name='Hide jersey numbers').uncheck()
     page.get_by_role('checkbox',name='First names only on team sheet').uncheck()
     page.get_by_role('button',name='Create a lineup from this',exact=True).click()
     for formation in ['3-2-1','2-2-2','2-3-1']:
@@ -71,21 +98,25 @@ with sync_playwright() as p:
     page.get_by_role('combobox',name='Starter ST',exact=True).select_option(ids[6])
     page.get_by_role('checkbox',name='#8 Jordan',exact=True).check()
     page.get_by_role('combobox',name='Substitute position for '+names[7],exact=True).select_option('0')
+    page.get_by_role('checkbox',name='Hide jersey numbers').check()
     page.get_by_role('button',name='Save lineup draft',exact=True).click()
     expect(page.get_by_text('PRIVATE DRAFT',exact=True)).to_be_visible()
     assert g['draft']['firstNamesOnly'] is True and len(g['draft']['benchPositions'])==8
+    assert g['draft']['hideNumbers'] is True
     page.get_by_role('button',name='Publish official lineup',exact=True).click()
     expect(page.get_by_text('OFFICIAL',exact=True)).to_be_visible()
     assert g['published']['firstNamesOnly'] is True and len(g['published']['benchPositions'])==8
+    assert g['published']['hideNumbers'] is True
     page.evaluate('window.sheetText=[]')
     page.get_by_role('button',name='Export image',exact=True).click()
     expect(page.get_by_role('dialog')).to_be_visible()
     with page.expect_download() as download:page.get_by_role('link',name='Download PNG',exact=True).click()
     download.value.save_as('artifacts/position-subs-export.png')
-    data=Path('artifacts/position-subs-export.png').read_bytes();width,height=struct.unpack('>II',data[16:24]);assert width==1200 and height>1720,(width,height)
+    data=Path('artifacts/position-subs-export.png').read_bytes();width,height=struct.unpack('>II',data[16:24]);assert width==1200 and height>1450,(width,height)
     drawn=page.evaluate('window.sheetText');assert 'María-José' in drawn
     assert not any('Montgomery-Richardson' in text or 'de la Cruz' in text for text in drawn)
     assert sum('Jordan' in text for text in drawn)>=2
+    assert not any('#' in text for text in drawn)
     page.get_by_role('button',name='Close image export',exact=True).click()
     context.close()
     context,page,_=g['new_context'](browser,'player',390)
@@ -94,12 +125,17 @@ with sync_playwright() as p:
     page.get_by_role('checkbox',name='First names only on team sheet').uncheck()
     expect(page.locator('.formation-pitch')).to_contain_text('Montgomery-Richardson')
     assert g['published']['firstNamesOnly'] is True
+    page.get_by_role('checkbox',name='Hide jersey numbers').uncheck()
+    expect(page.locator('.formation-player-number')).to_have_count(7)
+    assert g['published']['hideNumbers'] is True
     page.get_by_role('button',name='Create a lineup from this',exact=True).click()
     page.get_by_role('checkbox',name='First names only on team sheet').check()
+    page.get_by_role('checkbox',name='Hide jersey numbers').check()
     page.get_by_role('button',name='Post suggestion',exact=True).click()
     expect(page.get_by_text('SUGGESTION',exact=True)).to_be_visible()
     assert g['posts'][0]['payload']['firstNamesOnly'] is True
+    assert g['posts'][0]['payload']['hideNumbers'] is True
     assert len(g['posts'][0]['payload']['benchPositions'])==8
     assert not g['errors'],g['errors']
     context.close();browser.close()
-print('PASS positional/general subs, all formation layouts at 320/390/1440, first names, stale assignment cleanup, draft/official/suggestion persistence and tall PNG export',flush=True)
+print('PASS positional/general subs, all formation layouts at 320/390/1440, first names, stale assignment cleanup, draft/official/suggestion persistence and number-free/numbered PNG export',flush=True)

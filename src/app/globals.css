@@ -5145,3 +5145,9 @@ footer {
 .bench-shirt {color:var(--muted);font-size:.8rem;flex-shrink:0;}
 .bench-role {font-size:.75rem;line-height:1.5;padding:.15rem .45rem;border-radius:5px;background:#ece3ee;color:#614b65;flex-shrink:0;}
 @media(max-width:600px){.formation-team-sheet {padding:1.25rem .5rem;row-gap:1.5rem;}.formation-row {gap:.3rem;}.formation-team-sheet .formation-slot {max-width:32%;}.formation-team-sheet .formation-starter-name {font-size:.9rem;padding:.4rem .2rem;}.formation-position-subs li {font-size:.75rem;padding:.35rem .2rem;}.position-sub-label {font-size:.75rem;}.team-page .formation-team-sheet .formation-slot select {font-size:.75rem;padding-left:.3rem;}}
+
+.sheet-name-toggle + .sheet-name-toggle {margin-top:-.5rem;}
+.formation-team-sheet.formation-no-numbers {min-height:420px;}
+.formation-no-numbers .formation-starter-name {display:grid;place-items:center;min-height:44px;background:#dfeea2;border-color:#f1f6cf;}
+.team-page .formation-no-numbers .formation-slot select {min-height:44px;height:auto;background-color:#dfeea2;border-color:#f1f6cf;font-family:var(--display);font-weight:600;font-size:1rem;}
+@media(max-width:600px){.team-page .formation-no-numbers .formation-slot select {font-size:.9rem;}}
