@@ -11,6 +11,7 @@ import type {
   LineupPayload,
   PlayerAccount,
   RsvpResponse,
+  SeasonStatsSnapshot,
 } from "../types";
 import { clubId, publishableKey, supabaseUrl } from "./config";
 import { getBrowserClient } from "./client";
@@ -170,6 +171,14 @@ export async function readCaptainClub(): Promise<ClubSnapshot> {
   });
   if (error) throw new Error("Captain access could not be verified.");
   return data as ClubSnapshot;
+}
+export async function readSeasonStats(seasonId: string): Promise<SeasonStatsSnapshot> {
+  const { data, error } = await getBrowserClient().rpc("get_season_stats", {
+    p_club_id: clubId,
+    p_season_id: seasonId,
+  });
+  if (error) throw new Error("Player stats could not be loaded. Please try again.");
+  return data as SeasonStatsSnapshot;
 }
 export async function readDrafts() {
   const { data, error } = await getBrowserClient()

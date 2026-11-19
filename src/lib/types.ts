@@ -15,6 +15,25 @@ export type PlayerStat = {
   goals: number;
   assists: number | null;
 };
+export type PlayerSeasonStats = Pick<
+  Player,
+  "id" | "name" | "number" | "position" | "initials" | "isPublic"
+> & {
+  appearances: number;
+  goals: number;
+  assists: number;
+  appearancesKnown: boolean;
+  goalsKnown: boolean;
+  assistsKnown: boolean;
+};
+export type SeasonStatsSnapshot = {
+  teamView: boolean;
+  privatePlayerCount: number;
+  assistsTotal: number | null;
+  assistsRecordedMatches: number;
+  assistsCompleteMatches: number;
+  players: PlayerSeasonStats[];
+};
 export type RsvpResponse = "in" | "maybe" | "out";
 export type MatchRsvp = {
   matchId: string;

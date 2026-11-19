@@ -58,6 +58,20 @@ records are protected from automatic league changes and conflicts are flagged.
 Player privacy settings are preserved; the current private roster’s names and
 individual stats are excluded from public pages and the public API.
 
+The main **Stats** page (`/stats/`) shows all individual stats to signed-in team
+members, with editing restricted to captains. Public visitors see approved public
+players and grey anonymous placeholders for private players. Private identities,
+shirt numbers and individual totals are omitted from the public stats response;
+private players are excluded from public rankings. Team matches, goals, goal
+difference and the goals chart use final match results only. The team assist
+total sums recorded assists from all players, including private players. Missing
+assist records remain unknown; coverage is shown alongside the totals.
+
+The read-only `get_season_stats` API checks current club membership on every
+request. Stats responses are discarded when the account or season changes.
+Run `python tests/stats_view_browser.py` against the preview on port 3100 for
+public/member/captain layouts, anonymization, totals and sign-out race checks.
+
 Run `MAUVE_BASE_URL=http://127.0.0.1:3000 python tests/player_stats_browser.py`
 against a served live-mode production export for isolated browser verification.
 The test intercepts all service requests and makes no production writes.

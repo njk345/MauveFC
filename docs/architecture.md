@@ -20,6 +20,12 @@ Confirmed product decisions:
 
 - Public club site; private team tools (confirmed by the owner).
 - NYC Soccer is the league for the current Fall season (provided by the owner).
+- The main Stats page shows all players to signed-in team members. Public views
+  include only approved public-player identities and individual stats, with
+  anonymous placeholders for private players. Only captains can edit stats.
+- Team matches, goals and goal difference derive exclusively from published
+  final results. Team assists sum recorded player assists, including private
+  players, with missing/partial coverage shown explicitly.
 - LeagueApps program URL:
   https://nycsoccer.leagueapps.com/leagues/soccer/5162244-thurs-7-v-7-coed--bbp-group-b
 
