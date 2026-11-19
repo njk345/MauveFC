@@ -21,6 +21,8 @@ with sync_playwright() as p:
   headers={k:v for k,v in response.headers.items() if k.lower() not in ['content-encoding','content-length','transfer-encoding']}
   route.fulfill(status=response.status,headers=headers,body=response.read())
  page.route('https://maupvkabgveqvwkivtyh.supabase.co/**',bridge)
+ # Keep managed proxy certificate verification in Python for hosted assets too.
+ if BASE.startswith('https://'):page.route(BASE+'/**',bridge)
  for width in [390,1440]:
   page.set_viewport_size({'width':width,'height':900})
   for route in ['/','/schedule/','/results/','/players/','/stats/','/team/','/captain/','/captain/stats/','/captain/fixtures/','/captain/roster/','/captain/access/','/login/']:
