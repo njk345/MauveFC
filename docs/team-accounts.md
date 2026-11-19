@@ -60,6 +60,21 @@ own suggestion; captains can remove any suggestion. Author labels use roster nam
 never account emails. Only captains can save and reopen an unposted draft. Member
 work stays in memory until posted; it is not stored in localStorage.
 
+Position substitutes can be assigned from each selected bench player's **Position
+on sheet** selector. Choose a role to place their name below that starter, or keep
+**General substitutes** to leave them off the pitch. All selected substitutes also
+remain in the list below the diagram. Multiple subs can share a position; pitch
+rows and the PNG export grow to fit their names. Changing formations preserves
+assignments for matching roles and returns removed roles to the general bench.
+Promoting or removing a substitute clears their old assignment.
+
+**First names only on team sheet** shortens starter and substitute names in the
+pitch, bench list and PNG. Shirt numbers remain visible to distinguish teammates
+with the same first name. In the editor, this preference is saved with the draft
+or post. When viewing a posted sheet, anyone can change their local display/export
+without editing the saved lineup or roster names. Existing lineups default to
+full names and a general bench. These display options do not publish player data.
+
 **Export image** creates a PNG in the signed-in browser, including the current
 formation, names/numbers and substitutes. Incomplete, unposted formations can also
 be exported. Download PNG saves the file; compatible mobile browsers offer a file
@@ -73,6 +88,9 @@ invoker RPCs delegate to membership-checked private functions. Captain-only offi
 publishing retains the existing server-side authorization and revision checks.
 The official-publication trigger never records private draft edits. The additive
 migration preserves any currently shared official lineup as its first snapshot.
+The `lineup_position_substitutes` migration validates the optional `benchPositions`
+and `firstNamesOnly` fields for captain and suggestion writes; suggestion
+projections retain both fields. No existing lineup records are rewritten.
 
 The team area refreshes on focus and periodically while visible. Signing out or
 losing membership clears the private workspace. Private data is never embedded

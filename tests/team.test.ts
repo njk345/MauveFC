@@ -28,6 +28,7 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
     "20261110053440_leagueapps_sync.sql",
     "20261113162329_player_accounts_and_rsvps.sql",
     "20261115215504_lineup_suggestions_and_official_history.sql",
+    "20261119193825_lineup_position_substitutes.sql",
   ])
     await db.exec(
       await readFile(
@@ -291,6 +292,88 @@ test("private player accounts, RSVP ownership and shared lineup boundaries", asy
       await scalar("unshare_match_lineup", [M, lineupRevision]);
       await role("authenticated", A);
       assert.equal((await team()).lineups.length, 0);
+    },
+  );
+  await t.test(
+    "position substitutes and name preference persist without widening lineup access",
+    async () => {
+      await role("authenticated", CAP);
+      let revision = (await team()).lineups[0].revision;
+      const sheet = {
+        ...payload,
+        benchPositions: { [ids[7]]: 4 },
+        firstNamesOnly: true,
+      };
+      await scalar("save_match_lineup", [
+        M,
+        revision++,
+        JSON.stringify(sheet),
+        false,
+      ]);
+      assert.deepEqual(
+        (await team()).lineups[0].payload.benchPositions,
+        sheet.benchPositions,
+      );
+      await role("authenticated", A);
+      assert.equal((await team()).lineups.length, 0);
+      await role("authenticated", CAP);
+      await scalar("save_match_lineup", [
+        M,
+        revision++,
+        JSON.stringify(sheet),
+        true,
+      ]);
+      await role("authenticated", A);
+      assert.equal((await team()).lineups[0].payload.firstNamesOnly, true);
+      const id = await scalar("post_lineup_suggestion", [
+        M,
+        JSON.stringify(sheet),
+      ]);
+      const post = (await scalar("get_lineup_posts", [C])).find(
+        (p: any) => p.id === id,
+      );
+      assert.deepEqual(post.payload.benchPositions, sheet.benchPositions);
+      assert.equal(post.payload.firstNamesOnly, true);
+      const invalid = [
+        { firstNamesOnly: "true" },
+        { firstNamesOnly: null },
+        { benchPositions: [] },
+        { benchPositions: null },
+        { benchPositions: { [ids[0]]: 1 } },
+        { benchPositions: { [ids[7]]: 7 } },
+        { benchPositions: { [ids[7]]: -1 } },
+        { benchPositions: { [ids[7]]: "1" } },
+        { benchPositions: { [ids[7]]: 2.5 } },
+        { benchPositions: { [CAP2]: 0 } },
+      ];
+      for (const fields of invalid)
+        await assert.rejects(
+          scalar("post_lineup_suggestion", [
+            M,
+            JSON.stringify({ ...sheet, ...fields }),
+          ]),
+        );
+      await assert.rejects(
+        scalar("save_match_lineup", [
+          M,
+          revision,
+          JSON.stringify(sheet),
+          false,
+        ]),
+      );
+      await scalar("delete_lineup_suggestion", [id]);
+      await role("authenticated", CAP);
+      for (const fields of invalid)
+        await assert.rejects(
+          scalar("save_match_lineup", [
+            M,
+            revision,
+            JSON.stringify({ ...sheet, ...fields }),
+            false,
+          ]),
+        );
+      assert.equal((await team()).lineups[0].revision, revision);
+      await scalar("unshare_match_lineup", [M, revision]);
     },
   );
   await t.test(

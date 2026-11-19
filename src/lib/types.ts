@@ -28,6 +28,8 @@ export type LineupPayload = {
   formation: Formation;
   starters: (string | null)[];
   bench: string[];
+  benchPositions?: Record<string, number>;
+  firstNamesOnly?: boolean;
 };
 export type MatchLineup = {
   matchId: string;
