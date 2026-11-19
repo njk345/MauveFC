@@ -107,7 +107,7 @@ with sync_playwright() as p:
  context,page,state=new_context(browser,'captain')
  page.goto(BASE+'/team/',wait_until='networkidle');page.get_by_role('button',name='Create a lineup from this',exact=True).click();page.get_by_role('combobox',name='Formation',exact=True).select_option('3-2-1');page.get_by_role('button',name='Save lineup draft',exact=True).click();expect(page.get_by_text('PRIVATE DRAFT',exact=True)).to_be_visible()
  assert published['formation']=='2-3-1' and draft['formation']=='3-2-1'
- page.get_by_role('button',name='Export image',exact=True).click();expect(page.get_by_role('dialog')).to_be_visible()
+ page.get_by_role('button',name='Preview image',exact=True).click();expect(page.get_by_role('dialog')).to_be_visible()
  expect(page.locator('.lineup-export-image')).to_have_attribute('alt','Captain draft: 3-2-1 formation for Mauve FC versus Future FC')
  page.get_by_role('button',name='Close image export',exact=True).click()
  page.get_by_role('button',name='Publish official lineup',exact=True).click();expect(page.get_by_text('OFFICIAL',exact=True)).to_be_visible();assert published['formation']=='3-2-1' and draft is None
@@ -132,7 +132,7 @@ with sync_playwright() as p:
  assert published['formation']=='3-2-1'
  expect(page.get_by_role('combobox',name='Team suggestions',exact=True)).not_to_have_value('')
  page.evaluate('Object.defineProperty(navigator,"canShare",{configurable:true,value:()=>true});Object.defineProperty(navigator,"share",{configurable:true,value:async data=>{window.sharedImageName=data.files[0].name}})')
- page.get_by_role('button',name='Export image',exact=True).click()
+ page.get_by_role('button',name='Preview image',exact=True).click()
  expect(page.get_by_role('dialog')).to_be_visible()
  page.get_by_role('button',name='Share image',exact=True).click();assert page.evaluate('window.sharedImageName').endswith('.png')
  with page.expect_download() as info:page.get_by_role('link',name='Download PNG',exact=True).click()
@@ -151,7 +151,7 @@ with sync_playwright() as p:
  page.get_by_role('button',name='Create a lineup from this',exact=True).click()
  page.get_by_role('combobox',name='Starter GK',exact=True).select_option('')
  expect(page.get_by_role('button',name='Post suggestion',exact=True)).to_be_disabled()
- page.get_by_role('button',name='Export image',exact=True).click();expect(page.get_by_role('dialog')).to_be_visible()
+ page.get_by_role('button',name='Preview image',exact=True).click();expect(page.get_by_role('dialog')).to_be_visible()
  page.get_by_role('button',name='Close image export',exact=True).click()
  assert not errors,errors
  print('PASS member creation/posts, separate selectors, latest official default, draft restrictions, incomplete and complete PNG export',flush=True)
