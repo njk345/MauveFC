@@ -5119,3 +5119,29 @@ footer {
 .install-status {padding:1rem 1.2rem;background:#eaf0d6;border-radius:8px;font-size:.8rem;line-height:1.7;}
 @media(max-width:760px){.install-grid {grid-template-columns:minmax(0,1fr);gap:1.5rem;}.install-preview {padding:1.75rem;order:2;}.install-instructions {padding:1rem 0;order:1;}.install-tabs button {padding:.7rem .85rem;}.install-instructions h2 {font-size:2.1rem;}}
 @media(display-mode:standalone){body {padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);}}
+
+/* Flow-based pitch rows grow with position substitutes instead of overlapping. */
+.formation-team-sheet {display:grid;align-content:space-between;min-height:540px;padding:1.5rem .7rem;row-gap:1.75rem;}
+.formation-row {display:flex;justify-content:space-around;align-items:flex-start;gap:.5rem;position:relative;z-index:1;}
+.formation-team-sheet .formation-slot {position:relative;transform:none;inset:auto;flex:1;width:auto;max-width:29%;gap:.45rem;}
+.formation-team-sheet .formation-position {font-size:.75rem;}
+.formation-team-sheet .formation-starter-name {display:block;width:100%;padding:.45rem .4rem;background:#fffefa;color:var(--plum);border:1px solid #d6c9d6;border-radius:8px;font-family:var(--display);font-weight:600;font-size:1.05rem;line-height:1.35;white-space:normal;overflow-wrap:anywhere;overflow:visible;text-overflow:clip;}
+.team-page .formation-team-sheet .formation-slot select {font-size:.8rem;}
+.formation-position-subs {display:grid;gap:.4rem;list-style:none;width:100%;padding:0;margin:.15rem 0 0;}
+.formation-position-subs li {padding:.4rem .35rem;border:1px solid #aa93ac60;background:#65516c;border-radius:7px;color:#fff8ff;text-align:center;font-size:.78rem;line-height:1.45;overflow-wrap:anywhere;}
+.position-sub-label {display:block;font-size:.75rem;letter-spacing:.05em;color:#e6d8e9;margin-bottom:.15rem;}
+.sheet-name-toggle {display:flex;align-items:flex-start;gap:.75rem;margin:1.5rem 0;font-size:.875rem;font-weight:500;line-height:1.6;}
+.sheet-name-toggle input {width:18px;height:18px;accent-color:var(--mauve);margin:.15rem 0 0;flex-shrink:0;}
+.sheet-name-toggle small {display:block;font-size:.8rem;color:var(--muted);font-weight:400;}
+.bench-position-options {gap:1rem;align-items:start;}
+.bench-player-choice {padding:.85rem 1rem;border:1px solid var(--line);border-radius:10px;min-width:0;background:var(--paper);}
+.bench-player-choice.is-selected {background:#f0eaf2;border-color:#d3bfd5;}
+.bench-options .bench-player-choice>label {font-size:.875rem;line-height:1.6;overflow-wrap:anywhere;}
+.bench-player-choice input {width:16px;height:16px;flex-shrink:0;}
+.bench-options .bench-position-field {display:grid;gap:.4rem;margin-top:.9rem;font-size:.8rem;}
+.team-page .bench-position-field select {width:100%;min-width:0;}
+.sheet-bench-list {list-style:none;display:grid;gap:.65rem;padding:0;margin:1rem 0 0;}
+.sheet-bench-list li {display:flex;align-items:center;gap:.65rem;font-size:.875rem;line-height:1.6;overflow-wrap:anywhere;}
+.bench-shirt {color:var(--muted);font-size:.8rem;flex-shrink:0;}
+.bench-role {font-size:.75rem;line-height:1.5;padding:.15rem .45rem;border-radius:5px;background:#ece3ee;color:#614b65;flex-shrink:0;}
+@media(max-width:600px){.formation-team-sheet {padding:1.25rem .5rem;row-gap:1.5rem;}.formation-row {gap:.3rem;}.formation-team-sheet .formation-slot {max-width:32%;}.formation-team-sheet .formation-starter-name {font-size:.9rem;padding:.4rem .2rem;}.formation-position-subs li {font-size:.75rem;padding:.35rem .2rem;}.position-sub-label {font-size:.75rem;}.team-page .formation-team-sheet .formation-slot select {font-size:.75rem;padding-left:.3rem;}}

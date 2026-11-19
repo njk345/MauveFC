@@ -4,6 +4,13 @@ import { useAuth } from "./auth/auth-provider";
 import { LineupExport } from "./lineup-export";
 import { formations } from "@/lib/formations";
 import {
+  changeFormation,
+  formationRows,
+  positionSubstitutes,
+  sheetName,
+  withoutBenchPosition,
+} from "@/lib/lineup-sheet";
+import {
   deleteLineupSuggestion,
   postLineupSuggestion,
   unshareLineup,
@@ -56,7 +63,8 @@ export function LineupBoard({
     [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [nameOverride, setNameOverride] = useState<boolean | null>(null);
   const official = posts.filter((p) => p.kind === "official"),
     suggestions = posts.filter((p) => p.kind === "suggestion"),
     selected =
@@ -66,6 +74,7 @@ export function LineupBoard({
         ? lineup.payload
         : null,
     payload = composer || savedDraft || selected?.payload || empty(),
+    firstNames = nameOverride ?? payload.firstNamesOnly ?? false,
     editing = composer !== null,
     complete = payload.starters.every(Boolean),
     label = editing
@@ -101,6 +110,7 @@ export function LineupBoard({
     }
   }, [view, lineup, auth.captain, composer]);
   function clearChanges() {
+    setNameOverride(null);
     setDirty(false);
     onDirty(false);
     setError("");
@@ -116,7 +126,7 @@ export function LineupBoard({
     clearChanges();
   }
   function begin() {
-    setComposer(structuredClone(payload));
+    setComposer(structuredClone({ ...payload, firstNamesOnly: firstNames }));
     setRevision(lineup?.revision || 0);
     clearChanges();
   }
@@ -305,7 +315,7 @@ export function LineupBoard({
               disabled={busy}
               value={payload.formation}
               onChange={(e) =>
-                change({ ...payload, formation: e.target.value as Formation })
+                change(changeFormation(payload, e.target.value as Formation))
               }
             >
               {Object.keys(formations).map((f) => (
@@ -320,8 +330,26 @@ export function LineupBoard({
           </p>
         </>
       )}
+      <label className="sheet-name-toggle">
+        <input
+          type="checkbox"
+          checked={firstNames}
+          disabled={busy}
+          onChange={(e) =>
+            editing
+              ? change({ ...payload, firstNamesOnly: e.target.checked })
+              : setNameOverride(e.target.checked)
+          }
+        />
+        <span>
+          First names only on team sheet
+          <small>
+            Applies to the formation, substitutes and exported image.
+          </small>
+        </span>
+      </label>
       <div
-        className="formation-pitch"
+        className="formation-pitch formation-team-sheet"
         aria-label={`${payload.formation} formation`}
       >
         <div className="pitch-boundary" />
@@ -329,89 +357,166 @@ export function LineupBoard({
         <div className="pitch-circle" />
         <div className="pitch-goal-area top" />
         <div className="pitch-goal-area bottom" />
-        {formations[payload.formation].map((slot, i) => {
-          const player = players.find((p) => p.id === payload.starters[i]);
-          return (
-            <div
-              className="formation-slot"
-              style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-              key={i}
-            >
-              <span className="formation-position">{slot.label}</span>
-              <span className="formation-player-number">
-                {player?.number ?? "—"}
-              </span>
-              {editing ? (
-                <select
-                  aria-label={`Starter ${slot.label}`}
-                  disabled={busy}
-                  value={payload.starters[i] || ""}
-                  onChange={(e) => {
-                    const starters = [...payload.starters];
-                    starters[i] = e.target.value || null;
-                    change({
-                      ...payload,
-                      starters,
-                      bench: payload.bench.filter(
-                        (id) => id !== e.target.value,
-                      ),
-                    });
-                  }}
-                >
-                  <option value="">Choose player</option>
-                  {players
-                    .filter(
-                      (p) =>
-                        p.id === payload.starters[i] ||
-                        !payload.starters.includes(p.id),
-                    )
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                </select>
-              ) : (
-                <strong title={player?.name}>
-                  {player?.name || "Unassigned"}
-                </strong>
-              )}
-            </div>
-          );
-        })}
+        {formationRows(payload.formation).map((row, rowIndex) => (
+          <div className="formation-row" key={rowIndex}>
+            {row.map((slot) => {
+              const i = slot.index,
+                player = players.find((p) => p.id === payload.starters[i]);
+              const subs = positionSubstitutes(payload, i, players);
+              return (
+                <div className="formation-slot" key={i} data-slot={slot.label}>
+                  <span className="formation-position">{slot.label}</span>
+                  <span className="formation-player-number">
+                    {player?.number ?? "—"}
+                  </span>
+                  {editing ? (
+                    <select
+                      aria-label={`Starter ${slot.label}`}
+                      disabled={busy}
+                      value={payload.starters[i] || ""}
+                      onChange={(e) => {
+                        const starters = [...payload.starters];
+                        starters[i] = e.target.value || null;
+                        change({
+                          ...payload,
+                          starters,
+                          bench: payload.bench.filter(
+                            (id) => id !== e.target.value,
+                          ),
+                          benchPositions: withoutBenchPosition(
+                            payload,
+                            e.target.value,
+                          ),
+                        });
+                      }}
+                    >
+                      <option value="">Choose player</option>
+                      {players
+                        .filter(
+                          (p) =>
+                            p.id === payload.starters[i] ||
+                            !payload.starters.includes(p.id),
+                        )
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            #{p.number} {sheetName(p, firstNames)}
+                          </option>
+                        ))}
+                    </select>
+                  ) : (
+                    <strong className="formation-starter-name">
+                      {player ? sheetName(player, firstNames) : "Unassigned"}
+                    </strong>
+                  )}
+                  {subs.length > 0 && (
+                    <ul
+                      className="formation-position-subs"
+                      aria-label={`Substitutes for ${slot.label}`}
+                    >
+                      {subs.map((sub) => (
+                        <li key={sub.id}>
+                          <span className="position-sub-label">
+                            SUB · #{sub.number}
+                          </span>
+                          <span>{sheetName(sub, firstNames)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
       <div className="lineup-bench">
         <h4>Substitutes</h4>
         {editing ? (
-          <div className="bench-options">
-            {players
-              .filter((p) => !payload.starters.includes(p.id))
-              .map((p) => (
-                <label key={p.id}>
-                  <input
-                    type="checkbox"
-                    checked={payload.bench.includes(p.id)}
-                    disabled={busy}
-                    onChange={(e) =>
-                      change({
-                        ...payload,
-                        bench: e.target.checked
-                          ? [...payload.bench, p.id]
-                          : payload.bench.filter((id) => id !== p.id),
-                      })
-                    }
-                  />
-                  #{p.number} {p.name}
-                </label>
-              ))}
-          </div>
+          <>
+            <p className="help-text">
+              Choose your substitutes, then place any of them below a starter on
+              the pitch. Everyone selected stays in the substitutes list too.
+            </p>
+            <div className="bench-options bench-position-options">
+              {players
+                .filter((p) => !payload.starters.includes(p.id))
+                .map((p) => (
+                  <div
+                    className={`bench-player-choice ${payload.bench.includes(p.id) ? "is-selected" : ""}`}
+                    key={p.id}
+                  >
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={payload.bench.includes(p.id)}
+                        disabled={busy}
+                        onChange={(e) =>
+                          change({
+                            ...payload,
+                            bench: e.target.checked
+                              ? [...payload.bench, p.id]
+                              : payload.bench.filter((id) => id !== p.id),
+                            benchPositions: e.target.checked
+                              ? payload.benchPositions
+                              : withoutBenchPosition(payload, p.id),
+                          })
+                        }
+                      />
+                      #{p.number} {sheetName(p, firstNames)}
+                    </label>
+                    {payload.bench.includes(p.id) && (
+                      <label className="bench-position-field">
+                        <span>Position on sheet</span>
+                        <select
+                          aria-label={`Substitute position for ${p.name}`}
+                          disabled={busy}
+                          value={payload.benchPositions?.[p.id] ?? ""}
+                          onChange={(e) =>
+                            change({
+                              ...payload,
+                              benchPositions:
+                                e.target.value === ""
+                                  ? withoutBenchPosition(payload, p.id)
+                                  : {
+                                      ...payload.benchPositions,
+                                      [p.id]: Number(e.target.value),
+                                    },
+                            })
+                          }
+                        >
+                          <option value="">General substitutes</option>
+                          {formations[payload.formation].map((slot, i) => (
+                            <option key={i} value={i}>
+                              {slot.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </>
         ) : (
-          <p>
-            {payload.bench
-              .map((id) => players.find((p) => p.id === id)?.name)
-              .filter(Boolean)
-              .join(" · ") || "No substitutes named."}
-          </p>
+          <ul className="sheet-bench-list">
+            {payload.bench.map((id) => {
+              const player = players.find((p) => p.id === id);
+              if (!player) return null;
+              const index = payload.benchPositions?.[id];
+              return (
+                <li key={id}>
+                  <span className="bench-shirt">#{player.number}</span>
+                  <span>{sheetName(player, firstNames)}</span>
+                  {index !== undefined && (
+                    <span className="bench-role">
+                      {formations[payload.formation][index]?.label}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+            {!payload.bench.length && <li>No substitutes named.</li>}
+          </ul>
         )}
       </div>
       {error && (
@@ -457,7 +562,7 @@ export function LineupBoard({
         <LineupExport
           key={`${match.id}:${view}:${editing}`}
           match={match}
-          payload={payload}
+          payload={{ ...payload, firstNamesOnly: firstNames }}
           players={players}
           label={label}
         />
