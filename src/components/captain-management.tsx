@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Plus, Save } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
 import { PageHeading } from "./season-pages";
-import type { Match, Player } from "@/lib/types";
+import type { Match, Player, PlayoffRound } from "@/lib/types";
+import { playoffRounds } from "@/features/matches/playoffs";
 import { fromNewYorkInput, toNewYorkInput } from "@/lib/kickoff";
 import { useLeagueFixture } from "@/lib/supabase/repository";
 export function FixtureManagement() {
@@ -28,6 +29,7 @@ export function FixtureManagement() {
         home: true,
         status: "scheduled",
         revision: 0,
+        playoffRound: null,
       },
     );
     setKickoff(toNewYorkInput(match?.kickoff || null));
@@ -70,6 +72,8 @@ export function FixtureManagement() {
                   <strong>{m.opponent}</strong>
                   <small>
                     Matchday {m.round} · {m.status}
+                    {m.playoffRound &&
+                      ` · Playoffs: ${playoffRounds[m.playoffRound]}`}
                     {m.source &&
                       (m.fixtureOverride
                         ? " · Captain override"
@@ -92,7 +96,7 @@ export function FixtureManagement() {
               <p className="help-text">
                 {editing.fixtureOverride
                   ? "Your fixture details are protected from league updates."
-                  : "LeagueApps keeps this fixture up to date. Changing its details creates a captain override."}
+                  : "LeagueApps keeps this fixture up to date. Playoff labels are managed by the captain; changing schedule details creates a captain override."}
               </p>
             )}
             {editing.fixtureOverride && (
@@ -118,6 +122,50 @@ export function FixtureManagement() {
                 Restore league fixture details
               </button>
             )}
+            <fieldset className="playoff-settings">
+              <legend>Match type</legend>
+              <label className="playoff-toggle">
+                <input
+                  type="checkbox"
+                  checked={!!editing.playoffRound}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      playoffRound: e.target.checked ? "playoffs" : null,
+                    })
+                  }
+                />
+                <span>Playoff match</span>
+              </label>
+              {editing.playoffRound && (
+                <label className="form-field">
+                  <span>Playoff round</span>
+                  <select
+                    aria-label="Playoff round"
+                    value={editing.playoffRound}
+                    onChange={(e) =>
+                      setEditing({
+                        ...editing,
+                        playoffRound: e.target.value as PlayoffRound,
+                      })
+                    }
+                  >
+                    {Object.entries(playoffRounds).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {value === "playoffs"
+                          ? "Playoffs · round not specified"
+                          : label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <p>
+                Playoff games appear in Schedule, Results and Stats. Their
+                results do not count toward Home’s regular-season record or
+                league standings.
+              </p>
+            </fieldset>
             <label className="form-field">
               <span>Opponent</span>
               <input

@@ -7,6 +7,8 @@ import { date, day, month, time } from "@/lib/format";
 import type { Match } from "@/lib/types";
 import { usePrototype } from "./prototype-provider";
 import { outcome } from "@/features/stats/queries";
+import { isFinalsWin } from "@/features/matches/playoffs";
+import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
 export function FormBadge({ value }: { value: string | null }) {
   return <span className={`form-badge form-${value}`}>{value || "—"}</span>;
 }
@@ -21,7 +23,9 @@ export function MatchRow({
 }) {
   const result = match.result?.published ? match.result : undefined;
   return (
-    <div className={`match-row ${result ? "finished" : ""}`}>
+    <div
+      className={`match-row ${result ? "finished" : ""} ${isFinalsWin(match) ? "championship-result" : ""}`}
+    >
       <div className="match-date">
         <strong>{day(match.kickoff)}</strong>
         <span>{month(match.kickoff)}</span>
@@ -31,6 +35,7 @@ export function MatchRow({
           MATCHDAY {String(match.round).padStart(2, "0")}{" "}
           <span>· {match.home ? "HOME" : "AWAY"}</span>
         </div>
+        <PlayoffBadge match={match} />
         <div className="match-opponent">
           <OpponentBadge small code={match.opponentCode} color={match.color} />
           {onOpen ? (
@@ -52,9 +57,12 @@ export function MatchRow({
       <div className="match-row-end">
         {result ? (
           <>
-            <strong className="row-score">
-              {result.home} <span>–</span> {result.away}
-            </strong>
+            <div className="result-score-stack">
+              <strong className="row-score">
+                {result.home} <span>–</span> {result.away}
+              </strong>
+              <FinalsVictory match={match} />
+            </div>
             <FormBadge value={outcome(match)} />
           </>
         ) : (
@@ -171,6 +179,7 @@ export function FixtureCard({ match }: { match: Match }) {
         <span className="live-dot" /> NEXT UP{" "}
         <span>MATCHDAY {String(match.round).padStart(2, "0")}</span>
       </div>
+      <PlayoffBadge match={match} />
       <div className="fixture-teams">
         <div>
           <Crest />

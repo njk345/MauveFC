@@ -26,6 +26,9 @@ Confirmed product decisions:
 - Team matches, goals and goal difference derive exclusively from published
   final results. Team assists sum recorded player assists, including private
   players, with missing/partial coverage shown explicitly.
+- Captains manually designate playoffs and optional Quarterfinals, Semifinals
+  or Finals. Home’s record and form exclude playoffs; Schedule, Results and Stats
+  include them. A published Finals win celebrates the selected season’s title.
 - LeagueApps program URL:
   https://nycsoccer.leagueapps.com/leagues/soccer/5162244-thurs-7-v-7-coed--bbp-group-b
 
@@ -81,7 +84,7 @@ These are conceptual entities, not a finalized SQL schema.
 | `seasons` | Competition name, dates, format, match length, points rules |
 | `season_roster` | Official membership of a player in a season |
 | `private.match_guests` | Club player assigned to one game as a non-roster substitute |
-| `matches` | Season, opponent, venue, kickoff, fixture status, publication state |
+| `matches` | Season, opponent, venue, kickoff, fixture status, publication state, captain-managed playoff round |
 | `match_results` | Official and on-field scores, result basis, forfeit/adjustment reason |
 | `match_player_stats` | Player appearance, goals, assists, optional minutes and keeper details |
 | `schedule_sources` | Feed/API configuration, last successful sync, health |
@@ -107,6 +110,15 @@ Detailed `match_events` can follow if someone will actually record them.
 - **Official versus on-field:** store both score pairs when they differ. Official
   scores drive the club's league record; on-field scores describe the game played.
   A forfeit must not silently invent player goals, appearances, or clean sheets.
+- **Regular season versus playoffs:** nullable `matches.playoff_round` is regular
+  season when null, otherwise `playoffs`, `quarterfinals`, `semifinals` or `finals`.
+  Only captains can set it through the revision-checked fixture workflow.
+  LeagueApps imports and fixture restores preserve it; changing only this field
+  does not set a schedule override. Home and `public_season_totals` use regular
+  results only, while Results and Stats use all published results. League standings
+  remain authoritative imported standings. Finals trophies and Home’s champions
+  banner derive from the current published winning result, rather than a stored
+  flag, so corrections remove them. Confetti respects reduced-motion preferences.
 - **Unknown versus zero:** use nullable optional metrics and a capture status for
   attendance, scorers, and assists. No stats rows means unrecorded, not nobody played.
   Keep aggregate coverage visible, for example “assists recorded for 6 of 8 games.”

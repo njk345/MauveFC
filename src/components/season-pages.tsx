@@ -26,6 +26,8 @@ import type { Match } from "@/lib/types";
 import { LeaguePageNote } from "./league-connection";
 import { useAuth } from "./auth/auth-provider";
 import { PlayerDirectory } from "./player-directory";
+import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
+import { isFinalsWin } from "@/features/matches/playoffs";
 export function PageHeading({
   eyebrow,
   title,
@@ -60,7 +62,7 @@ export function MatchDetails({
   return (
     <Modal onClose={onClose}>
       <section
-        className="dialog match-dialog"
+        className={`dialog match-dialog ${isFinalsWin(match) ? "championship-result" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="match-title"
@@ -77,6 +79,7 @@ export function MatchDetails({
         <span className="eyebrow">
           {live ? "FIXTURE" : "SAMPLE FIXTURE"} · MATCHDAY {match.round}
         </span>
+        <PlayoffBadge match={match} />
         <h2 id="match-title">Mauve FC vs {match.opponent}</h2>
         <p>
           {date(match.kickoff, "long")} · {time(match.kickoff)}
@@ -93,6 +96,7 @@ export function MatchDetails({
               </strong>
               <OpponentBadge code={match.opponentCode} color={match.color} />
             </div>
+            <FinalsVictory match={match} />
             <div className="detail-stats">
               <h3>On the scoresheet</h3>
               {r.stats
@@ -330,7 +334,11 @@ export function ResultsPage() {
             <span>D</span> <i>—</i> {stats.losses}
             <span>L</span>
           </strong>
-          <span>SEASON RECORD</span>
+          <span>
+            {completed.some((m) => m.playoffRound)
+              ? "RECORD INCLUDING PLAYOFFS"
+              : "SEASON RECORD"}
+          </span>
         </div>
         <div>
           <strong>

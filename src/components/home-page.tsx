@@ -12,11 +12,23 @@ import {
 import { Crest, Jersey, OpponentBadge } from "./brand";
 import { FixtureCard } from "./matches";
 import { HomeStandings } from "./home-standings";
+import {
+  championshipWin,
+  regularSeasonMatches,
+} from "@/features/matches/playoffs";
+import {
+  HomeChampions,
+  PlayoffBadge,
+  FinalsVictory,
+} from "./playoff-celebration";
 export function HomePage() {
   const { matches, seasonId, seasons, players, live } = usePrototype(),
     season = seasons.find((s) => s.id === seasonId)!;
   const fixtures = matches.filter((m) => m.seasonId === seasonId),
+    regular = regularSeasonMatches(fixtures),
     completed = publishedMatches(fixtures),
+    regularCompleted = publishedMatches(regular),
+    champions = championshipWin(fixtures),
     latest = completed.at(-1),
     next = fixtures.find(
       (m) =>
@@ -24,9 +36,9 @@ export function HomePage() {
         !m.result?.published &&
         (!live || !m.kickoff || Date.parse(m.kickoff) >= Date.now()),
     ),
-    stats = teamStats(fixtures),
+    stats = teamStats(regular),
     leaders = playerStats(
-      fixtures,
+      regular,
       players.filter((p) => p.isPublic !== false),
     ).slice(0, 3);
   return (
@@ -52,11 +64,12 @@ export function HomePage() {
           </div>
         </div>
       </section>
+      {champions && <HomeChampions match={champions} season={season.name} />}
       <section className="section home-match-section">
         <div className="section-heading">
           <div>
             <span className="eyebrow">
-              {season.name} / {stats.played} MATCHES PLAYED
+              {season.name} / REGULAR SEASON · {stats.played} MATCHES PLAYED
             </span>
             <h2>Every match matters.</h2>
           </div>
@@ -88,29 +101,29 @@ export function HomePage() {
             <article className="fixture-card season-over">
               <Crest />
               <h2>
-                {live && !stats.played
+                {live && !completed.length
                   ? "A new chapter awaits."
                   : "That’s a wrap."}
               </h2>
               <p>
                 {live
-                  ? stats.played
+                  ? completed.length
                     ? "No upcoming matches are scheduled. See how we finished."
                     : "The season is taking shape. Check back for the first fixture."
                   : "The sample season is complete. See how we finished."}
               </p>
               <Link
-                href={stats.played ? "/results/" : "/schedule/"}
+                href={completed.length ? "/results/" : "/schedule/"}
                 className="button light"
               >
-                {stats.played ? "Explore results" : "Explore fixtures"}{" "}
+                {completed.length ? "Explore results" : "Explore fixtures"}{" "}
                 <ArrowRight size={16} />
               </Link>
             </article>
           )}
           <HomeStandings
             seasonId={seasonId}
-            completed={completed}
+            completed={regularCompleted}
             live={live}
           />
         </div>
@@ -135,12 +148,15 @@ export function HomePage() {
           </Link>
         </div>
         {latest && (
-          <div className="latest-match">
+          <div
+            className={`latest-match ${champions?.id === latest.id ? "championship-result" : ""}`}
+          >
             <div className="latest-label">
               <span className="eyebrow">FULL TIME</span>
               <span>
                 {season.name} · Matchday {latest.round}
               </span>
+              <PlayoffBadge match={latest} />
             </div>
             <div className="latest-score">
               <span className="latest-team">
@@ -162,12 +178,19 @@ export function HomePage() {
               </span>
             </div>
             <div className="latest-note">
+              <FinalsVictory match={latest} />
               <span className={`result-word result-${outcome(latest)}`}>
-                {outcome(latest) === "W"
-                  ? "THREE POINTS. ALL MAUVE."
-                  : outcome(latest) === "D"
-                    ? "A POINT TO BUILD ON."
-                    : "WE GO AGAIN."}
+                {latest.playoffRound
+                  ? outcome(latest) === "W"
+                    ? "A PLAYOFF WIN. ALL MAUVE."
+                    : outcome(latest) === "D"
+                      ? "LEVEL AT THE WHISTLE."
+                      : "WE GO AGAIN."
+                  : outcome(latest) === "W"
+                    ? "THREE POINTS. ALL MAUVE."
+                    : outcome(latest) === "D"
+                      ? "A POINT TO BUILD ON."
+                      : "WE GO AGAIN."}
               </span>
               <Link href="/results/">
                 Match details <MoveUpRight size={15} />
