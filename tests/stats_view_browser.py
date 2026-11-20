@@ -38,7 +38,8 @@ def new_context(browser, kind, width=1440):
         value['players'] = [] if state['all_private'] else [players[0]]
         value['roster'] = [r for r in value['roster'] if not state['all_private'] and r['playerId']==ids[0]]
         for m in value['matches']:
-            m['result']['stats'] = [s for s in m['result']['stats'] if not state['all_private'] and s['playerId']==ids[0]]
+            if m.get('result'):
+                m['result']['stats'] = [s for s in m['result']['stats'] if not state['all_private'] and s['playerId']==ids[0]]
         return value
     def stats(season):
         member = state['kind'] in ['player','captain']
@@ -81,71 +82,72 @@ def totals(page):
     expect(card(page,'GOAL DIFFERENCE')).to_have_text('+6')
     expect(card(page,'ASSISTS RECORDED')).to_have_text('5')
 
-Path('artifacts').mkdir(exist_ok=True)
-with sync_playwright() as p:
-    browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
-    for kind in [None,'outsider','player','captain']:
-        context,page,state,_=new_context(browser,kind)
-        page.goto(BASE+'/stats/',wait_until='networkidle')
-        expect(page.locator('.leaderboard-table tbody tr')).to_have_count(15)
-        totals(page)
-        if kind in ['player','captain']:
-            expect(page.locator('.private-stats-row')).to_have_count(0)
-            expect(page.locator('.leaderboard-table')).to_contain_text(names[1])
-            expect(page.locator('.leaderboard-table tbody tr').first).to_contain_text(names[1])
-            expect(page.locator('.leaderboard-table a').filter(has_text=names[1])).to_have_count(0)
-            expect(page.locator('.stats-visibility-note')).to_contain_text('Team view')
-        else:
-            expect(page.locator('.private-stats-row')).to_have_count(14)
-            for name in names[1:]: assert name not in page.locator('main').inner_text()
-            expect(page.locator('.private-stats-row').first.locator('td').nth(3)).to_have_text('—')
-            assert not page.locator('.private-stats-row a').count()
-        for width in [1440,390,320]:
-            page.set_viewport_size(dict(width=width,height=1000))
-            page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
-            page.wait_for_timeout(900) # Let the existing chart resize animation finish before capture.
-            page.screenshot(path=f'artifacts/stats-{kind or "public"}-{width}.png',full_page=True)
-            assert page.evaluate('document.documentElement.scrollWidth')<=width,(kind,width,page.locator('body').evaluate('(body)=>[...body.querySelectorAll("*")].filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>({tag:e.tagName,cls:e.className,w:e.getBoundingClientRect().width})).slice(0,12)'))
-        for metric in ['Assists','Appearances','Goals']:
-            page.get_by_role('button',name=metric,exact=True).click(); totals(page)
-        page.get_by_role('combobox',name='Season',exact=True).select_option(OLD)
-        expect(card(page,'MATCHES PLAYED')).to_have_text('0')
-        expect(card(page,'ASSISTS RECORDED')).to_have_text('—')
-        page.get_by_role('combobox',name='Season',exact=True).select_option(S)
-        totals(page)
-        if kind is None:
-            state['all_private']=True
-            page.get_by_role('button',name='Refresh stats',exact=True).click()
-            expect(page.locator('.private-stats-row')).to_have_count(15)
-            assert names[0] not in page.locator('.leaderboard-table').inner_text()
+if __name__ == '__main__':
+    Path('artifacts').mkdir(exist_ok=True)
+    with sync_playwright() as p:
+        browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+        for kind in [None,'outsider','player','captain']:
+            context,page,state,_=new_context(browser,kind)
+            page.goto(BASE+'/stats/',wait_until='networkidle')
+            expect(page.locator('.leaderboard-table tbody tr')).to_have_count(15)
             totals(page)
-            state['zero']=True
-            page.get_by_role('button',name='Refresh stats',exact=True).click()
-            expect(card(page,'ASSISTS RECORDED')).to_have_text('0')
-            state['fail']=True
-            page.get_by_role('button',name='Refresh stats',exact=True).click()
-            expect(page.locator('.form-errors[role="alert"]')).to_contain_text('could not be loaded')
-            expect(card(page,'GOALS SCORED')).to_have_text('8')
-            state['fail']=False
-            page.get_by_role('button',name='Try again',exact=True).click()
-            expect(page.locator('.private-stats-row')).to_have_count(15)
+            if kind in ['player','captain']:
+                expect(page.locator('.private-stats-row')).to_have_count(0)
+                expect(page.locator('.leaderboard-table')).to_contain_text(names[1])
+                expect(page.locator('.leaderboard-table tbody tr').first).to_contain_text(names[1])
+                expect(page.locator('.leaderboard-table a').filter(has_text=names[1])).to_have_count(0)
+                expect(page.locator('.stats-visibility-note')).to_contain_text('Team view')
+            else:
+                expect(page.locator('.private-stats-row')).to_have_count(14)
+                for name in names[1:]: assert name not in page.locator('main').inner_text()
+                expect(page.locator('.private-stats-row').first.locator('td').nth(3)).to_have_text('—')
+                assert not page.locator('.private-stats-row a').count()
+            for width in [1440,390,320]:
+                page.set_viewport_size(dict(width=width,height=1000))
+                page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
+                page.wait_for_timeout(900) # Let the existing chart resize animation finish before capture.
+                page.screenshot(path=f'artifacts/stats-{kind or "public"}-{width}.png',full_page=True)
+                assert page.evaluate('document.documentElement.scrollWidth')<=width,(kind,width,page.locator('body').evaluate('(body)=>[...body.querySelectorAll("*")].filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>({tag:e.tagName,cls:e.className,w:e.getBoundingClientRect().width})).slice(0,12)'))
+            for metric in ['Assists','Appearances','Goals']:
+                page.get_by_role('button',name=metric,exact=True).click(); totals(page)
+            page.get_by_role('combobox',name='Season',exact=True).select_option(OLD)
+            expect(card(page,'MATCHES PLAYED')).to_have_text('0')
+            expect(card(page,'ASSISTS RECORDED')).to_have_text('—')
+            page.get_by_role('combobox',name='Season',exact=True).select_option(S)
+            totals(page)
+            if kind is None:
+                state['all_private']=True
+                page.get_by_role('button',name='Refresh stats',exact=True).click()
+                expect(page.locator('.private-stats-row')).to_have_count(15)
+                assert names[0] not in page.locator('.leaderboard-table').inner_text()
+                totals(page)
+                state['zero']=True
+                page.get_by_role('button',name='Refresh stats',exact=True).click()
+                expect(card(page,'ASSISTS RECORDED')).to_have_text('0')
+                state['fail']=True
+                page.get_by_role('button',name='Refresh stats',exact=True).click()
+                expect(page.locator('.form-errors[role="alert"]')).to_contain_text('could not be loaded')
+                expect(card(page,'GOALS SCORED')).to_have_text('8')
+                state['fail']=False
+                page.get_by_role('button',name='Try again',exact=True).click()
+                expect(page.locator('.private-stats-row')).to_have_count(15)
+            context.close()
+        # Another tab signs out while a private response is in flight. The old
+        # response must not restore private rows after identity changes.
+        context,page,state,respond=new_context(browser,'player',390)
+        page.goto(BASE+'/stats/',wait_until='networkidle')
+        expect(page.locator('.leaderboard-table')).to_contain_text(names[1])
+        other=context.new_page();other.goto(BASE+'/team/',wait_until='networkidle')
+        state['hold']=True
+        page.get_by_role('button',name='Refresh stats',exact=True).click()
+        expect(page.get_by_text('Loading player stats…',exact=True)).to_be_visible()
+        assert state['pending']
+        other.get_by_role('button',name='Sign out',exact=True).click()
+        expect(page.locator('.private-stats-row')).to_have_count(14)
+        for route,payload in state['pending']:respond(route,payload)
+        expect(page.locator('.leaderboard-table')).not_to_contain_text(names[1])
+        expect(page.locator('.private-stats-row')).to_have_count(14)
         context.close()
-    # Another tab signs out while a private response is in flight. The old
-    # response must not restore private rows after identity changes.
-    context,page,state,respond=new_context(browser,'player',390)
-    page.goto(BASE+'/stats/',wait_until='networkidle')
-    expect(page.locator('.leaderboard-table')).to_contain_text(names[1])
-    other=context.new_page();other.goto(BASE+'/team/',wait_until='networkidle')
-    state['hold']=True
-    page.get_by_role('button',name='Refresh stats',exact=True).click()
-    expect(page.get_by_text('Loading player stats…',exact=True)).to_be_visible()
-    assert state['pending']
-    other.get_by_role('button',name='Sign out',exact=True).click()
-    expect(page.locator('.private-stats-row')).to_have_count(14)
-    for route,payload in state['pending']:respond(route,payload)
-    expect(page.locator('.leaderboard-table')).not_to_contain_text(names[1])
-    expect(page.locator('.private-stats-row')).to_have_count(14)
-    context.close()
-    assert not errors,errors
-    print('PASS main Stats public/member/captain views, anonymization, complete team assists, official totals, season changes, unknown/zero, retries and sign-out response races')
-    browser.close()
+        assert not errors,errors
+        print('PASS main Stats public/member/captain views, anonymization, complete team assists, official totals, season changes, unknown/zero, retries and sign-out response races')
+        browser.close()

@@ -103,7 +103,9 @@ export type Result = {
   published: boolean;
   updatedAt?: string;
 };
+export type PlayoffRound = "playoffs" | "quarterfinals" | "semifinals" | "finals";
 export type Match = {
+  playoffRound?: PlayoffRound | null;
   guestPlayerIds?: string[];
   source?: "leagueapps";
   externalId?: string;

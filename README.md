@@ -104,6 +104,30 @@ Run `python tests/guests_browser.py` against the production preview on port 3100
 for isolated guest creation/reuse, stats, lineups, exports, directory and privacy
 checks. All service requests are intercepted; tests make no production writes.
 
+## Playoffs
+
+In **Captain’s area → Fixtures**, edit a game, check **Playoff match**, and
+optionally choose Quarterfinals, Semifinals or Finals. Save the fixture to apply
+the label to past or upcoming games. These captain-managed labels survive
+LeagueApps refreshes and restoring league fixture details. Changing only the
+playoff label leaves automatic schedule updates enabled.
+
+Home’s record, points, match count, goal difference and form cover the regular
+season only; league standings remain the imported LeagueApps standings.
+Schedule and Results label every playoff game. Results and the main Stats page
+include playoff results, appearances, goals and assists with the usual privacy
+rules. Team goals still come from official results, and team assists from the
+recorded player stats.
+
+A published Finals win adds a trophy, a brief confetti burst and a league-champions
+banner on Home for that season. Reduced-motion preferences keep the trophies
+without animation. Correcting the result or removing the Finals designation
+automatically removes the celebration when it no longer applies.
+
+Run `python tests/playoffs_browser.py` against the live-mode production preview
+on port 3100 for captain editing, labels, totals, celebrations and mobile checks.
+All service requests are intercepted; tests make no production writes.
+
 ## Add to home screen
 
 Open `/install/` from the footer or mobile menu. The Mauve FC icon launches the

@@ -114,7 +114,7 @@ export function HomeStandings({
         <div className="friendly-summary">
           <h3>Every point earned.</h3>
           <p>
-            The club record reflects published results. League standings will
+            The club record reflects published regular-season results. League standings will
             appear once a verified source is connected.
           </p>
           <Link className="text-link" href="/stats/">

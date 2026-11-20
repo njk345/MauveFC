@@ -215,6 +215,7 @@ export type Database = {
           id: string
           kickoff: string | null
           league_fixture_override: boolean
+          playoff_round: string | null
           opponent: string
           opponent_code: string
           revision: number
@@ -231,6 +232,7 @@ export type Database = {
           id?: string
           kickoff?: string | null
           league_fixture_override?: boolean
+          playoff_round?: string | null
           opponent: string
           opponent_code: string
           revision?: number
@@ -247,6 +249,7 @@ export type Database = {
           id?: string
           kickoff?: string | null
           league_fixture_override?: boolean
+          playoff_round?: string | null
           opponent?: string
           opponent_code?: string
           revision?: number

@@ -373,9 +373,11 @@ export function StatsPage() {
         <div>
           <h3>The numbers need context.</h3>
           <p>
-            Matches, team goals and goal difference come exclusively from final
-            match results. Assists are the sum of recorded player assists,
-            including players with private profiles.{" "}
+            Playoff matches are included in these totals. Home’s record and
+            league standings cover the regular season. Matches, team goals and
+            goal difference come exclusively from final match results. Assists
+            are the sum of recorded player assists, including players with
+            private profiles.{" "}
             {data
               ? `Assists fully recorded for ${data.assistsCompleteMatches} of ${stats.played} matches; at least partially recorded for ${data.assistsRecordedMatches}.`
               : "Assist recording coverage is currently unavailable."}{" "}
