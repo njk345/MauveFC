@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -32,6 +33,7 @@ export function CaptainPage() {
       roster,
       live,
       seasonId,
+      setSeasonId,
       drafts,
       saveResult,
       setNotice,
@@ -49,6 +51,8 @@ export function CaptainPage() {
     [dirty, setDirty] = useState(false),
     [saving, setSaving] = useState(false),
     [guestBusy, setGuestBusy] = useState(false);
+  const matchQuery = useSearchParams().get("match");
+  const handledRequest = useRef<string | null | undefined>(undefined);
   const match = fixtures.find((m) => m.id === selectedId);
   const players = matchPlayers(allPlayers, roster, match);
   function load(m: Match) {
@@ -63,15 +67,41 @@ export function CaptainPage() {
     setSuccess(false);
     setDirty(false);
   }
+  function syncMatchUrl(id: string) {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("match") !== id) {
+      url.searchParams.set("match", id);
+      window.history.replaceState(null, "", url);
+    }
+  }
   useEffect(() => {
     if (!ready) return;
-    const query = new URLSearchParams(window.location.search).get("match");
+    // Observe router query changes, but read the actual URL here: static
+    // exports can initially hydrate with an empty query from the built page.
+    const requestedId = new URLSearchParams(window.location.search).get("match");
+    const newRequest = handledRequest.current !== requestedId;
+    const requested = matches.find(
+      (m) => m.id === requestedId && m.status !== "cancelled",
+    );
+    // The public bootstrap can render before the captain snapshot arrives.
+    // Keep an unresolved link intact while the private data loads.
+    if (requested || !requestedId) handledRequest.current = requestedId;
+    // An explicit review link can point to a different season. A manual
+    // season change still selects a match from that season normally.
+    if (newRequest && requested && requested.seasonId !== seasonId) {
+      setSeasonId(requested.seasonId);
+      return;
+    }
     const chosen =
-      fixtures.find((m) => m.id === query) ||
+      fixtures.find((m) => m.id === requestedId) ||
       fixtures.find((m) => !m.result?.published && m.status === "scheduled") ||
       fixtures[0];
-    if (chosen) load(chosen);
-  }, [seasonId, ready, resetVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (chosen) {
+      load(chosen);
+      if (!newRequest && requested && requested.seasonId !== seasonId)
+        syncMatchUrl(chosen.id);
+    }
+  }, [matchQuery, seasonId, ready, resetVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     function warn(e: BeforeUnloadEvent) {
       if (dirty) {
@@ -162,7 +192,7 @@ export function CaptainPage() {
   const goals = r.stats.reduce((n, s) => n + s.goals, 0),
     attended = r.stats.filter((s) => s.appeared).length;
   return (
-    <div className="section page-section captain-page">
+    <div id="result-editor" className="section page-section captain-page">
       <PageHeading
         eyebrow="THE CAPTAIN’S CORNER"
         title="From final whistle to final score."
@@ -240,7 +270,12 @@ export function CaptainPage() {
                   )
                     return;
                   const m = fixtures.find((m) => m.id === e.target.value);
-                  if (m) load(m);
+                  if (m) {
+                    load(m);
+                    // Keep the URL in sync so returning to the same review
+                    // link works after choosing another match here.
+                    syncMatchUrl(m.id);
+                  }
                 }}
               >
                 {fixtures.map((m) => (

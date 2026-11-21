@@ -199,6 +199,9 @@ The importer publishes official team scores with player capture marked
 unrecorded. It never creates player appearances, scorers or assists. A captain
 publishing a result takes ownership of that result and its player details. A
 conflicting future league score is shown for review without overwriting them.
+A missing league score is reported as “no final score posted”; it does not prove
+that a result was withdrawn. Review links select the exact game and its season,
+including navigation within the Results editor and reopening a saved match URL.
 Captain fixture edits create an explicit metadata override; restoring league
 fixture details in the captain tools resumes automatic metadata updates.
 

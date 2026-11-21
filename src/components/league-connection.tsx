@@ -108,9 +108,12 @@ export function LeagueConnectionPanel() {
           {m.opponent}:{" "}
           {m.leagueScore
             ? `League score ${m.leagueScore.home}–${m.leagueScore.away}.`
-            : "League result was withdrawn."}{" "}
+            : "LeagueApps has no final score posted for this match."}{" "}
           Your captain result and player stats are preserved.{" "}
-          <Link className="text-link" href={`/captain/?match=${m.id}`}>
+          <Link
+            className="text-link"
+            href={`/captain/?match=${m.id}#result-editor`}
+          >
             Review result
           </Link>
         </p>
