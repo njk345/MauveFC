@@ -28,6 +28,7 @@ import { useAuth } from "./auth/auth-provider";
 import { PlayerDirectory } from "./player-directory";
 import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
 import { isFinalsWin } from "@/features/matches/playoffs";
+import { ResultDecision } from "./result-decision";
 export function PageHeading({
   eyebrow,
   title,
@@ -96,6 +97,7 @@ export function MatchDetails({
               </strong>
               <OpponentBadge code={match.opponentCode} color={match.color} />
             </div>
+            <ResultDecision result={r} />
             <FinalsVictory match={match} />
             <div className="detail-stats">
               <h3>On the scoresheet</h3>

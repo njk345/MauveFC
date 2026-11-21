@@ -267,6 +267,18 @@ export async function writeFixture(fixture: Match) {
         : error.message,
     );
 }
+export async function writeSeasonComplete(
+  seasonId: string,
+  revision: number,
+  completed: boolean,
+) {
+  const { error } = await getBrowserClient().rpc("set_season_complete", {
+    p_season_id: seasonId,
+    p_expected_revision: revision,
+    p_completed: completed,
+  });
+  if (error) throw new Error(error.message);
+}
 export async function writePlayer(player: Player, seasonId: string) {
   const { error } = await getBrowserClient().rpc("save_roster_player", {
     p_club_id: clubId,

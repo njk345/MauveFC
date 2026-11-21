@@ -88,6 +88,8 @@ export type PlayerAccount = {
   expiresAt: string | null;
 };
 export type Result = {
+  decision?: "regulation" | "overtime" | "penalties";
+  penaltyOutcome?: "W" | "L" | null;
   baseRevision?: number;
   home: number;
   away: number;
@@ -155,12 +157,17 @@ export type LeagueConnection = {
   state: "idle" | "queued" | "running" | "succeeded" | "failed";
 };
 export type Season = {
+  completed?: boolean;
+  completedAt?: string | null;
+  finalPosition?: number | null;
+  revision?: number;
   id: string;
   name: string;
   competition: string;
   format: string;
 };
 export type PrototypeData = {
+  seasons?: Season[];
   version: 1;
   players?: Player[];
   roster?: { seasonId: string; playerId: string }[];

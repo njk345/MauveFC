@@ -147,6 +147,8 @@ export type Database = {
       }
       match_results: {
         Row: {
+          decision: string
+          penalty_outcome: string | null
           assists: string
           attendance: string
           away: number
@@ -164,6 +166,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          decision?: string
+          penalty_outcome?: string | null
           assists: string
           attendance: string
           away: number
@@ -181,6 +185,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          decision?: string
+          penalty_outcome?: string | null
           assists?: string
           attendance?: string
           away?: number
@@ -412,6 +418,10 @@ export type Database = {
       }
       seasons: {
         Row: {
+          completed: boolean
+          completed_at: string | null
+          final_position: number | null
+          completion_revision: number
           club_id: string
           competition: string
           format: string
@@ -419,6 +429,10 @@ export type Database = {
           name: string
         }
         Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          final_position?: number | null
+          completion_revision?: number
           club_id: string
           competition: string
           format: string
@@ -426,6 +440,10 @@ export type Database = {
           name: string
         }
         Update: {
+          completed?: boolean
+          completed_at?: string | null
+          final_position?: number | null
+          completion_revision?: number
           club_id?: string
           competition?: string
           format?: string
@@ -488,6 +506,10 @@ export type Database = {
       }
     }
     Functions: {
+      set_season_complete: {
+        Args: { p_season_id: string; p_expected_revision: number; p_completed: boolean };
+        Returns: undefined;
+      }
       apply_league_sync: {
         Args: { p_snapshot: Json; p_token: string }
         Returns: Json

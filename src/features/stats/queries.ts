@@ -1,11 +1,12 @@
 import { players } from "@/lib/sample-data";
 import type { Match, Player, SeasonStatsSnapshot } from "@/lib/types";
+import { resultOutcome } from "@/features/matches/decisions";
 export function publishedMatches(matches: Match[]) {
   return matches.filter((m) => m.status === "completed" && m.result?.published);
 }
 export function outcome(m: Match) {
   const r = m.result;
-  return !r ? null : r.home > r.away ? "W" : r.home < r.away ? "L" : "D";
+  return r ? resultOutcome(r) : null;
 }
 export function teamStats(matches: Match[]) {
   const played = publishedMatches(matches);

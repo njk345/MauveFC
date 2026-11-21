@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, LockKeyhole, Save } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
+import { ResultDecision } from "./result-decision";
 import { PageHeading } from "./season-pages";
 import { MatchPlayerEditor } from "./match-player-editor";
 import { captureSummary, expandResult } from "@/features/matches/player-stats";
@@ -254,6 +255,9 @@ function SeasonStatsEditor({
                     : "vs"}{" "}
                   {match.opponent}
                 </h2>
+                {match.result?.published && (
+                  <ResultDecision result={match.result} />
+                )}
                 <p>{match.venue}</p>
               </div>
             )}

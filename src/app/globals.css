@@ -5235,6 +5235,44 @@ footer {
 .playoff-badge {display:inline-flex;max-width:100%;font-size:.75rem;font-weight:600;line-height:1.5;letter-spacing:0;padding:.2rem .6rem;border:1px solid #cdb5c5;border-radius:15px;color:#62445c;background:#eee3ec;margin-bottom:.6rem;}
 .fixture-card>.playoff-badge {margin-top:.75rem;}
 .result-score-stack {display:flex;align-items:center;flex-direction:column;gap:.4rem;}
+.decision-badge {display:inline-block;max-width:100%;font-size:.875rem;line-height:1.4;font-weight:600;color:#65415d;letter-spacing:0;background:#eee5ec;border:1px solid #d5c4d0;border-radius:6px;padding:.25rem .5rem;}
+.result-score-stack .decision-badge {max-width:110px;text-align:center;font-size:.75rem;}
+.decision-settings {border:1px solid #d9cbd5;border-radius:10px;padding:1.25rem;margin:1.5rem 0;min-width:0;background:#f7f2f5;}
+.decision-settings legend {font-size:1rem;font-weight:600;padding:0 .5rem;}
+.decision-settings .form-field {margin-top:0;margin-bottom:.75rem;}
+.decision-settings .form-field>span {font-size:.875rem;}
+.decision-settings p {font-size:.875rem;line-height:1.7;margin-bottom:.75rem;}
+.decision-settings select,.season-status-form {font-size:1rem;}
+.match-dialog>.decision-badge {margin-bottom:1rem;}
+.home-season-finish {margin-top:1rem;margin-bottom:1.25rem;}
+.season-finish-banner {border:1px solid #cdbbc7;border-radius:12px;display:flex;align-items:center;gap:1.5rem;padding:1.5rem 1.75rem;background:linear-gradient(115deg,#eee4eb,#f7f2e9);color:#37233a;}
+.season-finish-icon {display:grid;place-items:center;flex-shrink:0;width:66px;height:66px;background:#dfcedb;border-radius:50%;color:#6d4664;}
+.season-finish-copy {min-width:0;flex:1;}
+.season-finish-copy .eyebrow {font-size:.75rem;line-height:1.7;}
+.season-finish-copy h2 {font-family:var(--display);font-size:2.1rem;line-height:1.15;margin:.35rem 0;}
+.season-finish-copy p {font-size:1rem;line-height:1.6;margin:0;}
+.season-finish-result {display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin-top:.65rem;font-size:.875rem;overflow-wrap:anywhere;}
+.season-finish-banner>.button {flex-shrink:0;font-size:.875rem;}
+.season-status-form {max-width:800px;border:1px solid #d9cbd5;border-radius:12px;padding:1.5rem;background:#fffdfa;}
+.season-status-heading {display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;}
+.season-status-heading h2 {font-family:var(--display);font-size:1.8rem;}
+.season-status-heading .pill {font-size:.875rem;}
+.season-status-form p {font-size:1rem;line-height:1.75;margin:1rem 0;}
+.season-status-form .button {margin-top:.5rem;}
+.season-finish-preview {margin-top:2rem;}
+.season-finish-preview>.eyebrow {display:flex;align-items:center;gap:.5rem;}
+.season-finish-preview>.section {width:100%;max-width:100%;margin:1rem 0;}
+.season-finish-preview>.section {padding-inline:0;}
+@media(max-width:700px){.decision-settings .field-pair{grid-template-columns:1fr;}.decision-settings .form-field{width:100%;}}
+@media(max-width:500px){
+  .match-row.has-decision{display:grid;grid-template-columns:28px minmax(0,1fr);gap:.85rem;}
+  .match-row.has-decision>.match-date{grid-column:1;grid-row:1 / 3;min-width:0;padding-right:.75rem;}
+  .match-row.has-decision>.match-information{grid-column:2;grid-row:1;}
+  .match-row.has-decision>.match-row-end{grid-column:2;grid-row:2;width:100%;margin-left:0;align-items:center;}
+  .match-row.has-decision .result-score-stack{flex:1;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:.5rem;}
+  .match-row.has-decision .result-score-stack .decision-badge{max-width:100%;font-size:.875rem;}
+}
+@media(max-width:700px){.season-finish-banner{flex-wrap:wrap;padding:1.25rem;gap:1rem;}.season-finish-icon{width:48px;height:48px;}.season-finish-icon svg{width:28px;height:28px;}.season-finish-copy h2{font-size:1.75rem;}.season-finish-banner>.button{flex-basis:100%;justify-content:center;}.result-score-stack .decision-badge{max-width:85px;}.season-status-form{padding:1.25rem;}}
 .finals-victory {position:relative;z-index:1;display:inline-flex;align-items:center;gap:.4rem;font-family:var(--body);font-size:.75rem;letter-spacing:0;line-height:1.5;font-weight:600;white-space:nowrap;color:#5f491b;background:#f4e9ba;padding:.25rem .55rem;border:1px solid #d3b66d;border-radius:20px;}
 .finals-victory svg {flex-shrink:0;}
 .championship-result {position:relative;isolation:isolate;background:linear-gradient(105deg,#f4f6e5,#f5ecd7);}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Trophy } from "lucide-react";
 import type { Match } from "@/lib/types";
 import { isFinalsWin, playoffRounds } from "@/features/matches/playoffs";
+import { ResultDecision } from "./result-decision";
 
 export function PlayoffBadge({ match }: { match: Match }) {
   if (!match.playoffRound) return null;
@@ -88,6 +89,7 @@ export function HomeChampions({
             Finals · Mauve FC {match.result!.home}–{match.result!.away}{" "}
             {match.opponent}
           </p>
+          <ResultDecision result={match.result!} />
         </div>
         <Link className="button" href="/results/">
           Relive the final

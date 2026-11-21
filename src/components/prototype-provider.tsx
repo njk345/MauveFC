@@ -29,6 +29,7 @@ import {
   readDrafts,
   writeResult,
   writeFixture,
+  writeSeasonComplete,
   writePlayer,
   type ClubSnapshot,
   writeMatchGuest,
@@ -37,6 +38,7 @@ import {
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 const KEY = "mauve-fc-prototype-v1";
 const initial: PrototypeData = {
+  seasons: sampleSeasons,
   version: 1,
   matches: initialMatches,
   players: samplePlayers,
@@ -58,6 +60,11 @@ type Context = {
   drafts: Record<string, Result>;
   saveResult: (id: string, result: Result) => Promise<void>;
   saveFixture: (match: Match) => Promise<void>;
+  setSeasonComplete: (
+    id: string,
+    revision: number,
+    completed: boolean,
+  ) => Promise<void>;
   savePlayer: (player: Player) => Promise<void>;
   changeGuest: (
     matchId: string,
@@ -148,13 +155,15 @@ export function PrototypeProvider({
                 typeof m.id === "string" &&
                 (!m.result || validateResult(m.result, roster).length === 0),
             )
-          )
+          ) {
             setData({
               ...parsed,
               players: roster,
               roster: parsed.roster || initial.roster,
               history: parsed.history || [],
             });
+            setSeasons(parsed.seasons || sampleSeasons);
+          }
         }
       } catch {
         setNotice(
@@ -305,6 +314,31 @@ export function PrototypeProvider({
           : [...d.matches, match],
       }));
   }
+  async function setSeasonComplete(
+    id: string,
+    revision: number,
+    completed: boolean,
+  ) {
+    if (auth.live) {
+      if (!auth.captain) throw new Error("Captain access required.");
+      await writeSeasonComplete(id, revision, completed);
+      await refresh();
+    } else {
+      const updated = seasons.map((s) =>
+        s.id === id
+          ? {
+              ...s,
+              completed,
+              revision: (s.revision ?? 0) + 1,
+              completedAt: completed ? new Date().toISOString() : null,
+              finalPosition: null,
+            }
+          : s,
+      );
+      setSeasons(updated);
+      setData((previous) => ({ ...previous, seasons: updated }));
+    }
+  }
   async function savePlayer(player: Player) {
     if (auth.live) {
       if (!auth.captain) throw new Error("Captain access required.");
@@ -327,6 +361,7 @@ export function PrototypeProvider({
     if (auth.live) return;
     setResetVersion((v) => v + 1);
     setData(structuredClone(initial));
+    setSeasons(sampleSeasons);
     setSeasonId("fall-2026");
     setNotice("Demo reset. You’re back to the original sample season.");
   }
@@ -345,6 +380,7 @@ export function PrototypeProvider({
         drafts: data.drafts || {},
         saveResult,
         saveFixture,
+        setSeasonComplete,
         savePlayer,
         changeGuest,
         refresh,

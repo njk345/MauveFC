@@ -12,15 +12,13 @@ import {
 import { Crest, Jersey, OpponentBadge } from "./brand";
 import { FixtureCard } from "./matches";
 import { HomeStandings } from "./home-standings";
+import { HomeSeasonFinish } from "./season-finish";
+import { ResultDecision } from "./result-decision";
 import {
   championshipWin,
   regularSeasonMatches,
 } from "@/features/matches/playoffs";
-import {
-  HomeChampions,
-  PlayoffBadge,
-  FinalsVictory,
-} from "./playoff-celebration";
+import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
 export function HomePage() {
   const { matches, seasonId, seasons, players, live } = usePrototype(),
     season = seasons.find((s) => s.id === seasonId)!;
@@ -30,12 +28,14 @@ export function HomePage() {
     regularCompleted = publishedMatches(regular),
     champions = championshipWin(fixtures),
     latest = completed.at(-1),
-    next = fixtures.find(
-      (m) =>
-        m.status === "scheduled" &&
-        !m.result?.published &&
-        (!live || !m.kickoff || Date.parse(m.kickoff) >= Date.now()),
-    ),
+    next =
+      !season.completed &&
+      fixtures.find(
+        (m) =>
+          m.status === "scheduled" &&
+          !m.result?.published &&
+          (!live || !m.kickoff || Date.parse(m.kickoff) >= Date.now()),
+      ),
     stats = teamStats(regular),
     leaders = playerStats(
       regular,
@@ -64,7 +64,7 @@ export function HomePage() {
           </div>
         </div>
       </section>
-      {champions && <HomeChampions match={champions} season={season.name} />}
+      <HomeSeasonFinish season={season} matches={fixtures} />
       <section className="section home-match-section">
         <div className="section-heading">
           <div>
@@ -101,7 +101,7 @@ export function HomePage() {
             <article className="fixture-card season-over">
               <Crest />
               <h2>
-                {live && !completed.length
+                {live && !completed.length && !season.completed
                   ? "A new chapter awaits."
                   : "That’s a wrap."}
               </h2>
@@ -109,7 +109,9 @@ export function HomePage() {
                 {live
                   ? completed.length
                     ? "No upcoming matches are scheduled. See how we finished."
-                    : "The season is taking shape. Check back for the first fixture."
+                    : season.completed
+                      ? "This season is complete. Revisit the club’s results."
+                      : "The season is taking shape. Check back for the first fixture."
                   : "The sample season is complete. See how we finished."}
               </p>
               <Link
@@ -178,6 +180,7 @@ export function HomePage() {
               </span>
             </div>
             <div className="latest-note">
+              <ResultDecision result={latest.result!} />
               <FinalsVictory match={latest} />
               <span className={`result-word result-${outcome(latest)}`}>
                 {latest.playoffRound

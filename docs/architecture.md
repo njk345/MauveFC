@@ -29,6 +29,11 @@ Confirmed product decisions:
 - Captains manually designate playoffs and optional Quarterfinals, Semifinals
   or Finals. Home’s record and form exclude playoffs; Schedule, Results and Stats
   include them. A published Finals win celebrates the selected season’s title.
+- Results distinguish regulation, overtime and penalties. Overtime can finish
+  drawn; penalties require a separate win/loss and tied match goals. Shootout
+  kicks do not count as team or individual goals.
+- Captains mark a season complete or reopen it. Completed seasons display their
+  championship, playoff finish or saved league placing on Home.
 - LeagueApps program URL:
   https://nycsoccer.leagueapps.com/leagues/soccer/5162244-thurs-7-v-7-coed--bbp-group-b
 
@@ -81,11 +86,11 @@ These are conceptual entities, not a finalized SQL schema.
 | `clubs` | Mauve FC identity and default timezone |
 | `club_memberships` | Auth user, club, role: captain or player; optional player link |
 | `players` | Stable player identity and public profile; independent of login |
-| `seasons` | Competition name, dates, format, match length, points rules |
+| `seasons` | Competition name, dates, format, completion state/revision, captured final league placing |
 | `season_roster` | Official membership of a player in a season |
 | `private.match_guests` | Club player assigned to one game as a non-roster substitute |
 | `matches` | Season, opponent, venue, kickoff, fixture status, publication state, captain-managed playoff round |
-| `match_results` | Official and on-field scores, result basis, forfeit/adjustment reason |
+| `match_results` | Official and on-field scores, result basis, regulation/overtime/penalty decision, shootout win/loss, adjustment reason |
 | `match_player_stats` | Player appearance, goals, assists, optional minutes and keeper details |
 | `schedule_sources` | Feed/API configuration, last successful sync, health |
 | `external_fixtures` | Source identifier → stable local match ID, imported values and overrides |
@@ -122,6 +127,18 @@ Detailed `match_events` can follow if someone will actually record them.
 - **Unknown versus zero:** use nullable optional metrics and a capture status for
   attendance, scorers, and assists. No stats rows means unrecorded, not nobody played.
   Keep aggregate coverage visible, for example “assists recorded for 6 of 8 games.”
+- **Decider versus goals:** W/D/L follows `penalty_outcome` for a penalty shootout,
+  otherwise the official goals. Penalties store tied match goals and a win/loss;
+  overtime goals are included in match/player totals. Draft validation permits
+  unfinished score edits but publishing and table constraints enforce valid
+  deciders. Older stats clients that omit these fields preserve the saved decision.
+- **Season finish:** completion is a captain-only revision-checked transaction.
+  Capture the connected league’s team position as `final_position` at completion;
+  imports never overwrite it. Reopening clears that snapshot and completing again
+  captures the latest placing. Completion does not lock result corrections. Home
+  derives championships and the highest non-cancelled playoff round from current
+  results; missing playoff scores or league placements remain explicit. Published
+  Finals wins retain the existing celebration before or after season completion.
 - **Totals versus events:** the first source of player goals and assists is the
   per-match totals. If event tracking arrives later, derive those totals from events
   for event-tracked matches; never sum two independent sources for the same match.

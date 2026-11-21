@@ -73,6 +73,7 @@ export function CaptainAccess({ children }: { children: ReactNode }) {
           <Link href="/captain/">Results</Link>
           <Link href="/captain/stats/">Player stats</Link>
           <Link href="/captain/fixtures/">Fixtures</Link>
+          <Link href="/captain/season/">Season</Link>
           <Link href="/captain/roster/">Roster</Link>
           <Link href="/captain/access/">Player accounts</Link>
           <Link href="/team/">Team & lineups</Link>

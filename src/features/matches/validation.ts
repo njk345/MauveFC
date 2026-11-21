@@ -1,10 +1,11 @@
 import type { Result, Player } from "@/lib/types";
 import { players } from "@/lib/sample-data";
+import { validateDecision } from "./decisions";
 export function validateResult(
   r: Result,
   roster: Player[] = players,
 ): string[] {
-  const errors: string[] = [];
+  const errors: string[] = validateDecision(r);
   if (
     ![r.home, r.away, r.onFieldHome, r.onFieldAway, r.ownGoals].every(
       (n) => Number.isInteger(n) && n >= 0 && n <= 99,
@@ -67,7 +68,10 @@ export function validateResult(
 }
 
 export function validateDraft(r: Result, roster: Player[] = players): string[] {
-  return validateResult(r, roster).filter(
-    (e) => e.includes("whole numbers") || e.includes("roster"),
-  );
+  return [
+    ...validateDecision(r, false),
+    ...validateResult(r, roster).filter(
+      (e) => e.includes("whole numbers") || e.includes("roster"),
+    ),
+  ];
 }

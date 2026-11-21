@@ -9,6 +9,7 @@ import { usePrototype } from "./prototype-provider";
 import { outcome } from "@/features/stats/queries";
 import { isFinalsWin } from "@/features/matches/playoffs";
 import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
+import { ResultDecision } from "./result-decision";
 export function FormBadge({ value }: { value: string | null }) {
   return <span className={`form-badge form-${value}`}>{value || "—"}</span>;
 }
@@ -24,7 +25,7 @@ export function MatchRow({
   const result = match.result?.published ? match.result : undefined;
   return (
     <div
-      className={`match-row ${result ? "finished" : ""} ${isFinalsWin(match) ? "championship-result" : ""}`}
+      className={`match-row ${result ? "finished" : ""} ${isFinalsWin(match) ? "championship-result" : ""} ${result?.decision && result.decision !== "regulation" ? "has-decision" : ""}`}
     >
       <div className="match-date">
         <strong>{day(match.kickoff)}</strong>
@@ -61,6 +62,7 @@ export function MatchRow({
               <strong className="row-score">
                 {result.home} <span>–</span> {result.away}
               </strong>
+              <ResultDecision result={result} />
               <FinalsVictory match={match} />
             </div>
             <FormBadge value={outcome(match)} />

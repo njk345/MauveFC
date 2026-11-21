@@ -26,6 +26,7 @@ import {
 } from "@/features/matches/player-stats";
 import { MatchGuests } from "./match-guests";
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
+import { ResultDecision } from "./result-decision";
 export function CaptainPage() {
   const {
       matches,
@@ -78,7 +79,9 @@ export function CaptainPage() {
     if (!ready) return;
     // Observe router query changes, but read the actual URL here: static
     // exports can initially hydrate with an empty query from the built page.
-    const requestedId = new URLSearchParams(window.location.search).get("match");
+    const requestedId = new URLSearchParams(window.location.search).get(
+      "match",
+    );
     const newRequest = handledRequest.current !== requestedId;
     const requested = matches.find(
       (m) => m.id === requestedId && m.status !== "cancelled",
@@ -233,6 +236,7 @@ export function CaptainPage() {
           <p>
             Mauve FC {r.home} – {r.away} {match?.opponent}
           </p>
+          <ResultDecision result={r} />
           <p>The club record, player totals, and charts are up to date.</p>
           <div className="button-row">
             <Link className="button" href="/results/">
@@ -383,11 +387,15 @@ export function CaptainPage() {
                 <label className="form-field">
                   <span>Result basis</span>
                   <select
+                    aria-label="Result basis"
                     value={r.basis}
                     onChange={(e) => {
                       const basis = e.target.value as Result["basis"];
                       patch({
                         basis,
+                        ...(basis !== "played"
+                          ? { decision: "regulation", penaltyOutcome: null }
+                          : {}),
                         ...(basis === "played"
                           ? { onFieldHome: r.home, onFieldAway: r.away }
                           : {
@@ -409,6 +417,58 @@ export function CaptainPage() {
                     <option value="adjusted">Other official adjustment</option>
                   </select>
                 </label>
+                {r.basis === "played" && (
+                  <fieldset className="decision-settings">
+                    <legend>Match decision</legend>
+                    <div className="field-pair">
+                      <label className="form-field">
+                        <span>Decided in</span>
+                        <select
+                          aria-label="Decided in"
+                          value={r.decision ?? "regulation"}
+                          onChange={(e) =>
+                            patch({
+                              decision: e.target.value as Result["decision"],
+                              penaltyOutcome:
+                                e.target.value === "penalties"
+                                  ? (r.penaltyOutcome ?? "W")
+                                  : null,
+                            })
+                          }
+                        >
+                          <option value="regulation">Regulation time</option>
+                          <option value="overtime">Overtime</option>
+                          <option value="penalties">Penalty shootout</option>
+                        </select>
+                      </label>
+                      {r.decision === "penalties" && (
+                        <label className="form-field">
+                          <span>Penalty result</span>
+                          <select
+                            aria-label="Penalty result"
+                            value={r.penaltyOutcome ?? "W"}
+                            onChange={(e) =>
+                              patch({
+                                penaltyOutcome: e.target.value as "W" | "L",
+                              })
+                            }
+                          >
+                            <option value="W">Win on penalties</option>
+                            <option value="L">Loss on penalties</option>
+                          </select>
+                        </label>
+                      )}
+                    </div>
+                    <p>
+                      {r.decision === "penalties"
+                        ? "Enter the tied match score before the shootout. Shootout kicks do not count toward team or player goals."
+                        : r.decision === "overtime"
+                          ? "Include overtime goals in the final score. A draw after overtime is allowed."
+                          : "Win, draw or loss follows the final score."}
+                    </p>
+                    <ResultDecision result={r} />
+                  </fieldset>
+                )}
                 {r.basis !== "played" && (
                   <div className="adjustment-fields">
                     <div className="field-pair">
@@ -491,6 +551,7 @@ export function CaptainPage() {
                     />
                   </div>
                   <h3>Mauve FC vs {match?.opponent}</h3>
+                  <ResultDecision result={r} />
                 </div>
                 <dl className="publish-summary">
                   <div>

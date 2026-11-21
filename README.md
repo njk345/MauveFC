@@ -124,9 +124,27 @@ banner on Home for that season. Reduced-motion preferences keep the trophies
 without animation. Correcting the result or removing the Finals designation
 automatically removes the celebration when it no longer applies.
 
+In the Results editor, **Decided in** distinguishes regulation time, overtime
+and penalty shootouts. Overtime uses the final score including overtime goals
+and can end in a draw. Penalties require the tied match score and a separate win
+or loss; shootout kicks never enter team goals, player goals or goal difference.
+Result labels, filters, form and Finals celebrations use the deciding outcome.
+Drafts and later player-stat corrections preserve it.
+
+Use **Captain’s area → Season → Season complete → Save season status** to close
+the selected season. Home then displays the championship, playoff exit and round,
+or final league placing when no playoffs are recorded. The league placing is
+captured from verified standings when the season is completed and stays fixed
+through later imports. Missing standings or unrecorded playoff results are
+shown explicitly rather than guessed. Captains can reopen a season, and results
+and player stats remain editable after completion.
+
 Run `python tests/playoffs_browser.py` against the live-mode production preview
 on port 3100 for captain editing, labels, totals, celebrations and mobile checks.
 All service requests are intercepted; tests make no production writes.
+`python tests/season_finish_browser.py` checks overtime/penalty editing, draft
+restoration, publishing, completion, reopening and the Home finish at mobile and
+desktop widths with intercepted services.
 
 ## Add to home screen
 
