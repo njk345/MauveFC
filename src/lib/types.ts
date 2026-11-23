@@ -1,6 +1,28 @@
 export type Capture = "unrecorded" | "partial" | "complete";
+export const preferredPositions = [
+  "Goalkeeper",
+  "Center back",
+  "Left back",
+  "Right back",
+  "Defensive midfield",
+  "Central midfield",
+  "Attacking midfield",
+  "Left wing",
+  "Right wing",
+  "Striker",
+] as const;
+export type PreferredPosition = (typeof preferredPositions)[number];
+export type CaptainPlayerDetails = {
+  email: string;
+  phone: string;
+  relationshipNote: string;
+  revision: number;
+};
 export type Player = {
   isPublic?: boolean;
+  preferredPositions?: PreferredPosition[];
+  // Returned only by captain-authorized projections; never stored in a public profile.
+  captainDetails?: CaptainPlayerDetails;
   id: string;
   name: string;
   number: number;
@@ -105,7 +127,11 @@ export type Result = {
   published: boolean;
   updatedAt?: string;
 };
-export type PlayoffRound = "playoffs" | "quarterfinals" | "semifinals" | "finals";
+export type PlayoffRound =
+  | "playoffs"
+  | "quarterfinals"
+  | "semifinals"
+  | "finals";
 export type Match = {
   playoffRound?: PlayoffRound | null;
   guestPlayerIds?: string[];

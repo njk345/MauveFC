@@ -15,6 +15,8 @@ import type {
   SeasonStatsSnapshot,
   DirectoryPlayer,
   GuestChange,
+  CaptainPlayerDetails,
+  PreferredPosition,
 } from "../types";
 import { clubId, publishableKey, supabaseUrl } from "./config";
 import { getBrowserClient } from "./client";
@@ -196,6 +198,22 @@ export async function readPlayerDirectory(): Promise<DirectoryPlayer[]> {
       "The player directory could not be loaded. Check your team access and try again.",
     );
   return data as DirectoryPlayer[];
+}
+export async function writePlayerDetails(player: Player) {
+  const { data, error } = await getBrowserClient().rpc("save_player_details", {
+    p_club_id: clubId,
+    p_player_id: player.id,
+    p_expected_revision: player.captainDetails?.revision ?? 0,
+    p_details: {
+      ...player.captainDetails,
+      preferredPositions: player.preferredPositions || [],
+    },
+  });
+  if (error) throw new Error(error.message);
+  return data as {
+    captainDetails: CaptainPlayerDetails;
+    preferredPositions: PreferredPosition[];
+  };
 }
 export async function readMemberPlayerProfiles(): Promise<ClubSnapshot> {
   const { data, error } = await getBrowserClient().rpc(

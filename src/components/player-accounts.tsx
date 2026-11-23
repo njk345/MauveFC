@@ -13,7 +13,7 @@ import {
 import type { PlayerAccount } from "@/lib/types";
 export function PlayerAccounts() {
   const auth = useAuth(),
-    { players, live, setNotice } = usePrototype(),
+    { players, live, setNotice, refresh: refreshClub } = usePrototype(),
     [accounts, setAccounts] = useState<PlayerAccount[]>([]),
     [selected, setSelected] = useState(""),
     [email, setEmail] = useState(""),
@@ -47,7 +47,11 @@ export function PlayerAccounts() {
   }, [live]);
   function choose(id: string) {
     setSelected(id);
-    setEmail(accounts.find((a) => a.playerId === id)?.email || "");
+    setEmail(
+      accounts.find((a) => a.playerId === id)?.email ||
+        players.find((p) => p.id === id)?.captainDetails?.email ||
+        "",
+    );
     setLink("");
     setError("");
   }
@@ -63,7 +67,7 @@ export function PlayerAccounts() {
       setExistingAccount(
         Boolean((data as { existingAccount?: boolean }).existingAccount),
       );
-      await refresh();
+      await Promise.all([refresh(), refreshClub()]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not create invite.");
     } finally {
@@ -157,6 +161,10 @@ export function PlayerAccounts() {
                     }}
                   />
                 </label>
+                <p className="help-text">
+                  The invitation email is saved to this player’s captain-only
+                  contact details. Existing accounts keep their sign-in email.
+                </p>
                 <button
                   className="button"
                   disabled={busy || !loaded || !selected}
@@ -241,7 +249,8 @@ export function PlayerAccounts() {
                   Link my profile
                 </button>
                 <p className="help-text">
-                  Only choose your own profile. Captain permissions stay in place.
+                  Only choose your own profile. Captain permissions stay in
+                  place.
                 </p>
               </div>
             </section>

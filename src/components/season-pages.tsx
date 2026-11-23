@@ -626,6 +626,16 @@ export function PlayerProfile({ id }: { id: string }) {
             <MapPin size={15} />
             {p.hometown}
           </span>
+          {profiles.teamView && !!p.preferredPositions?.length && (
+            <div className="profile-preferred-positions">
+              <span className="small-text muted">PREFERRED POSITIONS</span>
+              <div className="directory-positions">
+                {p.preferredPositions.map((position) => (
+                  <span key={position}>{position}</span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="profile-totals">
             <div>
               <strong>{p.appearances}</strong>

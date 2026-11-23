@@ -2,6 +2,10 @@
 import { useState } from "react";
 import { Plus, Save } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
+import {
+  PlayerDetailFields,
+  withEditableDetails,
+} from "./player-detail-fields";
 import { PageHeading } from "./season-pages";
 import type { Match, Player, PlayoffRound } from "@/lib/types";
 import { playoffRounds } from "@/features/matches/playoffs";
@@ -308,7 +312,7 @@ export function FixtureManagement() {
   );
 }
 export function RosterManagement() {
-  const { players, roster, seasonId, savePlayer, setNotice, live } =
+  const { players, roster, seasonId, savePlayer, setNotice, live, refresh } =
       usePrototype(),
     [editing, setEditing] = useState<Player | null>(null),
     [busy, setBusy] = useState(false),
@@ -354,16 +358,18 @@ export function RosterManagement() {
             className="button"
             onClick={() => {
               setError("");
-              setEditing({
-                id: crypto.randomUUID(),
-                name: "",
-                number: 0,
-                position: "Midfielder",
-                initials: "FC",
-                hometown: "",
-                bio: "",
-                isPublic: false,
-              });
+              setEditing(
+                withEditableDetails({
+                  id: crypto.randomUUID(),
+                  name: "",
+                  number: 0,
+                  position: "Midfielder",
+                  initials: "FC",
+                  hometown: "",
+                  bio: "",
+                  isPublic: false,
+                }),
+              );
             }}
           >
             <Plus size={16} />
@@ -374,7 +380,7 @@ export function RosterManagement() {
               <button
                 key={p.id}
                 onClick={() => {
-                  setEditing(p);
+                  setEditing(withEditableDetails(p));
                   setError("");
                 }}
               >
@@ -480,14 +486,31 @@ export function RosterManagement() {
               />
               <span>Approve this profile for the public club site</span>
             </label>
+            <PlayerDetailFields player={editing} onChange={setEditing} />
             <p className="help-text">
               Saving also adds this player to the selected season. Keep a
               profile private until its details are approved.
             </p>
             {error && (
-              <p role="alert" className="auth-error">
-                {error}
-              </p>
+              <div role="alert" className="auth-error">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  className="button secondary small"
+                  onClick={() => {
+                    void refresh()
+                      .then(() => {
+                        setEditing(null);
+                        setError("");
+                      })
+                      .catch(() =>
+                        setError("Could not reload players. Try again."),
+                      );
+                  }}
+                >
+                  Reload players
+                </button>
+              </div>
             )}
             <div className="button-row">
               <button disabled={busy} className="button">

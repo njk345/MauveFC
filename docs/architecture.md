@@ -89,6 +89,7 @@ These are conceptual entities, not a finalized SQL schema.
 | `clubs` | Mauve FC identity and default timezone |
 | `club_memberships` | Auth user, club, role: captain or player; optional player link |
 | `players` | Stable player identity and public profile; independent of login |
+| `private.player_details` | Optional contact email/phone, captain-only relationship note, preferred positions and edit revision; keyed to the stable club player |
 | `seasons` | Competition name, dates, format, completion state/revision, captured final league placing |
 | `season_roster` | Official membership of a player in a season |
 | `private.match_guests` | Club player assigned to one game as a non-roster substitute |
@@ -328,6 +329,52 @@ Keep a safe export/backup path for results and stats before real team data accum
 Prioritize tests for official/on-field results, missing versus zero stats,
 transactional publishing/corrections, access boundaries, and repeatable imports.
 Include a mobile end-to-end check of the captain's entry flow before real use.
+
+## Next milestones
+
+The club now has live accounts, invitations, RSVPs, shared/official lineups,
+home-screen installation, player stats, a historical player directory, guest
+players, playoffs, season completion and fixture removal/restoration.
+
+Before starting the next season/history milestone, enrich the stable player
+record. Captains can record optional email and phone, how the club knows the
+player, and multiple preferred playing positions. Roster and directory editors
+use the same club-wide record; editing directory details does not add season
+membership or game attendance. Invitations automatically retain their required
+email, including for existing linked players during the initial backfill. Contact
+details survive access revocation and changes between roster/guest roles.
+
+Contact information and relationship notes are captain-only at this stage.
+Preferred positions appear in the private directory and team-visible profiles,
+with a directory position filter for finding subs. Public-profile approval never
+releases contact details, notes or position preferences. Stale detail edits fail
+rather than overwrite another captain's changes. A contact email is independent
+of the Auth sign-in email.
+
+Work through these milestones in order, with a reviewable slice at each step:
+
+1. **Season management and historical imports.** Create seasons, connect the
+   appropriate LeagueApps program/team feed for each, carry over selected roster
+   players, and preview historical imports before saving. Reuse stable player
+   identities; distinguish missing stats from recorded zeroes. Keep standings
+   sourced from the league, and preserve playoff/removal rules.
+2. **Career stats and richer player cards.** Offer season/career totals, seasons
+   played, milestones and club records. Keep unknown historical data unknown and
+   retain public/member visibility rules. Add captain exports for results/player
+   stats and verify backup/recovery alongside the season work.
+3. **Player personalization.** Let members edit their own photo, bio, contact
+   email/phone, preferred positions and other approved fields. Captains retain
+   roster membership and public-profile approval. Relationship notes remain
+   captain-only and must use a separate, protected read/write contract. A change
+   to sign-in email requires Auth's verified email-change flow; editing a contact
+   email must not silently change account identity. Decide contact sharing
+   explicitly before making email/phone visible to other team members.
+4. **RSVP follow-through.** Add deadlines, opt-in reminders and a captain view of
+   unanswered invitations/responses, preserving the distinction between RSVP
+   intent and recorded attendance.
+5. **Matchday stories and awards.** Add shareable result cards, captain-approved
+   recap drafts grounded in recorded facts, and private player-of-the-match
+   voting/team awards.
 
 ## Open decisions
 

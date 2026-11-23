@@ -37,6 +37,34 @@ Pending membership invitations expire after seven days. The generated Auth link
 can expire sooner according to the project’s Auth settings; create a fresh link
 if needed. Public sign-ups remain disabled. This flow does not require SMTP.
 
+## Player details and finding subs
+
+Captains can edit optional contact email, phone, a private “how we know this
+player” note, and multiple preferred positions in **Captain → Roster**. For
+historical players and guests, use **Players → Club directory → Edit player
+details**; this updates their existing club record without adding them to the
+selected season's roster. Directory filters combine player history with
+preferred position; captains can also search contact details and their notes.
+Unrecorded preferences stay unknown rather than defaulting to a primary position.
+
+An invitation automatically saves its required email on the player record and
+preserves other details. The invitation form prefills the account/invitation
+email when one exists, otherwise the saved contact email. Existing verified
+player-account links and pending invitations are backfilled on installation.
+Access revocation does not erase the historical player or their contacts.
+
+Contact email, phone and relationship notes are captain-only, even when the
+player has a public profile. Preferred positions are visible to signed-in team
+members in the directory and profiles. None of these fields enter public
+responses or image exports. Player details are stored in `private.player_details`
+with a stable player/club key; server-side role checks protect every write and
+contact projection. Concurrent changes require reloading instead of silently
+overwriting another edit. Contact email edits do not update Auth credentials.
+
+Member self-editing and verified sign-in email changes remain future work; see
+the [next milestones](architecture.md#next-milestones). Relationship notes will
+remain captain-only when member personalization is introduced.
+
 ## Matches and lineups
 
 Players can change only their own **In / Maybe / Out** response for a scheduled,

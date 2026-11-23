@@ -3,38 +3,143 @@ import { useEffect, useState } from "react";
 import { LockKeyhole, Search } from "lucide-react";
 import { useAuth } from "./auth/auth-provider";
 import { usePrototype } from "./prototype-provider";
-import { readPlayerDirectory } from "@/lib/supabase/repository";
-import type { DirectoryPlayer } from "@/lib/types";
+import {
+  readPlayerDirectory,
+  writePlayerDetails,
+} from "@/lib/supabase/repository";
+import {
+  preferredPositions,
+  type DirectoryPlayer,
+  type Player,
+} from "@/lib/types";
+import {
+  PlayerDetailFields,
+  withEditableDetails,
+} from "./player-detail-fields";
+
+function DirectoryDetailsEditor({
+  player,
+  onSave,
+  onClose,
+  onReload,
+}: {
+  player: DirectoryPlayer;
+  onSave: (player: DirectoryPlayer) => void;
+  onClose: () => void;
+  onReload: () => void;
+}) {
+  const [editing, setEditing] = useState<Player>(() =>
+    withEditableDetails(player),
+  );
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const details = await writePlayerDetails(editing);
+      onSave({ ...player, ...details });
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not save player details.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <form className="management-form directory-details-editor" onSubmit={save}>
+      <span className="eyebrow">CAPTAIN / PLAYER DETAILS</span>
+      <h2>{player.name}</h2>
+      <p className="help-text">
+        Update this player’s club record across every season and guest
+        appearance.
+      </p>
+      <PlayerDetailFields player={editing} onChange={setEditing} />
+      {error && (
+        <div className="form-errors" role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="button secondary small"
+            onClick={onReload}
+          >
+            Reload directory
+          </button>
+        </div>
+      )}
+      <div className="button-row">
+        <button className="button" disabled={busy}>
+          {busy ? "Saving…" : "Save player details"}
+        </button>
+        <button
+          className="button secondary"
+          type="button"
+          disabled={busy}
+          onClick={onClose}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
 
 export function PlayerDirectory() {
   const auth = useAuth(),
-    { seasons, seasonId } = usePrototype();
-  const [players, setPlayers] = useState<DirectoryPlayer[] | null>(null),
-    [error, setError] = useState("");
+    { seasons, seasonId, refresh, setNotice } = usePrototype();
+  const [response, setResponse] = useState<{
+    owner: string;
+    players?: DirectoryPlayer[];
+    error?: string;
+  }>();
   const [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
+    [position, setPosition] = useState("all"),
+    [editingId, setEditingId] = useState(""),
     [reload, setReload] = useState(0);
+  const owner = `${auth.user?.id}:${auth.member}:${auth.captain}:${auth.loading}:${reload}`;
   useEffect(() => {
-    setPlayers(null);
-    setError("");
+    setResponse(undefined);
+    setEditingId("");
     if (!auth.member || auth.loading) return;
     let active = true;
     void readPlayerDirectory().then(
       (data) => {
-        if (active) setPlayers(data);
+        if (active) setResponse({ owner, players: data });
       },
       (e) => {
-        if (active) setError(e.message);
+        if (active) {
+          setResponse({ owner, error: e.message });
+          void auth.refreshAccess().catch(() => {});
+        }
       },
     );
     return () => {
       active = false;
     };
-  }, [auth.user?.id, auth.member, auth.loading, reload]);
+  }, [owner]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!auth.member || auth.loading) return null;
+  const current = response?.owner === owner ? response : undefined;
+  const players = current?.players,
+    error = current?.error;
+  const editing = players?.find((p) => p.id === editingId);
   const filtered = (players || []).filter(
     (p) =>
-      p.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) &&
+      (p.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
+        (auth.captain &&
+          [
+            p.captainDetails?.email,
+            p.captainDetails?.phone,
+            p.captainDetails?.relationshipNote,
+          ].some((v) =>
+            v?.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+          ))) &&
+      (position === "all" ||
+        (position === "unknown"
+          ? !p.preferredPositions?.length
+          : p.preferredPositions?.some((p) => p === position))) &&
       (filter === "all" ||
         (filter === "roster" && p.rosterSeasonIds.includes(seasonId)) ||
         (filter === "guests" && p.guestGames > 0) ||
@@ -68,9 +173,27 @@ export function PlayerDirectory() {
               value={query}
               maxLength={100}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search all known players"
+              placeholder={
+                auth.captain
+                  ? "Name, contact details or captain notes"
+                  : "Search all known players"
+              }
             />
           </div>
+        </label>
+        <label className="form-field">
+          <span>Preferred position</span>
+          <select
+            aria-label="Filter preferred position"
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+          >
+            <option value="all">All positions</option>
+            {preferredPositions.map((p) => (
+              <option key={p}>{p}</option>
+            ))}
+            <option value="unknown">Preferences not recorded</option>
+          </select>
         </label>
         <label className="form-field">
           <span>Player history</span>
@@ -101,6 +224,25 @@ export function PlayerDirectory() {
       )}
       {players && (
         <>
+          {auth.captain && editing && (
+            <DirectoryDetailsEditor
+              key={`${owner}:${editing.id}:${editing.captainDetails?.revision ?? 0}`}
+              player={editing}
+              onClose={() => setEditingId("")}
+              onReload={() => setReload((v) => v + 1)}
+              onSave={(updated) => {
+                setResponse({
+                  owner,
+                  players: players.map((p) =>
+                    p.id === updated.id ? updated : p,
+                  ),
+                });
+                setEditingId("");
+                setNotice("Player details saved to the club directory.");
+                void refresh().catch(() => {});
+              }}
+            />
+          )}
           <p className="directory-count">
             {filtered.length} of {players.length} known players
           </p>
@@ -115,6 +257,18 @@ export function PlayerDirectory() {
                       #{p.number} · {p.position}
                     </p>
                   </div>
+                </div>
+                <div
+                  className="directory-positions"
+                  aria-label="Preferred positions"
+                >
+                  {p.preferredPositions?.length ? (
+                    p.preferredPositions.map((position) => (
+                      <span key={position}>{position}</span>
+                    ))
+                  ) : (
+                    <p>Preferred positions not recorded</p>
+                  )}
                 </div>
                 <div className="directory-history">
                   <span>
@@ -143,6 +297,49 @@ export function PlayerDirectory() {
                 <small>
                   {p.isPublic ? "Public profile approved" : "Private profile"}
                 </small>
+                {auth.captain && (
+                  <div className="directory-captain-details">
+                    <span className="directory-notebook-label">
+                      <LockKeyhole size={13} /> Captain’s notebook
+                    </span>
+                    {p.captainDetails?.email && (
+                      <a
+                        href={`mailto:${encodeURIComponent(p.captainDetails.email)}`}
+                      >
+                        {p.captainDetails.email}
+                      </a>
+                    )}
+                    {p.captainDetails?.phone && (
+                      <a
+                        href={`tel:${p.captainDetails.phone.replace(/[^+\d]/g, "")}`}
+                      >
+                        {p.captainDetails.phone}
+                      </a>
+                    )}
+                    {p.captainDetails?.relationshipNote && (
+                      <p className="directory-relationship-note">
+                        {p.captainDetails.relationshipNote}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="button secondary small"
+                      onClick={() => {
+                        setEditingId(p.id);
+                        requestAnimationFrame(() =>
+                          document
+                            .querySelector(".directory-details-editor")
+                            ?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "start",
+                            }),
+                        );
+                      }}
+                    >
+                      Edit player details
+                    </button>
+                  </div>
+                )}
               </article>
             ))}
           </div>
