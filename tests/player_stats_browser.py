@@ -58,6 +58,8 @@ def context_for(browser, kind='captain', width=1440):
             member = kind in ['captain', 'player']
             payload = dict(teamView=member, privatePlayerCount=0 if member else len(players), assistsTotal=None, assistsRecordedMatches=0, assistsCompleteMatches=0,
                 players=[{**p, 'goals':0, 'assists':0, 'appearances':0, 'goalsKnown':False, 'assistsKnown':False, 'appearancesKnown':False} for p in players] if member else [])
+        elif path.endswith('/get_member_player_profiles'):
+            assert kind in ['captain', 'player']; payload = data
         elif path.endswith('/get_captain_club'):
             assert kind == 'captain'
             payload = data
@@ -171,8 +173,8 @@ with sync_playwright() as p:
         expect(page.get_by_role('checkbox', name=names[0]+' played')).to_have_count(0)
         for path in ['/players/', '/stats/', '/results/']:
             page.goto(BASE+path, wait_until='networkidle')
-            if path=='/stats/' and kind=='player':
-                expect(page.locator('.leaderboard-table')).to_contain_text(names[0])
+            if path in ['/stats/', '/players/'] and kind=='player':
+                expect(page.locator('.leaderboard-table' if path=='/stats/' else '.player-grid')).to_contain_text(names[0])
             else:
                 for name in names: assert name not in page.locator('main').inner_text()
         context.close()

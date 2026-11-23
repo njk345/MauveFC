@@ -60,6 +60,7 @@ def new_context(browser, kind, width=1440):
         elif path.endswith('/get_team_access'): payload=dict(member=state['kind'] in ['player','captain'], role=state['kind'], playerId=ids[1] if state['kind'] else None)
         elif path.endswith('/get_public_club'): payload=public()
         elif path.endswith('/get_captain_club'): assert state['kind']=='captain'; payload=data
+        elif path.endswith('/get_member_player_profiles'): assert state['kind'] in ['captain','player']; payload=data
         elif path=='/rest/v1/match_drafts': payload=[]
         elif path.endswith('/get_team_club'): assert state['kind'] in ['player','captain']; payload={**data,'lineups':[],'rsvps':[]}
         elif path.endswith('/get_lineup_posts'): payload=[]

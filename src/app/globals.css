@@ -1415,6 +1415,8 @@ a svg {
   gap: 28px 22px;
 }
 .player-card {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--line);
   border-radius: 4px;
   overflow: hidden;
@@ -1425,6 +1427,7 @@ a svg {
   transform: translateY(-4px);
 }
 .player-shirt {
+  flex-shrink: 0;
   position: relative;
   background: #eae4e7;
   height: 215px;
@@ -1473,6 +1476,9 @@ a svg {
   color: #8a6a81;
 }
 .player-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding: 20px 17px 17px;
 }
 .player-info .eyebrow {
@@ -1481,12 +1487,15 @@ a svg {
   color: #8e7589;
 }
 .player-info h2 {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
   font-family: var(--body);
   font-size: 16px;
   font-weight: 600;
   margin: 7px 0 18px;
 }
 .player-mini-stats {
+  margin-top: auto;
   display: flex;
   gap: 18px;
   font-size: 6px;
@@ -3613,7 +3622,7 @@ footer {
   .player-info h2 {
     font-size: 12px;
     margin: 7px 0 14px;
-    white-space: nowrap;
+    white-space: normal;
   }
   .player-mini-stats {
     gap: 9px;

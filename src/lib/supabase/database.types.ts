@@ -515,6 +515,10 @@ export type Database = {
       }
     }
     Functions: {
+      get_member_player_profiles: {
+        Args: { p_club_id: string };
+        Returns: Json;
+      }
       set_fixture_removed: {
         Args: { p_match_id: string; p_expected_revision: number; p_removed: boolean };
         Returns: undefined;

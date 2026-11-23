@@ -29,6 +29,7 @@ import { PlayerDirectory } from "./player-directory";
 import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
 import { isFinalsWin } from "@/features/matches/playoffs";
 import { ResultDecision } from "./result-decision";
+import { usePlayerProfiles } from "./use-player-profiles";
 export function PageHeading({
   eyebrow,
   title,
@@ -410,25 +411,18 @@ export function ResultsPage() {
 }
 export function PlayersPage() {
   const auth = useAuth();
+  const profiles = usePlayerProfiles();
   const [view, setView] = useState("season");
-  const {
-      matches,
-      seasonId,
-      seasons,
-      players,
-      live,
-      roster: seasonRoster,
-    } = usePrototype(),
+  const { matches, players, roster: seasonRoster } = profiles,
+    { seasonId, live } = usePrototype(),
     [search, setSearch] = useState(""),
     [position, setPosition] = useState("All positions"),
     roster = playerStats(
       matches.filter((m) => m.seasonId === seasonId),
-      players.filter(
-        (p) =>
-          p.isPublic !== false &&
-          seasonRoster.some(
-            (sr) => sr.seasonId === seasonId && sr.playerId === p.id,
-          ),
+      players.filter((p) =>
+        seasonRoster.some(
+          (sr) => sr.seasonId === seasonId && sr.playerId === p.id,
+        ),
       ),
     ).sort((a, b) => a.number - b.number),
     filtered = roster.filter(
@@ -443,7 +437,7 @@ export function PlayersPage() {
         title="Meet the Mauve."
         description="The players behind the club, season after season."
       />
-      {auth.member && (
+      {profiles.teamView && (
         <div className="tabs player-directory-tabs" aria-label="Player views">
           <button
             type="button"
@@ -463,8 +457,21 @@ export function PlayersPage() {
           </button>
         </div>
       )}
-      {auth.member && view === "directory" ? (
+      {profiles.teamView && view === "directory" ? (
         <PlayerDirectory key={auth.user?.id} />
+      ) : profiles.loading ? (
+        <p role="status">Loading player profiles…</p>
+      ) : profiles.error ? (
+        <div className="form-errors" role="alert">
+          <p>{profiles.error}</p>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={profiles.reload}
+          >
+            Retry profiles
+          </button>
+        </div>
       ) : (
         <>
           <div className="roster-toolbar">
@@ -551,6 +558,7 @@ export function PlayersPage() {
             </div>
           )}
           <p className="muted coverage-note">
+            {profiles.teamView && "Private team view · "}
             {live
               ? "Player profiles and shirt illustrations."
               : "Sample profiles and shirt illustrations."}{" "}
@@ -562,12 +570,32 @@ export function PlayersPage() {
   );
 }
 export function PlayerProfile({ id }: { id: string }) {
-  const { matches, seasonId, seasons, players, live } = usePrototype(),
+  const profiles = usePlayerProfiles();
+  const { matches, players } = profiles,
+    { seasonId, seasons, live } = usePrototype(),
     fixtures = matches.filter((m) => m.seasonId === seasonId),
-    p = playerStats(
-      fixtures,
-      players.filter((p) => p.isPublic !== false),
-    ).find((p) => p.id === id);
+    p = playerStats(fixtures, players).find((p) => p.id === id);
+  if (profiles.loading)
+    return (
+      <div className="section page-section" role="status">
+        Loading player profile…
+      </div>
+    );
+  if (profiles.error)
+    return (
+      <div className="section page-section">
+        <div className="form-errors" role="alert">
+          <p>{profiles.error}</p>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={profiles.reload}
+          >
+            Retry profile
+          </button>
+        </div>
+      </div>
+    );
   if (!p)
     return (
       <div className="section page-section">

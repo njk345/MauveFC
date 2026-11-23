@@ -197,6 +197,19 @@ export async function readPlayerDirectory(): Promise<DirectoryPlayer[]> {
     );
   return data as DirectoryPlayer[];
 }
+export async function readMemberPlayerProfiles(): Promise<ClubSnapshot> {
+  const { data, error } = await getBrowserClient().rpc(
+    "get_member_player_profiles",
+    {
+      p_club_id: clubId,
+    },
+  );
+  if (error)
+    throw new Error(
+      "Team player profiles could not be loaded. Check your team access and try again.",
+    );
+  return data as ClubSnapshot;
+}
 export type GuestInput = {
   playerId?: string;
   player?: Pick<Player, "name" | "number" | "position">;

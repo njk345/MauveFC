@@ -46,6 +46,7 @@ def new_context(browser,kind=None,width=390):
   elif path.endswith('/get_captain_club'):payload=snapshot('captain') if state['kind']=='captain' else {};status=200 if state['kind']=='captain' else 403
   elif path.startswith('/rest/v1/match_drafts'):payload=[]
   elif path.endswith('/get_team_club'):payload=snapshot(state['kind']) if state['kind'] else {};status=200 if state['kind'] else 403
+  elif path.endswith('/get_member_player_profiles'):payload={k:copy.deepcopy(team[k]) for k in ['players','roster','seasons','matches']} if state['kind'] else {};status=200 if state['kind'] else 403
   elif path.endswith('/save_match_rsvp'):
    assert state['kind'] and set(body)=={'p_match_id','p_response'};counts['rsvp']+=1
    team['rsvps']=[r for r in team['rsvps'] if r['playerId']!=state['profile']]
@@ -101,7 +102,7 @@ with sync_playwright() as p:
  page.get_by_role('button',name='Private roster (8)',exact=True).click();expect(page.locator('.team-player-card')).to_have_count(8);expect(page.locator('.team-player-card').nth(1)).to_contain_text('YOU')
  assert page.evaluate('document.documentElement.scrollWidth')<=390
  page.screenshot(path='artifacts/team-roster-player-390.png',full_page=True)
- page.goto(BASE+'/players/',wait_until='networkidle');assert 'Private Member' not in page.locator('main').inner_text()
+ page.goto(BASE+'/players/',wait_until='networkidle');expect(page.locator('.player-card')).to_have_count(8);expect(page.locator('.player-grid')).to_contain_text('Private Member 1')
  page.goto(BASE+'/team/',wait_until='networkidle');page.get_by_role('button',name='Sign out',exact=True).click();expect(page.get_by_role('link',name='Team sign-in',exact=True)).to_be_visible();assert 'Private Member' not in page.locator('main').inner_text()
  print('PASS explicit invite acceptance, password setup, player privacy, own RSVP, reschedule confirmation and sign-out',flush=True);context.close()
  context,page,state=new_context(browser,'captain')

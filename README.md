@@ -100,9 +100,27 @@ record. Recorded appearances, current lineup references and published lineup
 history protect used assignments from removal. Adding guests preserves unsaved
 stats/formations and advances the captain’s own saved result-draft revision.
 
+The **Players → Season profiles** view shows every roster player to signed-in
+team members and captains, including private profiles. Search, position filters,
+individual profile pages, season totals and appearance histories use the same
+member access. Public visitors and signed-in nonmembers see only approved public
+profiles. Members can switch to **Club directory** to browse all known players,
+including former roster players and non-roster guests.
+
+Private profile data is requested only by the Players/profile routes through
+the read-only `get_member_player_profiles` API, which checks current club
+membership on every request. It includes active published match stats and omits
+captain drafts, account details and removed fixtures. Public club responses are
+unchanged. Private page data is hidden immediately on identity/access changes;
+pending responses cannot restore it after sign-out. Profiles recheck on focus
+and every minute while visible.
+
 Run `python tests/guests_browser.py` against the production preview on port 3100
 for isolated guest creation/reuse, stats, lineups, exports, directory and privacy
 checks. All service requests are intercepted; tests make no production writes.
+`python tests/member_players_browser.py` checks private roster/profile access,
+directory filters, public visibility, retries, sign-out races and revocation at
+desktop and mobile widths using intercepted services.
 
 ## Playoffs
 

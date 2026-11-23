@@ -257,6 +257,20 @@ The site remains available with its last good data during a provider outage.
 
 ## Access and privacy
 
+Players and individual profile pages use a separate read-only member projection
+when a current team member or captain is signed in. It includes all club players,
+season-roster membership and active published match-player stats for accurate
+totals and appearance histories. The public club projection and public-profile
+approval filter stay unchanged. Club directory access remains available to both
+team roles, including historical roster players and guests.
+
+`get_member_player_profiles` wraps a private function that checks current club
+membership on every request. It returns no drafts, account/email details, editor
+identities, removed fixtures or captain restore queue. The client scopes pending
+responses to the current account/access state, hides old private data before
+effect cleanup, and rechecks on focus and once a minute while visible. Private
+profile URLs reveal no player details to public visitors or nonmembers.
+
 Public visitors can see only published club content and approved player profile
 fields. Keep emails, account IDs, invite tokens, private notes, and availability
 outside public responses. The public club site/private team tools split is confirmed.

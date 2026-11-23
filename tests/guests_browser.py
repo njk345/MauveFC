@@ -60,6 +60,7 @@ def new_context(browser,kind='captain',width=390):
         elif path.endswith('/get_captain_club'):assert kind=='captain';payload=data
         elif path=='/rest/v1/match_drafts':payload=[]
         elif path.endswith('/get_team_club'):assert kind in ['captain','player'];payload={**data,'lineups':list(lineups.values()),'rsvps':[]}
+        elif path.endswith('/get_member_player_profiles'):assert kind in ['captain','player'];payload=data
         elif path.endswith('/get_lineup_posts'):payload=posts
         elif path.endswith('/get_player_directory'):assert kind in ['captain','player'];payload=directory()
         elif path.endswith('/get_season_stats'):payload=season_stats(kind,body['p_season_id'])
