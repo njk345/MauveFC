@@ -215,6 +215,9 @@ export type Database = {
       }
       matches: {
         Row: {
+          removed_at: string | null
+          removed_by: string | null
+          feed_source: string | null
           club_id: string
           color: string
           home: boolean
@@ -232,6 +235,9 @@ export type Database = {
           venue: string
         }
         Insert: {
+          removed_at?: string | null
+          removed_by?: string | null
+          feed_source?: string | null
           club_id: string
           color?: string
           home?: boolean
@@ -249,6 +255,9 @@ export type Database = {
           venue: string
         }
         Update: {
+          removed_at?: string | null
+          removed_by?: string | null
+          feed_source?: string | null
           club_id?: string
           color?: string
           home?: boolean
@@ -506,6 +515,10 @@ export type Database = {
       }
     }
     Functions: {
+      set_fixture_removed: {
+        Args: { p_match_id: string; p_expected_revision: number; p_removed: boolean };
+        Returns: undefined;
+      }
       set_season_complete: {
         Args: { p_season_id: string; p_expected_revision: number; p_completed: boolean };
         Returns: undefined;

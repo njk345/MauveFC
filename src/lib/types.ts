@@ -109,7 +109,7 @@ export type PlayoffRound = "playoffs" | "quarterfinals" | "semifinals" | "finals
 export type Match = {
   playoffRound?: PlayoffRound | null;
   guestPlayerIds?: string[];
-  source?: "leagueapps";
+  source?: string;
   externalId?: string;
   fixtureOverride?: boolean;
   resultSource?: "leagueapps" | "captain";
@@ -131,6 +131,11 @@ export type Match = {
   home: boolean;
   status: "scheduled" | "completed" | "postponed" | "cancelled";
   result?: Result;
+};
+export type RemovedFixture = Match & {
+  source: string;
+  removedAt: string;
+  feedAvailable?: boolean | null;
 };
 export type LeagueStanding = {
   position: number;
@@ -167,6 +172,7 @@ export type Season = {
   format: string;
 };
 export type PrototypeData = {
+  removedFixtures?: RemovedFixture[];
   seasons?: Season[];
   version: 1;
   players?: Player[];

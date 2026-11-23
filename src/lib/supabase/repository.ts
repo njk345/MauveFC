@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type {
   LeagueConnection,
   Match,
+  RemovedFixture,
   Player,
   Result,
   Season,
@@ -18,6 +19,7 @@ import type {
 import { clubId, publishableKey, supabaseUrl } from "./config";
 import { getBrowserClient } from "./client";
 export type ClubSnapshot = {
+  removedFixtures?: RemovedFixture[];
   league?: LeagueConnection;
   matches: Match[];
   players: Player[];
@@ -266,6 +268,14 @@ export async function writeFixture(fixture: Match) {
         ? "This fixture changed. Reload before saving."
         : error.message,
     );
+}
+export async function writeFixtureRemoval(match: Match, removed: boolean) {
+  const { error } = await getBrowserClient().rpc("set_fixture_removed", {
+    p_match_id: match.id,
+    p_expected_revision: match.revision ?? 0,
+    p_removed: removed,
+  });
+  if (error) throw new Error(error.message);
 }
 export async function writeSeasonComplete(
   seasonId: string,

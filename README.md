@@ -146,6 +146,33 @@ All service requests are intercepted; tests make no production writes.
 restoration, publishing, completion, reopening and the Home finish at mobile and
 desktop widths with intercepted services.
 
+## Remove and restore fixtures
+
+In **Captain’s area → Fixtures**, edit a game and choose **Remove fixture**.
+Confirming removes it from Schedule, Results, Home records, season/player stats,
+the goals chart and private match tools. Closed seasons fall back to the last
+remaining published playoff result, or their saved league placing when no
+playoffs remain. Home’s league standings continue to use LeagueApps unchanged.
+
+Removed feed games appear in **Removed feed fixtures** for the selected season.
+Hourly refreshes update their retained feed details without adding them back.
+Choose **Add back** to restore the same game, its recorded result/player stats,
+guests, lineups and RSVPs. Current result drafts survive visibility-only changes;
+drafts made stale by real source changes still require review. A game no longer
+listed by its source is labeled accordingly and can still be restored from the
+retained record. Manual games have no feed-restore entry. Player identities stay
+in the club directory independently of removed appearances.
+
+Removal and restoration require current captain access and the expected match
+revision. Other editors cannot write removed games, and public/member APIs omit
+both removed matches and the private restore queue. Future importers can register
+their provider key to use the same removal/restore workflow.
+
+Run `python tests/fixture_removal_browser.py` against the production preview on
+port 3100 for removal, cancel/error handling, feed refreshes, restoration, season
+finishes, stats, unchanged standings and mobile layouts. Services are intercepted;
+tests make no production writes.
+
 ## Add to home screen
 
 Open `/install/` from the footer or mobile menu. The Mauve FC icon launches the

@@ -17,7 +17,6 @@ export function ordinal(position: number) {
   return `${position}${suffix}`;
 }
 
-const roundRank = { playoffs: 0, quarterfinals: 1, semifinals: 2, finals: 3 };
 export function seasonFinish(season: Season, matches: Match[]) {
   const fixtures = matches.filter((m) => m.seasonId === season.id);
   const champion = championshipWin(fixtures);
@@ -33,11 +32,10 @@ export function seasonFinish(season: Season, matches: Match[]) {
     (m) => m.playoffRound && m.status !== "cancelled",
   );
   if (playoffs.length) {
-    const ranked = [...playoffs].sort(
+    const recorded = publishedMatches(playoffs);
+    const ranked = [...(recorded.length ? recorded : playoffs)].sort(
       (a, b) =>
-        roundRank[a.playoffRound!] - roundRank[b.playoffRound!] ||
-        (a.kickoff || "").localeCompare(b.kickoff || "") ||
-        a.round - b.round,
+        (a.kickoff || "").localeCompare(b.kickoff || "") || a.round - b.round,
     );
     const last = ranked.at(-1)!;
     const published = publishedMatches([last]).length > 0;

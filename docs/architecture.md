@@ -34,6 +34,9 @@ Confirmed product decisions:
   kicks do not count as team or individual goals.
 - Captains mark a season complete or reopen it. Completed seasons display their
   championship, playoff finish or saved league placing on Home.
+- Captains remove fixtures and restore removed feed games from a private queue.
+  Removed games contribute no result/player totals or team match tools. League
+  standings remain the imported league table.
 - LeagueApps program URL:
   https://nycsoccer.leagueapps.com/leagues/soccer/5162244-thurs-7-v-7-coed--bbp-group-b
 
@@ -89,7 +92,7 @@ These are conceptual entities, not a finalized SQL schema.
 | `seasons` | Competition name, dates, format, completion state/revision, captured final league placing |
 | `season_roster` | Official membership of a player in a season |
 | `private.match_guests` | Club player assigned to one game as a non-roster substitute |
-| `matches` | Season, opponent, venue, kickoff, fixture status, publication state, captain-managed playoff round |
+| `matches` | Season, opponent, venue, kickoff, fixture status, publication state, playoff round, removal marker and feed provider key |
 | `match_results` | Official and on-field scores, result basis, regulation/overtime/penalty decision, shootout win/loss, adjustment reason |
 | `match_player_stats` | Player appearance, goals, assists, optional minutes and keeper details |
 | `schedule_sources` | Feed/API configuration, last successful sync, health |
@@ -136,9 +139,26 @@ Detailed `match_events` can follow if someone will actually record them.
   Capture the connected league’s team position as `final_position` at completion;
   imports never overwrite it. Reopening clears that snapshot and completing again
   captures the latest placing. Completion does not lock result corrections. Home
-  derives championships and the highest non-cancelled playoff round from current
-  results; missing playoff scores or league placements remain explicit. Published
+  derives championships and the last remaining published playoff result from
+  current active games; pending games are a fallback only when no playoff result
+  remains. Missing playoff scores or league placements remain explicit. Published
   Finals wins retain the existing celebration before or after season completion.
+- **Removal versus cancellation:** `matches.removed_at` removes a game from all
+  club-facing projections and aggregate views without destroying linked records.
+  RLS also excludes removed matches/results from the column-restricted table API.
+  Captain-only, revision-checked removal/restore transactions serialize with match
+  writes. Triggers reject stale interactive edits to removed games and their
+  results, drafts, stats, guests, RSVPs and lineups. Restoration keeps the same UUID
+  and recorded data; visibility-only changes rebase current result drafts, while
+  real intervening source changes keep stale drafts protected.
+- **Feed queue:** server-owned `matches.feed_source` identifies imported fixtures
+  independently of provider-specific link tables. LeagueApps registration is
+  automatic; future adapters set their own provider key. Captains alone receive
+  `removedFixtures`, including source availability when known. Import updates keep
+  the removal marker and never resurrect a deleted game. Missing source items
+  remain available as explicitly labeled retained records. Manual removals have
+  no feed-restore UI. League standings and captured final league place are never
+  recomputed from local fixture removals.
 - **Totals versus events:** the first source of player goals and assists is the
   per-match totals. If event tracking arrives later, derive those totals from events
   for event-tracked matches; never sum two independent sources for the same match.

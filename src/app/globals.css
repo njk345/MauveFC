@@ -5225,6 +5225,28 @@ footer {
 .stats-table-hint {display:none;}
 
 .playoff-settings {min-width:0;border:1px solid #d9cbd5;border-radius:10px;background:#f5eff3;padding:1.25rem;margin:0 0 1.5rem;}
+.fixture-remove-zone{border-top:1px solid #e2d7df;padding-top:1.25rem;margin-top:1.5rem;}
+.fixture-remove-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:#8c374c;}
+.fixture-remove-dialog{max-width:540px;width:calc(100% - 2rem);}
+.fixture-remove-dialog h2{font-family:var(--display);font-size:2rem;margin:.5rem 0 1rem;}
+.fixture-remove-dialog p{display:block;font-size:1rem;line-height:1.75;margin:1rem 0;}
+.fixture-remove-dialog .button{font-size:.875rem;min-height:44px;}
+.fixture-remove-confirm{background:#81364d;color:#fff;}
+.fixture-remove-confirm:hover{background:#672c3e;}
+.removed-feed-fixtures{border:1px solid #d9cbd5;border-radius:12px;padding:1.25rem;margin-top:2rem;background:#f4eef2;min-width:0;}
+.removed-feed-fixtures h2{display:flex;align-items:center;gap:.75rem;font-family:var(--display);font-size:1.6rem;}
+.removed-feed-fixtures h2>span{font-family:var(--body);font-size:.875rem;display:grid;place-items:center;min-width:28px;height:28px;padding:0 .35rem;border-radius:20px;background:#e1d1dd;color:#684560;}
+.removed-feed-fixtures p{font-size:.875rem;line-height:1.65;margin:.5rem 0;}
+.removed-feed-list{padding:0;list-style:none;display:grid;gap:1rem;margin-top:1rem;}
+.removed-feed-list>li{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;background:#fffdfa;border:1px solid #e0d4dc;border-radius:8px;padding:1rem;min-width:0;}
+.removed-feed-list>li>div{min-width:0;}
+.removed-feed-list h3{font-size:1rem;line-height:1.5;overflow-wrap:anywhere;margin:.25rem 0;}
+.removed-feed-source{font-size:.875rem;font-weight:600;color:#78536e;}
+.removed-feed-result{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.5rem 0;}
+.removed-feed-result>strong{font-family:var(--display);font-size:1.5rem;}
+.removed-feed-list .button{flex-shrink:0;min-height:44px;font-size:.875rem;}
+.removed-feed-empty,.removed-feed-availability{color:#705c6c;}
+@media(max-width:600px){.removed-feed-list>li{flex-direction:column;}.removed-feed-list .button{align-self:flex-start;}.fixture-remove-dialog .button-row{display:grid;grid-template-columns:1fr;}}
 .playoff-settings legend {padding:0 .5rem;font-size:.875rem;font-weight:600;}
 .playoff-toggle {display:flex;align-items:center;gap:.75rem;min-height:44px;font-size:1rem;cursor:pointer;}
 .playoff-toggle input {width:22px;height:22px;accent-color:#815573;}

@@ -15,6 +15,7 @@ import {
 import type {
   LeagueConnection,
   Match,
+  RemovedFixture,
   Player,
   PrototypeData,
   Result,
@@ -29,6 +30,7 @@ import {
   readDrafts,
   writeResult,
   writeFixture,
+  writeFixtureRemoval,
   writeSeasonComplete,
   writePlayer,
   type ClubSnapshot,
@@ -52,6 +54,7 @@ type Context = {
   ready: boolean;
   resetVersion: number;
   matches: Match[];
+  removedFixtures: RemovedFixture[];
   players: Player[];
   seasons: Season[];
   roster: { seasonId: string; playerId: string }[];
@@ -60,6 +63,8 @@ type Context = {
   drafts: Record<string, Result>;
   saveResult: (id: string, result: Result) => Promise<void>;
   saveFixture: (match: Match) => Promise<void>;
+  removeFixture: (match: Match) => Promise<void>;
+  restoreFixture: (match: RemovedFixture) => Promise<void>;
   setSeasonComplete: (
     id: string,
     revision: number,
@@ -117,6 +122,7 @@ export function PrototypeProvider({
     setData({
       version: 1,
       matches: snapshot.matches,
+      removedFixtures: snapshot.removedFixtures || [],
       players: snapshot.players,
       roster: snapshot.roster,
       drafts,
@@ -314,6 +320,72 @@ export function PrototypeProvider({
           : [...d.matches, match],
       }));
   }
+  async function removeFixture(match: Match) {
+    if (auth.live) {
+      if (!auth.captain) throw new Error("Captain access required.");
+      await writeFixtureRemoval(match, true);
+      await refresh();
+    } else
+      setData((previous) => {
+        const drafts = { ...previous.drafts };
+        const draft = drafts[match.id];
+        if (!match.source) delete drafts[match.id];
+        else if (draft && (draft.baseRevision ?? 0) === (match.revision ?? 0))
+          drafts[match.id] = {
+            ...draft,
+            baseRevision: (match.revision ?? 0) + 1,
+          };
+        return {
+          ...previous,
+          matches: previous.matches.filter((m) => m.id !== match.id),
+          drafts,
+          removedFixtures: match.source
+            ? [
+                ...(previous.removedFixtures || []),
+                {
+                  ...match,
+                  source: match.source,
+                  revision: (match.revision ?? 0) + 1,
+                  removedAt: new Date().toISOString(),
+                },
+              ]
+            : previous.removedFixtures,
+        };
+      });
+  }
+  async function restoreFixture(match: RemovedFixture) {
+    if (auth.live) {
+      if (!auth.captain) throw new Error("Captain access required.");
+      await writeFixtureRemoval(match, false);
+      await refresh();
+    } else {
+      const {
+        removedAt: _removed,
+        feedAvailable: _available,
+        ...restored
+      } = match;
+      setData((previous) => {
+        const drafts = { ...previous.drafts };
+        const draft = drafts[match.id];
+        if (draft && (draft.baseRevision ?? 0) === (match.revision ?? 0))
+          drafts[match.id] = {
+            ...draft,
+            baseRevision: (match.revision ?? 0) + 1,
+          };
+        return {
+          ...previous,
+          drafts,
+          matches: [
+            ...previous.matches,
+            { ...restored, revision: (match.revision ?? 0) + 1 },
+          ].sort((a, b) => a.round - b.round),
+          removedFixtures: previous.removedFixtures?.filter(
+            (m) => m.id !== match.id,
+          ),
+        };
+      });
+    }
+  }
   async function setSeasonComplete(
     id: string,
     revision: number,
@@ -372,6 +444,7 @@ export function PrototypeProvider({
         ready,
         resetVersion,
         matches: data.matches,
+        removedFixtures: data.removedFixtures || [],
         players: data.players || [],
         roster: data.roster || [],
         seasons,
@@ -380,6 +453,8 @@ export function PrototypeProvider({
         drafts: data.drafts || {},
         saveResult,
         saveFixture,
+        removeFixture,
+        restoreFixture,
         setSeasonComplete,
         savePlayer,
         changeGuest,

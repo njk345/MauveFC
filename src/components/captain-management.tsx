@@ -7,6 +7,11 @@ import type { Match, Player, PlayoffRound } from "@/lib/types";
 import { playoffRounds } from "@/features/matches/playoffs";
 import { fromNewYorkInput, toNewYorkInput } from "@/lib/kickoff";
 import { useLeagueFixture } from "@/lib/supabase/repository";
+import {
+  feedName,
+  RemoveFixtureButton,
+  RemovedFeedFixtures,
+} from "./fixture-removal";
 export function FixtureManagement() {
   const { matches, seasonId, saveFixture, setNotice, live, refresh } =
       usePrototype(),
@@ -77,13 +82,14 @@ export function FixtureManagement() {
                     {m.source &&
                       (m.fixtureOverride
                         ? " · Captain override"
-                        : " · LeagueApps")}
+                        : ` · ${feedName(m.source)}`)}
                   </small>
                 </span>
                 <span>Edit</span>
               </button>
             ))}
           </div>
+          <RemovedFeedFixtures />
         </div>
         {editing ? (
           <form className="management-form" onSubmit={submit}>
@@ -96,10 +102,10 @@ export function FixtureManagement() {
               <p className="help-text">
                 {editing.fixtureOverride
                   ? "Your fixture details are protected from league updates."
-                  : "LeagueApps keeps this fixture up to date. Playoff labels are managed by the captain; changing schedule details creates a captain override."}
+                  : `${feedName(editing.source)} keeps this fixture up to date. Playoff labels are managed by the captain; changing schedule details creates a captain override.`}
               </p>
             )}
-            {editing.fixtureOverride && (
+            {editing.fixtureOverride && editing.source === "leagueapps" && (
               <button
                 type="button"
                 className="text-link"
@@ -281,6 +287,15 @@ export function FixtureManagement() {
                 Cancel
               </button>
             </div>
+            {fixtures.some((m) => m.id === editing.id) && (
+              <div className="fixture-remove-zone">
+                <RemoveFixtureButton
+                  match={editing}
+                  disabled={busy}
+                  onRemoved={() => setEditing(null)}
+                />
+              </div>
+            )}
           </form>
         ) : (
           <div className="management-empty">
