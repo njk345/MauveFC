@@ -1,5 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
-import { parseLeagueSnapshot, source } from "../_shared/leagueapps.ts";
+import {
+  fetchLeaguePage,
+  leagueSourceFromLink,
+  parseLeagueSnapshot,
+  source,
+} from "../_shared/leagueapps.ts";
 
 // Only Postgres dispatches jobs. Browser callers use the captain-authorized RPC.
 // verify_jwt=false is required for pg_net; a private, expiring, single-use token
@@ -32,53 +37,19 @@ Deno.serve(async (req: Request) => {
   const { data: config, error } = await admin.rpc("begin_league_sync", {
     p_token: token,
   });
-  if (
-    error ||
-    config?.programId !== source.programId ||
-    config?.teamId !== source.teamId
-  )
+  if (error || !config?.programId || !config?.teamId)
     return new Response("Invalid job", { status: 403 });
   try {
-    async function page(url: string) {
-      const response = await fetch(url, {
-        redirect: "error",
-        signal: AbortSignal.timeout(20000),
-        headers: {
-          Accept: "text/html",
-          "User-Agent": "MauveFC-LeagueSync/1.0",
-        },
-      });
-      if (
-        !response.ok ||
-        !response.headers.get("content-type")?.includes("text/html")
-      )
-        throw new Error("Source unavailable");
-      const reader = response.body!.getReader(),
-        chunks: Uint8Array[] = [];
-      let size = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        size += value.length;
-        if (size > 2_000_000) {
-          await reader.cancel();
-          throw new Error("Source too large");
-        }
-        chunks.push(value);
-      }
-      const bytes = new Uint8Array(size);
-      let offset = 0;
-      for (const chunk of chunks) {
-        bytes.set(chunk, offset);
-        offset += chunk.length;
-      }
-      return new TextDecoder().decode(bytes);
-    }
+    const configured = leagueSourceFromLink(
+      `${config.origin || source.origin}/leagues/${config.programId}/teams/${config.teamId}`,
+      "",
+      config.timeZone || "America/New_York",
+    );
     const [schedule, standings] = await Promise.all([
-      page(source.scheduleUrl),
-      page(source.standingsUrl),
+      fetchLeaguePage(configured.scheduleUrl),
+      fetchLeaguePage(configured.standingsUrl),
     ]);
-    const snapshot = parseLeagueSnapshot(schedule, standings);
+    const snapshot = parseLeagueSnapshot(schedule, standings, configured);
     const { data, error: applyError } = await admin.rpc("apply_league_sync", {
       p_token: token,
       p_snapshot: snapshot,

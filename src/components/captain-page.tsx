@@ -27,7 +27,9 @@ import {
 import { MatchGuests } from "./match-guests";
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 import { ResultDecision } from "./result-decision";
+import { useSeasonTeamName } from "./use-season-team-name";
 export function CaptainPage() {
+  const teamName = useSeasonTeamName();
   const {
       matches,
       players: allPlayers,
@@ -234,7 +236,7 @@ export function CaptainPage() {
           <span className="eyebrow">THAT’S IN THE BOOKS</span>
           <h2>Another chapter, published.</h2>
           <p>
-            Mauve FC {r.home} – {r.away} {match?.opponent}
+            {teamName} {r.home} – {r.away} {match?.opponent}
           </p>
           <ResultDecision result={r} />
           <p>The club record, player totals, and charts are up to date.</p>
@@ -351,10 +353,10 @@ export function CaptainPage() {
                 <div className="score-entry">
                   <label>
                     <Crest />
-                    <strong>Mauve FC</strong>
-                    <span className="sr-only">Mauve FC official score</span>
+                    <strong>{teamName}</strong>
+                    <span className="sr-only">{teamName} official score</span>
                     <input
-                      aria-label="Mauve FC official score"
+                      aria-label={`${teamName} official score`}
                       type="number"
                       min="0"
                       max="99"
@@ -550,7 +552,9 @@ export function CaptainPage() {
                       color={match?.color || "#557285"}
                     />
                   </div>
-                  <h3>Mauve FC vs {match?.opponent}</h3>
+                  <h3>
+                    {teamName} vs {match?.opponent}
+                  </h3>
                   <ResultDecision result={r} />
                 </div>
                 <dl className="publish-summary">

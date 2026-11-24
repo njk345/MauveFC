@@ -249,7 +249,8 @@ function SeasonStatsEditor({
                   MATCHDAY {match.round} · {date(match.kickoff, "long")}
                 </span>
                 <h2>
-                  Mauve FC{" "}
+                  {seasons.find((season) => season.id === seasonId)?.teamName ||
+                    "Mauve FC"}{" "}
                   {match.result?.published
                     ? `${match.result.home} – ${match.result.away}`
                     : "vs"}{" "}

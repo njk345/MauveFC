@@ -9,7 +9,7 @@ import {
 import { PageHeading } from "./season-pages";
 import type { Match, Player, PlayoffRound } from "@/lib/types";
 import { playoffRounds } from "@/features/matches/playoffs";
-import { fromNewYorkInput, toNewYorkInput } from "@/lib/kickoff";
+import { fromZonedInput, toZonedInput } from "@/lib/kickoff";
 import { useLeagueFixture } from "@/lib/supabase/repository";
 import {
   feedName,
@@ -17,13 +17,21 @@ import {
   RemovedFeedFixtures,
 } from "./fixture-removal";
 export function FixtureManagement() {
-  const { matches, seasonId, saveFixture, setNotice, live, refresh } =
+  const { seasonId } = usePrototype();
+  return <SeasonFixtureManagement key={seasonId} />;
+}
+function SeasonFixtureManagement() {
+  const { matches, seasonId, seasons, saveFixture, setNotice, live, refresh } =
       usePrototype(),
     [editing, setEditing] = useState<Match | null>(null),
     [kickoff, setKickoff] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const fixtures = matches.filter((m) => m.seasonId === seasonId);
+  const season = seasons.find((s) => s.id === seasonId);
+  const leagueTeams = season?.manualStandings
+    ? season.leagueTeams?.filter((team) => !team.isOurs)
+    : undefined;
   function edit(match?: Match) {
     setEditing(
       match || {
@@ -41,7 +49,7 @@ export function FixtureManagement() {
         playoffRound: null,
       },
     );
-    setKickoff(toNewYorkInput(match?.kickoff || null));
+    setKickoff(toZonedInput(match?.kickoff || null, season?.timeZone));
     setError("");
   }
   async function submit(e: React.FormEvent) {
@@ -50,7 +58,10 @@ export function FixtureManagement() {
     setBusy(true);
     setError("");
     try {
-      await saveFixture({ ...editing, kickoff: fromNewYorkInput(kickoff) });
+      await saveFixture({
+        ...editing,
+        kickoff: fromZonedInput(kickoff, season?.timeZone),
+      });
       setEditing(null);
       setNotice(
         live ? "Fixture saved." : "Sample fixture saved in this browser.",
@@ -178,14 +189,47 @@ export function FixtureManagement() {
             </fieldset>
             <label className="form-field">
               <span>Opponent</span>
-              <input
-                required
-                maxLength={100}
-                value={editing.opponent}
-                onChange={(e) =>
-                  setEditing({ ...editing, opponent: e.target.value })
-                }
-              />
+              {leagueTeams?.length ? (
+                <select
+                  required
+                  value={editing.opponent}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      opponent: e.target.value,
+                      opponentCode: e.target.value
+                        .split(/\s+/)
+                        .filter(Boolean)
+                        .slice(0, 3)
+                        .map((word) => word[0])
+                        .join("")
+                        .toUpperCase(),
+                    })
+                  }
+                >
+                  <option value="">Choose a league team</option>
+                  {editing.opponent &&
+                    !leagueTeams.some(
+                      (team) => team.name === editing.opponent,
+                    ) && (
+                      <option value={editing.opponent}>
+                        {editing.opponent} · not listed
+                      </option>
+                    )}
+                  {leagueTeams.map((team) => (
+                    <option key={team.id}>{team.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  required
+                  maxLength={100}
+                  value={editing.opponent}
+                  onChange={(e) =>
+                    setEditing({ ...editing, opponent: e.target.value })
+                  }
+                />
+              )}
             </label>
             <div className="field-pair">
               <label className="form-field">
@@ -217,7 +261,12 @@ export function FixtureManagement() {
               </label>
             </div>
             <label className="form-field">
-              <span>Kickoff · New York time</span>
+              <span>
+                Kickoff ·{" "}
+                {season?.timeZone && season.timeZone !== "America/New_York"
+                  ? season.timeZone.replaceAll("_", " ")
+                  : "New York time"}
+              </span>
               <input
                 type="datetime-local"
                 value={kickoff}
@@ -312,6 +361,10 @@ export function FixtureManagement() {
   );
 }
 export function RosterManagement() {
+  const { seasonId } = usePrototype();
+  return <SeasonRosterManagement key={seasonId} />;
+}
+function SeasonRosterManagement() {
   const { players, roster, seasonId, savePlayer, setNotice, live, refresh } =
       usePrototype(),
     [editing, setEditing] = useState<Player | null>(null),

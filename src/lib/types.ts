@@ -178,6 +178,12 @@ export type LeagueStanding = {
   points: number;
 };
 export type LeagueConnection = {
+  kind?: "leagueapps" | "manual";
+  leagueName?: string;
+  scheduleUrl?: string;
+  standingsUrl?: string;
+  refreshesAutomatically?: boolean;
+  unmatchedGames?: number;
   seasonId: string;
   teamId: string;
   teamName: string;
@@ -188,6 +194,16 @@ export type LeagueConnection = {
   state: "idle" | "queued" | "running" | "succeeded" | "failed";
 };
 export type Season = {
+  year?: number | null;
+  term?: "Winter" | "Spring" | "Summer" | "Fall" | null;
+  teamName?: string;
+  location?: string;
+  leagueWebsite?: string;
+  timeZone?: string;
+  source?: "manual" | "leagueapps";
+  manualStandings?: boolean;
+  settingsRevision?: number;
+  leagueTeams?: { id: string; name: string; isOurs: boolean }[];
   completed?: boolean;
   completedAt?: string | null;
   finalPosition?: number | null;
@@ -196,6 +212,57 @@ export type Season = {
   name: string;
   competition: string;
   format: string;
+};
+export type SeasonSetupInput = {
+  id: string;
+  source: "manual" | "leagueapps";
+  year: number;
+  term: NonNullable<Season["term"]>;
+  name: string;
+  teamName: string;
+  competition: string;
+  location: string;
+  leagueWebsite: string;
+  timeZone: string;
+  format: string;
+  completed: boolean;
+  manualStandings: boolean;
+  teams: string[];
+  rosterPlayerIds: string[];
+};
+export type SeasonImportPreview = {
+  phase: "ready";
+  previewId: string;
+  teamName: string;
+  expiresAt: string;
+  source: { origin: string; programId: string; teamId: string };
+  games: {
+    externalId: string;
+    opponent: string;
+    kickoff: string | null;
+    venue: string;
+    status: Match["status"];
+    score: { home: number; away: number; basis: "played" | "forfeit" } | null;
+  }[];
+  standings: LeagueStanding[];
+};
+export type SeasonImportTeamChoice = {
+  phase: "choose-team";
+  teams: { teamId: string; name: string }[];
+  origin: string;
+  programId: string;
+};
+export type ManualLeagueResult = {
+  id: string;
+  seasonId: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  home: number;
+  away: number;
+  playedOn: string;
+  decision: "regulation" | "overtime" | "penalties";
+  penaltyOutcome: "W" | "L" | null;
+  revision: number;
 };
 export type PrototypeData = {
   removedFixtures?: RemovedFixture[];

@@ -17,10 +17,15 @@ import type {
   GuestChange,
   CaptainPlayerDetails,
   PreferredPosition,
+  SeasonSetupInput,
+  SeasonImportPreview,
+  SeasonImportTeamChoice,
+  ManualLeagueResult,
 } from "../types";
 import { clubId, publishableKey, supabaseUrl } from "./config";
 import { getBrowserClient } from "./client";
 export type ClubSnapshot = {
+  leagues?: LeagueConnection[];
   removedFixtures?: RemovedFixture[];
   league?: LeagueConnection;
   matches: Match[];
@@ -130,14 +135,85 @@ export async function createPlayerInvite(
   if (!data?.link) throw new Error("The invitation could not be created.");
   return data;
 }
-export async function requestLeagueSync() {
+export async function requestLeagueSync(seasonId?: string) {
   const { error } = await getBrowserClient().rpc("request_league_sync", {
     p_club_id: clubId,
+    ...(seasonId ? { p_season_id: seasonId } : {}),
   });
   if (error)
     throw new Error(
       "LeagueApps refresh could not be requested. Please try again.",
     );
+}
+export async function previewSeasonImport(
+  link: string,
+  teamId: string,
+  timeZone: string,
+) {
+  const { data, error } = await getBrowserClient().functions.invoke(
+    "season-import",
+    {
+      body: { clubId, link, teamId, timeZone },
+    },
+  );
+  if (error) {
+    let message = "The season preview could not be loaded. Please try again.";
+    if (error.context instanceof Response) {
+      try {
+        message = (await error.context.json()).error || message;
+      } catch {
+        /* preserve safe transport message */
+      }
+    }
+    throw new Error(message);
+  }
+  return data as SeasonImportPreview | SeasonImportTeamChoice;
+}
+export async function createClubSeason(
+  input: SeasonSetupInput,
+  previewId?: string,
+) {
+  const { data, error } = await getBrowserClient().rpc("create_club_season", {
+    p_club_id: clubId,
+    p_input: input,
+    p_preview_id: previewId || null,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+export async function configureManualStandings(
+  season: Season,
+  enabled: boolean,
+  teamNames: string[],
+) {
+  const { error } = await getBrowserClient().rpc("configure_manual_standings", {
+    p_season_id: season.id,
+    p_expected_revision: season.settingsRevision || 0,
+    p_enabled: enabled,
+    p_team_names: teamNames,
+  });
+  if (error) throw new Error(error.message);
+}
+export async function readManualLeagueResults(seasonId: string) {
+  const { data, error } = await getBrowserClient().rpc(
+    "get_manual_league_results",
+    { p_season_id: seasonId },
+  );
+  if (error)
+    throw new Error("League results could not be loaded. Please try again.");
+  return data as ManualLeagueResult[];
+}
+export async function writeManualLeagueResult(
+  result: ManualLeagueResult,
+  remove = false,
+) {
+  const { error } = await getBrowserClient().rpc("write_manual_league_result", {
+    p_season_id: result.seasonId,
+    p_expected_revision: result.revision,
+    p_result: result,
+    p_remove: remove,
+  });
+  if (error) throw new Error(error.message);
 }
 export async function useLeagueFixture(match: Match) {
   const { error } = await getBrowserClient().rpc("use_league_fixture", {

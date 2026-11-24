@@ -6,23 +6,43 @@ import { PageHeading } from "./season-pages";
 import { HomeSeasonFinish } from "./season-finish";
 import { ordinal } from "@/features/matches/season-finish";
 import type { LeagueConnection, Match, Season } from "@/lib/types";
+import { SeasonSetup } from "./season-setup";
+import { ManualSeasonStandings } from "./manual-season-standings";
 
 export function CaptainSeason() {
-  const { seasons, seasonId, matches, league, setSeasonComplete, setNotice } =
-    usePrototype();
+  const [settingUp, setSettingUp] = useState(false);
+  const {
+    seasons,
+    seasonId,
+    matches,
+    league,
+    setSeasonComplete,
+    setNotice,
+    live,
+  } = usePrototype();
   const season = seasons.find((s) => s.id === seasonId);
-  if (!season) return null;
   // Mount a new form for each season/revision; background refreshes cannot
   // overwrite an unsaved choice unless the saved season status changed.
   return (
-    <SeasonForm
-      key={`${season.id}:${season.revision ?? 0}`}
-      season={season}
-      matches={matches}
-      league={league}
-      save={setSeasonComplete}
-      notify={setNotice}
-    />
+    <>
+      <SeasonSetup onOpenChange={setSettingUp} />
+      {!settingUp && season && (
+        <SeasonForm
+          key={`${season.id}:${season.revision ?? 0}`}
+          season={season}
+          matches={matches}
+          league={league}
+          save={setSeasonComplete}
+          notify={setNotice}
+        />
+      )}
+      {!settingUp && live && season?.source === "manual" && (
+        <ManualSeasonStandings
+          key={`${season.id}:${season.settingsRevision || 0}`}
+          season={season}
+        />
+      )}
+    </>
   );
 }
 
@@ -42,10 +62,14 @@ function SeasonForm({
   const [completed, setCompleted] = useState(!!season.completed);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const placing =
+  const ownStanding =
     league?.seasonId === season.id
-      ? league.standings.find((s) => s.teamId === league.teamId)?.position
+      ? league.standings.find((s) => s.teamId === league.teamId)
       : undefined;
+  const placing =
+    league?.kind === "manual" && !ownStanding?.played
+      ? undefined
+      : ownStanding?.position;
   const preview = {
     ...season,
     completed,
@@ -87,6 +111,20 @@ function SeasonForm({
             {season.completed ? "Complete" : "In progress"}
           </span>
         </div>
+        <p>
+          {season.teamName || "Mauve FC"} · {season.competition}
+          {season.location ? ` · ${season.location}` : ""}
+        </p>
+        {season.leagueWebsite && (
+          <a
+            className="text-link"
+            href={season.leagueWebsite}
+            target="_blank"
+            rel="noreferrer"
+          >
+            League website
+          </a>
+        )}
         <label className="playoff-toggle">
           <input
             type="checkbox"
@@ -105,7 +143,7 @@ function SeasonForm({
           {season.completed
             ? season.finalPosition
               ? `Saved league placing: ${ordinal(season.finalPosition)}.`
-              : "No verified league placing was available when this season was completed."
+              : "No recorded league placing is available for this completed season."
             : placing
               ? `Current league placing: ${ordinal(placing)}. It will be saved when you complete the season.`
               : "No verified league placing is available. The season can still be marked complete without inventing a position."}

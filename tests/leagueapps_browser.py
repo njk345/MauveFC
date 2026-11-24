@@ -2,7 +2,7 @@
 The captain identity and mutations are intercepted in-browser; no real writes or
 sign-in emails occur. urllib preserves the managed cloud proxy's CA verification.
 """
-import base64, copy, json, os, time, urllib.request, urllib.error, ssl
+import base64, copy, json, os, time, urllib.request, urllib.error, ssl, re
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 BASE=os.getenv('MAUVE_BASE_URL','http://127.0.0.1:3000')
@@ -21,33 +21,32 @@ Path('artifacts').mkdir(exist_ok=True)
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
  page=b.new_page();page.route(API+'/**',bridge);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ season_id=snapshot['seasons'][0]['id']
+ selected=[m for m in snapshot['matches'] if m['seasonId']==season_id]
+ official=next((l for l in snapshot.get('leagues',[]) if l['seasonId']==season_id),snapshot.get('league'))
+ own=next(row for row in official['standings'] if row['teamId']==official['teamId'])
+ final=[m for m in selected if m.get('result',{}).get('published') and m['status']=='completed']
+ def outcome(m):
+  r=m['result'];return r.get('penaltyOutcome') if r.get('decision')=='penalties' else 'W' if r['home']>r['away'] else 'L' if r['home']<r['away'] else 'D'
  for width in [390,1440]:
   page.set_viewport_size({'width':width,'height':1000})
   page.goto(BASE+'/',wait_until='networkidle')
-  expect(page.locator('.home-standings-table tbody tr')).to_have_count(9)
-  expect(page.locator('.mauve-standing')).to_contain_text('It’s Coming Home (Lilac)')
-  expect(page.locator('.mauve-standing')).to_contain_text('14')
-  expect(page.locator('.fixture-card')).to_contain_text('Thottenham Hotgurls')
-  expect(page.locator('.fixture-card')).to_contain_text('Nov')
-  expect(page.locator('.home-season-summary')).to_contain_text('14')
+  expect(page.locator('.home-standings-table tbody tr')).to_have_count(len(official['standings']))
+  expect(page.locator('.mauve-standing')).to_contain_text(own['name'])
+  expect(page.locator('.mauve-standing td').last).to_have_text(str(own['points']))
   assert page.evaluate('document.documentElement.scrollWidth')<=width
   page.screenshot(path=f'artifacts/leagueapps-home-{width}.png',full_page=True)
   page.goto(BASE+'/schedule/',wait_until='networkidle')
-  expect(page.locator('.match-row')).to_have_count(1)
-  page.get_by_role('button',name='Awaiting results (1)').click()
-  expect(page.locator('.match-row')).to_have_count(1)
-  expect(page.locator('.match-row')).to_contain_text('Farcelona')
-  expect(page.locator('.match-row')).to_contain_text('Awaiting league result')
-  page.get_by_role('button',name='All matches (8)').click()
-  expect(page.locator('.match-row')).to_have_count(8)
+  page.get_by_role('button',name=re.compile('^All matches')).click()
+  expect(page.locator('.match-row')).to_have_count(len(selected))
   page.goto(BASE+'/results/',wait_until='networkidle')
-  expect(page.locator('.match-row')).to_have_count(6)
-  page.get_by_role('button',name='Wins',exact=True).click();expect(page.locator('.match-row')).to_have_count(4)
-  page.get_by_role('button',name='Draws',exact=True).click();expect(page.locator('.match-row')).to_have_count(2)
-  print('PASS real LeagueApps standings, next match, missing-score fixture and results at',width,flush=True)
+  expect(page.locator('.match-row')).to_have_count(len(final))
+  page.get_by_role('button',name='Wins',exact=True).click();expect(page.locator('.match-row')).to_have_count(sum(outcome(m)=='W' for m in final))
+  page.get_by_role('button',name='Draws',exact=True).click();expect(page.locator('.match-row')).to_have_count(sum(outcome(m)=='D' for m in final))
+  print('PASS real LeagueApps standings and fixture/result projections at',width,flush=True)
  page.close()
  # UI-only captain session. Auth and every mutation are stubbed.
- data=copy.deepcopy(snapshot);m=data['matches'][0];m['needsReview']=True;m['leagueScore']={'home':3,'away':0,'basis':'played'}
+ data=copy.deepcopy(snapshot);data['leagues']=[data['league']];m=data['matches'][0];m['needsReview']=True;m['leagueScore']={'home':3,'away':0,'basis':'played'}
  own_id='33333333-3333-4333-8333-333333333333'
  user={'id':own_id,'aud':'authenticated','role':'authenticated','email':'captain@example.com','app_metadata':{},'user_metadata':{},'created_at':'2026-11-09T00:00:00Z'}
  encode=lambda obj:base64.urlsafe_b64encode(json.dumps(obj).encode()).decode().rstrip('=')

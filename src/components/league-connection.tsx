@@ -6,6 +6,16 @@ import type { LeagueConnection } from "@/lib/types";
 import { requestLeagueSync } from "@/lib/supabase/repository";
 import { usePrototype } from "./prototype-provider";
 export function LeagueUpdated({ league }: { league: LeagueConnection }) {
+  if (league.kind === "manual")
+    return (
+      <p className="standings-note">
+        Manual standings · Partial league record · Published regular-season
+        results only
+        {league.unmatchedGames
+          ? ` · ${league.unmatchedGames} club game${league.unmatchedGames === 1 ? "" : "s"} missing a matching league team`
+          : ""}
+      </p>
+    );
   return (
     <p className="standings-note">
       {league.lastSuccess
@@ -13,19 +23,25 @@ export function LeagueUpdated({ league }: { league: LeagueConnection }) {
         : "LeagueApps · First update pending"}
       {league.error || league.state === "failed"
         ? " · Refresh delayed"
-        : " · Refreshes hourly"}
+        : league.refreshesAutomatically === false
+          ? " · Archived season"
+          : " · Refreshes hourly"}
     </p>
   );
 }
 export function LeaguePageNote() {
   const { league, seasonId } = usePrototype();
-  if (!league || league.seasonId !== seasonId) return null;
+  if (!league || league.kind === "manual" || league.seasonId !== seasonId)
+    return null;
   return (
     <div className="league-page-note">
       <LeagueUpdated league={league} />
       <a
         className="text-link"
-        href="https://nycsoccer.leagueapps.com/leagues/5162244/schedule"
+        href={
+          league.scheduleUrl ||
+          "https://nycsoccer.leagueapps.com/leagues/5162244/schedule"
+        }
         target="_blank"
         rel="noreferrer"
       >
@@ -50,13 +66,15 @@ export function LeagueConnectionPanel() {
     }, 2500);
     return () => clearInterval(timer);
   }, [pending]);
-  if (!league) return null;
-  const conflicts = matches.filter((m) => m.needsReview);
+  if (!league || league.kind === "manual") return null;
+  const conflicts = matches.filter(
+    (m) => m.seasonId === league.seasonId && m.needsReview,
+  );
   async function sync() {
     setBusy(true);
     setError("");
     try {
-      await requestLeagueSync();
+      await requestLeagueSync(league!.seasonId);
       await refresh();
       setNotice(
         "League refresh requested. Recent requests share the latest update for five minutes.",
@@ -75,7 +93,11 @@ export function LeagueConnectionPanel() {
       <div>
         <span className="eyebrow">CONNECTED TO LEAGUEAPPS</span>
         <h2>{league.teamName}</h2>
-        <p>Scores, fixtures and the full league table refresh automatically.</p>
+        <p>
+          {league.refreshesAutomatically === false
+            ? "This season is archived. Refresh its fixtures, scores and league table when needed."
+            : "Scores, fixtures and the full league table refresh automatically."}
+        </p>
         <LeagueUpdated league={league} />
       </div>
       <div className="league-actions">
@@ -89,7 +111,10 @@ export function LeagueConnectionPanel() {
         </button>
         <a
           className="text-link"
-          href="https://nycsoccer.leagueapps.com/leagues/5162244/schedule"
+          href={
+            league.scheduleUrl ||
+            "https://nycsoccer.leagueapps.com/leagues/5162244/schedule"
+          }
           target="_blank"
           rel="noreferrer"
         >

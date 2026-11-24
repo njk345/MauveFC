@@ -10,6 +10,7 @@ import { outcome } from "@/features/stats/queries";
 import { isFinalsWin } from "@/features/matches/playoffs";
 import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
 import { ResultDecision } from "./result-decision";
+import { useSeasonTeamName } from "./use-season-team-name";
 export function FormBadge({ value }: { value: string | null }) {
   return <span className={`form-badge form-${value}`}>{value || "—"}</span>;
 }
@@ -124,6 +125,7 @@ export function CalendarButton({
   compact?: boolean;
 }) {
   const { live } = usePrototype();
+  const teamName = useSeasonTeamName(match.seasonId);
   function download() {
     if (!match.kickoff) return;
     const stamp = (d: Date) =>
@@ -142,7 +144,7 @@ export function CalendarButton({
       `DTSTAMP:${stamp(new Date())}`,
       `DTSTART:${stamp(start)}`,
       `DTEND:${stamp(end)}`,
-      `SUMMARY:${live ? "" : "[SAMPLE] "}Mauve FC vs ${match.opponent}`,
+      `SUMMARY:${live ? "" : "[SAMPLE] "}${teamName.replace(/[\r\n]/g, " ").replace(/[,;]/g, " ")} vs ${match.opponent.replace(/[\r\n]/g, " ").replace(/[,;]/g, " ")}`,
       `LOCATION:${match.venue.replace(/,/g, "\\,")}`,
       live
         ? "DESCRIPTION:Mauve FC club fixture."
@@ -175,6 +177,7 @@ export function CalendarButton({
   );
 }
 export function FixtureCard({ match }: { match: Match }) {
+  const teamName = useSeasonTeamName(match.seasonId);
   return (
     <article className="fixture-card">
       <div className="card-eyebrow">
@@ -185,7 +188,7 @@ export function FixtureCard({ match }: { match: Match }) {
       <div className="fixture-teams">
         <div>
           <Crest />
-          <strong>Mauve FC</strong>
+          <strong>{teamName}</strong>
         </div>
         <span className="versus">VS</span>
         <div>

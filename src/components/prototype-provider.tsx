@@ -113,10 +113,14 @@ export function PrototypeProvider({
     [notice, setNotice] = useState(""),
     [resetVersion, setResetVersion] = useState(0),
     [loadError, setLoadError] = useState("");
-  const [league, setLeague] = useState<LeagueConnection | undefined>(
-    bootstrap?.league,
+  const [connections, setConnections] = useState<LeagueConnection[]>(
+    bootstrap?.leagues || (bootstrap?.league ? [bootstrap.league] : []),
+  );
+  const league = connections.find(
+    (connection) => connection.seasonId === seasonId,
   );
   const identity = useRef("");
+  const preferredSeason = useRef<string | null>(null);
   identity.current = `${auth.user?.id || ""}:${auth.captain}`;
   function apply(snapshot: ClubSnapshot, drafts: Record<string, Result> = {}) {
     setData({
@@ -129,12 +133,18 @@ export function PrototypeProvider({
       history: [],
     });
     setSeasons(snapshot.seasons);
-    setLeague(snapshot.league);
-    setSeasonId((id) =>
-      snapshot.seasons.some((s) => s.id === id)
-        ? id
-        : snapshot.seasons[0]?.id || "",
+    setConnections(
+      snapshot.leagues || (snapshot.league ? [snapshot.league] : []),
     );
+    setSeasonId((id) => {
+      const selected = preferredSeason.current;
+      preferredSeason.current = null;
+      return selected && snapshot.seasons.some((s) => s.id === selected)
+        ? selected
+        : snapshot.seasons.some((s) => s.id === id)
+          ? id
+          : snapshot.seasons[0]?.id || "";
+    });
     setLoadError("");
   }
   async function refresh() {
@@ -224,6 +234,25 @@ export function PrototypeProvider({
         );
       }
   }, [data, ready, auth.live]);
+  useEffect(() => {
+    if (!auth.live) return;
+    try {
+      const selected = localStorage.getItem("mauve-fc-selected-season");
+      preferredSeason.current = selected;
+      if (selected && seasons.some((s) => s.id === selected))
+        setSeasonId(selected);
+    } catch {
+      /* current session selection still works */
+    }
+  }, [auth.live]);
+  useEffect(() => {
+    if (!ready || !seasons.some((s) => s.id === seasonId)) return;
+    try {
+      localStorage.setItem("mauve-fc-selected-season", seasonId);
+    } catch {
+      /* optional preference */
+    }
+  }, [seasonId, seasons, ready]);
   useEffect(() => {
     if (!notice) return;
     const t = setTimeout(() => setNotice(""), 6000);

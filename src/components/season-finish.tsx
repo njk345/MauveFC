@@ -35,8 +35,8 @@ export function HomeSeasonFinish({
             finish.match.status === "completed" && (
               <div className="season-finish-result">
                 <span>
-                  Mauve FC {finish.match.result.home}–{finish.match.result.away}{" "}
-                  {finish.match.opponent}
+                  {season.teamName || "Mauve FC"} {finish.match.result.home}–
+                  {finish.match.result.away} {finish.match.opponent}
                 </span>
                 <ResultDecision result={finish.match.result} />
               </div>

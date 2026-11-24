@@ -36,6 +36,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       reset,
       notice,
       seasons,
+      league,
       live,
       ready,
       loadError,
@@ -43,6 +44,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
     } = usePrototype();
   const [menu, setMenu] = useState(false),
     [confirm, setConfirm] = useState(false);
+  const selectedSeason = seasons.find((season) => season.id === seasonId);
+  const leagueWebsite =
+    selectedSeason?.leagueWebsite ||
+    league?.standingsUrl ||
+    (!selectedSeason?.source ? "https://www.nycsoccer.com/" : "");
   return (
     <>
       <div className="sample-strip">
@@ -192,13 +198,11 @@ export function SiteShell({ children }: { children: ReactNode }) {
             Made in Brooklyn. Best enjoyed together.
           </p>
           <div className="footer-links">
-            <a
-              href="https://www.nycsoccer.com/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Our league <ArrowUpRight size={14} />
-            </a>
+            {leagueWebsite && (
+              <a href={leagueWebsite} target="_blank" rel="noreferrer">
+                Our league <ArrowUpRight size={14} />
+              </a>
+            )}
             <Link href="/captain/">
               Captain’s area <ArrowUpRight size={14} />
             </Link>

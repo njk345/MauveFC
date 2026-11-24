@@ -30,6 +30,7 @@ import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
 import { isFinalsWin } from "@/features/matches/playoffs";
 import { ResultDecision } from "./result-decision";
 import { usePlayerProfiles } from "./use-player-profiles";
+import { useSeasonTeamName } from "./use-season-team-name";
 export function PageHeading({
   eyebrow,
   title,
@@ -60,6 +61,7 @@ export function MatchDetails({
   onClose: () => void;
 }) {
   const { players, live } = usePrototype();
+  const teamName = useSeasonTeamName(match.seasonId);
   const r = match.result?.published ? match.result : undefined;
   return (
     <Modal onClose={onClose}>
@@ -82,7 +84,9 @@ export function MatchDetails({
           {live ? "FIXTURE" : "SAMPLE FIXTURE"} · MATCHDAY {match.round}
         </span>
         <PlayoffBadge match={match} />
-        <h2 id="match-title">Mauve FC vs {match.opponent}</h2>
+        <h2 id="match-title">
+          {teamName} vs {match.opponent}
+        </h2>
         <p>
           {date(match.kickoff, "long")} · {time(match.kickoff)}
         </p>

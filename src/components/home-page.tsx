@@ -72,6 +72,12 @@ export function HomePage() {
               {season.name} / REGULAR SEASON · {stats.played} MATCHES PLAYED
             </span>
             <h2>Every match matters.</h2>
+            {season.teamName && (
+              <p className="home-season-context">
+                {season.teamName} · {season.competition}
+                {season.location ? ` · ${season.location}` : ""}
+              </p>
+            )}
           </div>
           <Link className="text-link" href="/schedule/">
             Full schedule <ArrowUpRight size={16} />
@@ -163,7 +169,7 @@ export function HomePage() {
             <div className="latest-score">
               <span className="latest-team">
                 <Crest small />
-                <strong>Mauve FC</strong>
+                <strong>{season.teamName || "Mauve FC"}</strong>
               </span>
               <div className="big-score">
                 {latest.result!.home}

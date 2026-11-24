@@ -27,3 +27,6 @@ content_path = "./templates/sign-in.html"
 verify_jwt = false
 [functions.player-invite]
 verify_jwt = true
+
+[functions.season-import]
+verify_jwt = true

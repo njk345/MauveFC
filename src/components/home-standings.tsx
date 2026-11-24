@@ -26,14 +26,18 @@ export function HomeStandings({
   completed: Match[];
   live?: boolean;
 }) {
-  const { league } = usePrototype();
+  const { league, seasons } = usePrototype();
+  const season = seasons.find((s) => s.id === seasonId);
   if (live && league?.seasonId === seasonId && league.standings.length)
     return (
       <article className="home-standings">
         <div className="standings-heading">
           <div>
             <h3>League standings</h3>
-            <p>NYCSoccer · {league.teamName}</p>
+            <p>
+              {league.leagueName || season?.competition || "League"} ·{" "}
+              {league.teamName}
+            </p>
           </div>
           <span className="pill">
             {league.standings.find((r) => r.teamId === league.teamId)?.position}{" "}
@@ -42,7 +46,9 @@ export function HomeStandings({
         </div>
         <table className="home-standings-table">
           <caption className="sr-only">
-            Official LeagueApps standings in league order
+            {league.kind === "manual"
+              ? "Manual standings from available regular-season results"
+              : "Official LeagueApps standings in league order"}
           </caption>
           <thead>
             <tr>
@@ -93,14 +99,19 @@ export function HomeStandings({
               ))}
             </div>
           </div>
-          <a
-            className="text-link"
-            href="https://nycsoccer.leagueapps.com/leagues/5162244/standings"
-            target="_blank"
-            rel="noreferrer"
-          >
-            League table <ArrowUpRight size={15} />
-          </a>
+          {league.kind !== "manual" && (
+            <a
+              className="text-link"
+              href={
+                league.standingsUrl ||
+                "https://nycsoccer.leagueapps.com/leagues/5162244/standings"
+              }
+              target="_blank"
+              rel="noreferrer"
+            >
+              League table <ArrowUpRight size={15} />
+            </a>
+          )}
         </div>
         <LeagueUpdated league={league} />
       </article>
@@ -114,8 +125,9 @@ export function HomeStandings({
         <div className="friendly-summary">
           <h3>Every point earned.</h3>
           <p>
-            The club record reflects published regular-season results. League standings will
-            appear once a verified source is connected.
+            {season?.source === "manual"
+              ? "The club record reflects published regular-season results. League standings are optional for this manually entered season."
+              : "The club record reflects published regular-season results. League standings will appear once a verified source is connected."}
           </p>
           <Link className="text-link" href="/stats/">
             Explore club statistics <ArrowUpRight size={15} />

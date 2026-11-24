@@ -353,7 +353,10 @@ of the Auth sign-in email.
 
 Work through these milestones in order, with a reviewable slice at each step:
 
-1. **Season management and historical imports.** Create seasons, connect the
+1. **Season management and historical imports — implemented.** See
+   [season management](season-management.md) for the unified setup flow, manual
+   league tables, previewed LeagueApps imports and season-scoped refresh jobs.
+   Create seasons, connect the
    appropriate LeagueApps program/team feed for each, carry over selected roster
    players, and preview historical imports before saving. Reuse stable player
    identities; distinguish missing stats from recorded zeroes. Keep standings
