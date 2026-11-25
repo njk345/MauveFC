@@ -12,6 +12,7 @@ import type { Match, Result } from "@/lib/types";
 import { date } from "@/lib/format";
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 import { MatchGuests } from "./match-guests";
+import { orderMatches } from "@/features/matches/order";
 
 export function CaptainPlayerStats() {
   const { ready, seasonId, resetVersion } = usePrototype();
@@ -63,14 +64,19 @@ function SeasonStatsEditor({
     refresh,
     setNotice,
   } = usePrototype();
-  const fixtures = matches
-    .filter((m) => m.seasonId === seasonId && m.status !== "cancelled")
-    .sort(
-      (a, b) =>
-        Number(!!b.result?.published) - Number(!!a.result?.published) ||
-        (b.kickoff || "").localeCompare(a.kickoff || "") ||
-        b.round - a.round,
-    );
+  const seasonFixtures = matches.filter(
+    (m) => m.seasonId === seasonId && m.status !== "cancelled",
+  );
+  const fixtures = [
+    ...orderMatches(
+      seasonFixtures.filter((m) => m.result?.published),
+      "newest-first",
+    ),
+    ...orderMatches(
+      seasonFixtures.filter((m) => !m.result?.published),
+      "newest-first",
+    ),
+  ];
   const [selectedId, setSelectedId] = useState(() => {
     const query = new URLSearchParams(window.location.search).get("match");
     return (

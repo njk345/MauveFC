@@ -19,11 +19,5 @@ export function isFinalsWin(match: Match) {
   );
 }
 export function championshipWin(matches: Match[]) {
-  return publishedMatches(matches)
-    .filter(isFinalsWin)
-    .sort(
-      (a, b) =>
-        (a.kickoff || "").localeCompare(b.kickoff || "") || a.round - b.round,
-    )
-    .at(-1);
+  return publishedMatches(matches, "newest-first").find(isFinalsWin);
 }

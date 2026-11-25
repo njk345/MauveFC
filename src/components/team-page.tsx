@@ -9,6 +9,7 @@ import { date, time } from "@/lib/format";
 import { LineupBoard } from "./lineup-board";
 import { MatchGuests } from "./match-guests";
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
+import { orderMatches } from "@/features/matches/order";
 import {
   readTeamClub,
   writeRsvp,
@@ -143,12 +144,13 @@ function TeamWorkspace() {
         </div>
       </div>
     );
-  const fixtures = data.matches
-      .filter((m) => m.seasonId === seasonId)
-      .sort((a, b) => (a.kickoff || "9999").localeCompare(b.kickoff || "9999")),
+  const seasonFixtures = data.matches.filter((m) => m.seasonId === seasonId);
+  const fixtures = orderMatches(seasonFixtures),
     upcoming = fixtures.filter(rsvpsOpen),
     match =
-      fixtures.find((m) => m.id === selected) || upcoming[0] || fixtures.at(-1),
+      fixtures.find((m) => m.id === selected) ||
+      upcoming[0] ||
+      orderMatches(seasonFixtures, "newest-first")[0],
     rosterPlayers = data.players.filter((p) =>
       data.roster.some((r) => r.seasonId === seasonId && r.playerId === p.id),
     ),

@@ -24,10 +24,10 @@ export function HomePage() {
     season = seasons.find((s) => s.id === seasonId)!;
   const fixtures = matches.filter((m) => m.seasonId === seasonId),
     regular = regularSeasonMatches(fixtures),
-    completed = publishedMatches(fixtures),
-    regularCompleted = publishedMatches(regular),
+    completed = publishedMatches(fixtures, "newest-first"),
+    regularCompleted = publishedMatches(regular, "newest-first"),
     champions = championshipWin(fixtures),
-    latest = completed.at(-1),
+    latest = completed[0],
     next =
       !season.completed &&
       fixtures.find(

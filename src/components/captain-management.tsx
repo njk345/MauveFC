@@ -7,6 +7,7 @@ import {
   withEditableDetails,
 } from "./player-detail-fields";
 import { PageHeading } from "./season-pages";
+import { orderMatches } from "@/features/matches/order";
 import type { Match, Player, PlayoffRound } from "@/lib/types";
 import { playoffRounds } from "@/features/matches/playoffs";
 import { fromZonedInput, toZonedInput } from "@/lib/kickoff";
@@ -27,7 +28,7 @@ function SeasonFixtureManagement() {
     [kickoff, setKickoff] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const fixtures = matches.filter((m) => m.seasonId === seasonId);
+  const fixtures = orderMatches(matches.filter((m) => m.seasonId === seasonId));
   const season = seasons.find((s) => s.id === seasonId);
   const leagueTeams = season?.manualStandings
     ? season.leagueTeams?.filter((team) => !team.isOurs)

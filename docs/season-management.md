@@ -79,3 +79,13 @@ Only captains can create seasons, stage/import previews, configure manual
 standings or write other-team results. Public projections expose season metadata,
 league team names and standings, never staged previews, job capabilities or
 private player contacts. Use fresh revisions to edit settings/results.
+
+## Fixture and result ordering
+
+Known dates and kickoff times determine chronology. Equal or missing times use
+playoff progression: regular play, unspecified playoffs, quarterfinals,
+semifinals, then finals. Remaining ties retain the incoming sequence; matchday
+numbers, IDs and opponent names do not override it. Results and the Home latest
+result use the same newest-first ordering, including player appearance history
+and the completed season's playoff finish. Schedule views use oldest first.
+Known chronology takes precedence if incomplete dates and round labels conflict.

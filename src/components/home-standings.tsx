@@ -97,9 +97,12 @@ export function HomeStandings({
           <div>
             <span className="eyebrow">CLUB FORM</span>
             <div className="form-group">
-              {completed.slice(-5).map((m) => (
-                <FormBadge key={m.id} value={outcome(m)} />
-              ))}
+              {completed
+                .slice(0, 5)
+                .reverse()
+                .map((m) => (
+                  <FormBadge key={m.id} value={outcome(m)} />
+                ))}
             </div>
           </div>
           {league.kind !== "manual" && (
@@ -140,9 +143,12 @@ export function HomeStandings({
           <div>
             <span className="eyebrow">CLUB FORM</span>
             <div className="form-group">
-              {completed.slice(-5).map((m) => (
-                <FormBadge key={m.id} value={outcome(m)} />
-              ))}
+              {completed
+                .slice(0, 5)
+                .reverse()
+                .map((m) => (
+                  <FormBadge key={m.id} value={outcome(m)} />
+                ))}
             </div>
           </div>
         </div>
@@ -231,9 +237,12 @@ export function HomeStandings({
         <div>
           <span className="eyebrow">CLUB FORM</span>
           <div className="form-group">
-            {completed.slice(-5).map((m) => (
-              <FormBadge key={m.id} value={outcome(m)} />
-            ))}
+            {completed
+              .slice(0, 5)
+              .reverse()
+              .map((m) => (
+                <FormBadge key={m.id} value={outcome(m)} />
+              ))}
           </div>
         </div>
         <Link className="text-link" href="/stats/">

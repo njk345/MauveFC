@@ -28,6 +28,7 @@ import { MatchGuests } from "./match-guests";
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 import { ResultDecision } from "./result-decision";
 import { useSeasonTeamName } from "./use-season-team-name";
+import { orderMatches } from "@/features/matches/order";
 export function CaptainPage() {
   const teamName = useSeasonTeamName();
   const {
@@ -43,8 +44,10 @@ export function CaptainPage() {
       ready,
       resetVersion,
     } = usePrototype(),
-    fixtures = matches.filter(
-      (m) => m.seasonId === seasonId && m.status !== "cancelled",
+    fixtures = orderMatches(
+      matches.filter(
+        (m) => m.seasonId === seasonId && m.status !== "cancelled",
+      ),
     ),
     [selectedId, setSelectedId] = useState(""),
     [r, setR] = useState<Result>(() => blank([])),

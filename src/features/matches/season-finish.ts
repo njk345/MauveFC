@@ -1,6 +1,7 @@
 import type { Match, Season } from "@/lib/types";
 import { championshipWin, playoffRounds } from "./playoffs";
 import { outcome, publishedMatches } from "@/features/stats/queries";
+import { orderMatches } from "./order";
 
 export function ordinal(position: number) {
   const lastTwo = position % 100;
@@ -32,12 +33,8 @@ export function seasonFinish(season: Season, matches: Match[]) {
     (m) => m.playoffRound && m.status !== "cancelled",
   );
   if (playoffs.length) {
-    const recorded = publishedMatches(playoffs);
-    const ranked = [...(recorded.length ? recorded : playoffs)].sort(
-      (a, b) =>
-        (a.kickoff || "").localeCompare(b.kickoff || "") || a.round - b.round,
-    );
-    const last = ranked.at(-1)!;
+    const recorded = publishedMatches(playoffs, "newest-first");
+    const last = recorded[0] || orderMatches(playoffs, "newest-first")[0];
     const published = publishedMatches([last]).length > 0;
     const label = playoffRounds[last.playoffRound!];
     const lost = published && outcome(last) === "L";

@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
+import { orderMatches } from "@/features/matches/order";
 import {
   outcome,
   playerStats,
@@ -181,7 +182,7 @@ export function SchedulePage() {
     [filter, setFilter] = useState("upcoming"),
     [selected, setSelected] = useState<Match | null>(null),
     season = seasons.find((s) => s.id === seasonId)!;
-  const fixtures = matches.filter((m) => m.seasonId === seasonId),
+  const fixtures = orderMatches(matches.filter((m) => m.seasonId === seasonId)),
     awaiting = fixtures.filter(
       (m) =>
         live &&
@@ -320,7 +321,8 @@ export function ResultsPage() {
     season = seasons.find((s) => s.id === seasonId)!;
   const completed = publishedMatches(
       matches.filter((m) => m.seasonId === seasonId),
-    ).reverse(),
+      "newest-first",
+    ),
     stats = teamStats(completed),
     visible = completed.filter(
       (m) => filter === "all" || outcome(m) === filter,
@@ -607,9 +609,9 @@ export function PlayerProfile({ id }: { id: string }) {
         <Link href="/players/">Back to the squad</Link>
       </div>
     );
-  const appearances = publishedMatches(fixtures)
-    .filter((m) => m.result!.stats.some((s) => s.playerId === id && s.appeared))
-    .reverse();
+  const appearances = publishedMatches(fixtures, "newest-first").filter((m) =>
+    m.result!.stats.some((s) => s.playerId === id && s.appeared),
+  );
   return (
     <div className="section page-section">
       <Link href="/players/" className="text-link back-link">
