@@ -19,6 +19,7 @@ export const source: LeagueSource = {
     "https://nycsoccer.leagueapps.com/ajax/loadSchedule?origin=site&scope=program&programId=5162244&publishedOnly=true&itemType=games_only&teamId=8032635",
 };
 export type Standing = {
+  divisionName?: string;
   position: number;
   teamId: string;
   name: string;
@@ -52,13 +53,70 @@ function number(s: string, signed = false) {
     throw new Error("Invalid numeric range");
   return n;
 }
+
+function standingsDocument(html: string, config: LeagueSource) {
+  const $ = load(html),
+    tables = $("table.standings");
+  if (!tables.length || tables.length > 100)
+    throw new Error("Standings tables missing or excessive");
+  const groups = tables.toArray().map((element) => {
+    const table = $(element);
+    // LeagueApps emits an invalid tr/td outside a table for the heading.
+    // HTML normalization drops those tags, but keeps the h4 in its division.
+    const divisionName =
+      clean(table.closest(".division_standings").find("h4").first().text()) ||
+      undefined;
+    const teams = table
+      .find("tbody tr")
+      .toArray()
+      .map((row) => {
+        const anchor = $(row).children("td").first().find("a");
+        const teamId = teamFromHref(anchor.attr("href") || "", config),
+          name = clean(anchor.text());
+        if (anchor.length !== 1 || !teamId || !name)
+          throw new Error("Invalid standings team");
+        return { teamId, name, ...(divisionName ? { divisionName } : {}) };
+      });
+    if (teams.length < 2 || teams.length > 100)
+      throw new Error("Incomplete league division");
+    return { table, divisionName, teams };
+  });
+  if (
+    groups.length > 1 &&
+    (groups.some((group) => !group.divisionName) ||
+      new Set(groups.map((group) => group.divisionName)).size !== groups.length)
+  )
+    throw new Error("Ambiguous league divisions");
+  const teams = groups.flatMap((group) => group.teams);
+  if (
+    teams.length > 1000 ||
+    new Set(teams.map((team) => team.teamId)).size !== teams.length
+  )
+    throw new Error("Duplicate or excessive league teams");
+  return { $, groups };
+}
+
+export function parseLeagueTeams(html: string, config: LeagueSource = source) {
+  return standingsDocument(html, config).groups.flatMap((group) => group.teams);
+}
+
 export function parseStandings(
   html: string,
   config: LeagueSource = source,
 ): Standing[] {
-  const $ = load(html),
-    table = $("table.standings");
-  if (table.length !== 1) throw new Error("Standings table missing");
+  const { $, groups } = standingsDocument(html, config);
+  const matching = config.teamId
+    ? groups.filter((group) =>
+        group.teams.some((team) => team.teamId === config.teamId),
+      )
+    : groups;
+  if (matching.length !== 1)
+    throw new Error(
+      config.teamId
+        ? "Team missing from league standings"
+        : "Choose a team to select its division standings",
+    );
+  const { table, divisionName } = matching[0];
   const headers = table
     .find("thead th")
     .map((_, e) => clean($(e).text()))
@@ -126,6 +184,7 @@ export function parseStandings(
       )
         throw new Error("Standings totals do not reconcile");
       return {
+        ...(divisionName ? { divisionName } : {}),
         position: i + 1,
         teamId,
         name: clean(a.text()),
@@ -362,11 +421,12 @@ export function parseLeagueSnapshot(
 ) {
   const games = parseSchedule(scheduleHtml, config),
     standings = parseStandings(standingsHtml, config);
+  const programTeams = parseLeagueTeams(standingsHtml, config);
   if (
     games.some(
       (g) =>
         g.opponent !== "Opponent TBD" &&
-        !standings.some((s) => s.name === g.opponent),
+        !programTeams.some((team) => team.name === g.opponent),
     )
   )
     throw new Error("Schedule and standings disagree on team names");

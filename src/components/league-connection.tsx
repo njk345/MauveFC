@@ -93,6 +93,9 @@ export function LeagueConnectionPanel() {
       <div>
         <span className="eyebrow">CONNECTED TO LEAGUEAPPS</span>
         <h2>{league.teamName}</h2>
+        {league.standings[0]?.divisionName && (
+          <p>{league.standings[0].divisionName}</p>
+        )}
         <p>
           {league.refreshesAutomatically === false
             ? "This season is archived. Refresh its fixtures, scores and league table when needed."

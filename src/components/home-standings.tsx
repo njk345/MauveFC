@@ -37,6 +37,9 @@ export function HomeStandings({
             <p>
               {league.leagueName || season?.competition || "League"} ·{" "}
               {league.teamName}
+              {league.standings[0]?.divisionName
+                ? ` · ${league.standings[0].divisionName}`
+                : ""}
             </p>
           </div>
           <span className="pill">

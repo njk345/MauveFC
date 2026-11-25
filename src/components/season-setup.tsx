@@ -38,7 +38,9 @@ export function SeasonSetup({
     [error, setError] = useState(""),
     [savedId, setSavedId] = useState("");
   const request = useRef(0);
+  const autofilledTeamName = useRef("");
   function start() {
+    autofilledTeamName.current = "";
     onOpenChange?.(true);
     const year = Number(
       new Intl.DateTimeFormat("en-US", {
@@ -99,15 +101,19 @@ export function SeasonSetup({
       if (result.phase === "choose-team") setChoices(result);
       else {
         setPreview(result);
-        setChoices(null);
+        const previousAutoName = autofilledTeamName.current;
         setInput(
           (previous) =>
             previous && {
               ...previous,
-              teamName: previous.teamName || result.teamName,
+              teamName:
+                !previous.teamName || previous.teamName === previousAutoName
+                  ? result.teamName
+                  : previous.teamName,
               leagueWebsite: previous.leagueWebsite || result.source.origin,
             },
         );
+        autofilledTeamName.current = result.teamName;
       }
     } catch (e) {
       if (current === request.current)
@@ -545,14 +551,20 @@ export function SeasonSetup({
                             required
                             value={teamId}
                             onChange={(e) => {
+                              request.current++;
                               setTeamId(e.target.value);
                               setPreview(null);
+                              setLoadingPreview(false);
+                              setError("");
                             }}
                           >
                             <option value="">Select a team</option>
                             {choices.teams.map((team) => (
                               <option key={team.teamId} value={team.teamId}>
                                 {team.name}
+                                {team.divisionName
+                                  ? ` · ${team.divisionName}`
+                                  : ""}
                               </option>
                             ))}
                           </select>
@@ -577,6 +589,12 @@ export function SeasonSetup({
                       {preview && (
                         <div className="season-import-preview" role="status">
                           <h3>{preview.teamName}</h3>
+                          {preview.divisionName && (
+                            <p>
+                              Standings from {preview.divisionName} · selected
+                              automatically for your team.
+                            </p>
+                          )}
                           <p>
                             {preview.games.length} fixture
                             {preview.games.length === 1 ? "" : "s"} ·{" "}

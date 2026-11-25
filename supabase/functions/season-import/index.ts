@@ -3,7 +3,7 @@ import {
   fetchLeaguePage,
   leagueSourceFromLink,
   parseLeagueSnapshot,
-  parseStandings,
+  parseLeagueTeams,
 } from "../_shared/leagueapps.ts";
 
 const site = "https://mauve-fc-club-prototype.deluxehill3.chatgpt.site";
@@ -86,11 +86,11 @@ Deno.serve(async (req: Request) => {
   }
   try {
     const standingsHtml = await fetchLeaguePage(source.standingsUrl);
-    const standings = parseStandings(standingsHtml, source);
+    const teams = parseLeagueTeams(standingsHtml, source);
     if (!source.teamId)
       return reply({
         phase: "choose-team",
-        teams: standings.map(({ teamId, name }) => ({ teamId, name })),
+        teams,
         origin: source.origin,
         programId: source.programId,
       });
@@ -117,7 +117,8 @@ Deno.serve(async (req: Request) => {
     return reply({
       phase: "ready",
       previewId,
-      teamName: standings.find((s) => s.teamId === source.teamId)!.name,
+      teamName: teams.find((team) => team.teamId === source.teamId)!.name,
+      divisionName: snapshot.standings[0]?.divisionName,
       source: {
         origin: source.origin,
         programId: source.programId,

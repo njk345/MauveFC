@@ -39,7 +39,12 @@ placing is invented when our team has no recorded league games.
 Paste a public team, schedule, standings or league page URL on a LeagueApps
 organization's HTTPS website. Canonical numeric links and the usual sport/slug
 league links are accepted. Team links select a team directly; league-wide links
-first load team choices. The captain previews the selected team's fixtures,
+first load team choices. Multi-division leagues list teams from every division,
+label each choice with its division, and select the standings table containing
+the chosen team ID. Division ranks are preserved independently, and both imports
+and later refreshes use that team's division. Cross-division games remain in the
+team schedule without adding those opponents to the division table. The captain
+previews the selected team's fixtures,
 final scores and league table before saving. This uses public web widgets,
 never a calendar subscription. The adapter has recorded regression fixtures
 from both NYC Soccer and NYC Footy, including Footy's extra standings column

@@ -164,6 +164,7 @@ export type RemovedFixture = Match & {
   feedAvailable?: boolean | null;
 };
 export type LeagueStanding = {
+  divisionName?: string;
   position: number;
   teamId: string;
   name: string;
@@ -231,6 +232,7 @@ export type SeasonSetupInput = {
   rosterPlayerIds: string[];
 };
 export type SeasonImportPreview = {
+  divisionName?: string;
   phase: "ready";
   previewId: string;
   teamName: string;
@@ -248,7 +250,7 @@ export type SeasonImportPreview = {
 };
 export type SeasonImportTeamChoice = {
   phase: "choose-team";
-  teams: { teamId: string; name: string }[];
+  teams: { teamId: string; name: string; divisionName?: string }[];
   origin: string;
   programId: string;
 };
