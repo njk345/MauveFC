@@ -8,13 +8,69 @@ import { LeagueUpdated } from "./league-connection";
 
 // An illustrative, fixed matchday-six snapshot, never presented as live league data.
 const sampleTable = [
-  { club: "Parkside United", played: 6, difference: 9, points: 15 },
-  { club: "Mauve FC", played: 6, difference: 7, points: 13 },
-  { club: "East River FC", played: 6, difference: 1, points: 10 },
-  { club: "Dumbo Athletic", played: 6, difference: 0, points: 8 },
-  { club: "Crown Heights FC", played: 6, difference: -3, points: 7 },
-  { club: "Northside FC", played: 6, difference: -4, points: 5 },
-  { club: "Sunday Service", played: 6, difference: -10, points: 1 },
+  {
+    club: "Parkside United",
+    played: 6,
+    wins: 5,
+    losses: 1,
+    draws: 0,
+    difference: 9,
+    points: 15,
+  },
+  {
+    club: "Mauve FC",
+    played: 6,
+    wins: 4,
+    losses: 1,
+    draws: 1,
+    difference: 7,
+    points: 13,
+  },
+  {
+    club: "East River FC",
+    played: 6,
+    wins: 3,
+    losses: 2,
+    draws: 1,
+    difference: 1,
+    points: 10,
+  },
+  {
+    club: "Dumbo Athletic",
+    played: 6,
+    wins: 2,
+    losses: 2,
+    draws: 2,
+    difference: 0,
+    points: 8,
+  },
+  {
+    club: "Crown Heights FC",
+    played: 6,
+    wins: 2,
+    losses: 3,
+    draws: 1,
+    difference: -3,
+    points: 7,
+  },
+  {
+    club: "Northside FC",
+    played: 6,
+    wins: 1,
+    losses: 3,
+    draws: 2,
+    difference: -4,
+    points: 5,
+  },
+  {
+    club: "Sunday Service",
+    played: 6,
+    wins: 0,
+    losses: 5,
+    draws: 1,
+    difference: -10,
+    points: 1,
+  },
 ];
 
 export function HomeStandings({
@@ -47,52 +103,68 @@ export function HomeStandings({
             / {league.standings.length}
           </span>
         </div>
-        <table className="home-standings-table">
-          <caption className="sr-only">
-            {league.kind === "manual"
-              ? "Manual standings from available regular-season results"
-              : "Official LeagueApps standings in league order"}
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">CLUB</th>
-              <th scope="col">
-                <abbr title="Played">P</abbr>
-              </th>
-              <th scope="col">
-                <abbr title="Goal difference">GD</abbr>
-              </th>
-              <th scope="col">
-                <abbr title="Points">PTS</abbr>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {league.standings.map((row) => (
-              <tr
-                key={row.teamId}
-                className={
-                  row.teamId === league.teamId ? "mauve-standing" : undefined
-                }
-              >
-                <td>{row.position}</td>
-                <th scope="row">
-                  {row.name}
-                  {row.teamId === league.teamId && (
-                    <span className="our-club-dot" aria-label="Our club" />
-                  )}
+        <div
+          className="standings-table-scroll"
+          role="region"
+          aria-label="League standings"
+          tabIndex={0}
+        >
+          <table className="home-standings-table">
+            <caption className="sr-only">
+              {league.kind === "manual"
+                ? "Manual standings from available regular-season results"
+                : "Official LeagueApps standings in league order"}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">CLUB</th>
+                <th scope="col">
+                  <abbr title="Played">P</abbr>
                 </th>
-                <td>{row.played}</td>
-                <td>
-                  {row.difference > 0 ? "+" : ""}
-                  {row.difference}
-                </td>
-                <td>{row.points}</td>
+                <th scope="col" className="standing-record">
+                  <abbr title="Wins–losses–draws">W–L–D</abbr>
+                </th>
+                <th scope="col">
+                  <abbr title="Goal difference">GD</abbr>
+                </th>
+                <th scope="col">
+                  <abbr title="Points">PTS</abbr>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {league.standings.map((row) => (
+                <tr
+                  key={row.teamId}
+                  className={
+                    row.teamId === league.teamId ? "mauve-standing" : undefined
+                  }
+                >
+                  <td>{row.position}</td>
+                  <th scope="row">
+                    {row.name}
+                    {row.teamId === league.teamId && (
+                      <span className="our-club-dot" aria-label="Our club" />
+                    )}
+                  </th>
+                  <td>{row.played}</td>
+                  <td
+                    className="standing-record"
+                    aria-label={`${row.wins} wins, ${row.losses} losses, ${row.draws} draws`}
+                  >
+                    {row.wins}–{row.losses}–{row.draws}
+                  </td>
+                  <td>
+                    {row.difference > 0 ? "+" : ""}
+                    {row.difference}
+                  </td>
+                  <td>{row.points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <div className="standings-form">
           <div>
             <span className="eyebrow">CLUB FORM</span>
@@ -170,53 +242,69 @@ export function HomeStandings({
         <span className="pill">SAMPLE</span>
       </div>
       {seasonId === "fall-2026" ? (
-        <table className="home-standings-table">
-          <caption className="sr-only">
-            Fictional league standings after matchday six. This fixed sample
-            snapshot does not change with local result edits.
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">
-                <span className="sr-only">Position</span>#
-              </th>
-              <th scope="col">CLUB</th>
-              <th scope="col">
-                <abbr title="Played">P</abbr>
-              </th>
-              <th scope="col">
-                <abbr title="Goal difference">GD</abbr>
-              </th>
-              <th scope="col">
-                <abbr title="Points">PTS</abbr>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sampleTable.map((row, i) => (
-              <tr
-                key={row.club}
-                className={
-                  row.club === "Mauve FC" ? "mauve-standing" : undefined
-                }
-              >
-                <td>{i + 1}</td>
-                <th scope="row">
-                  {row.club}
-                  {row.club === "Mauve FC" && (
-                    <span className="our-club-dot" aria-label="Our club" />
-                  )}
+        <div
+          className="standings-table-scroll"
+          role="region"
+          aria-label="Sample league standings"
+          tabIndex={0}
+        >
+          <table className="home-standings-table">
+            <caption className="sr-only">
+              Fictional league standings after matchday six. This fixed sample
+              snapshot does not change with local result edits.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">
+                  <span className="sr-only">Position</span>#
                 </th>
-                <td>{row.played}</td>
-                <td>
-                  {row.difference > 0 ? "+" : ""}
-                  {row.difference}
-                </td>
-                <td>{row.points}</td>
+                <th scope="col">CLUB</th>
+                <th scope="col">
+                  <abbr title="Played">P</abbr>
+                </th>
+                <th scope="col" className="standing-record">
+                  <abbr title="Wins–losses–draws">W–L–D</abbr>
+                </th>
+                <th scope="col">
+                  <abbr title="Goal difference">GD</abbr>
+                </th>
+                <th scope="col">
+                  <abbr title="Points">PTS</abbr>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sampleTable.map((row, i) => (
+                <tr
+                  key={row.club}
+                  className={
+                    row.club === "Mauve FC" ? "mauve-standing" : undefined
+                  }
+                >
+                  <td>{i + 1}</td>
+                  <th scope="row">
+                    {row.club}
+                    {row.club === "Mauve FC" && (
+                      <span className="our-club-dot" aria-label="Our club" />
+                    )}
+                  </th>
+                  <td>{row.played}</td>
+                  <td
+                    className="standing-record"
+                    aria-label={`${row.wins} wins, ${row.losses} losses, ${row.draws} draws`}
+                  >
+                    {row.wins}–{row.losses}–{row.draws}
+                  </td>
+                  <td>
+                    {row.difference > 0 ? "+" : ""}
+                    {row.difference}
+                  </td>
+                  <td>{row.points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
         <div className="friendly-summary">
           <h3>

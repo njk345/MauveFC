@@ -371,6 +371,12 @@ function SeasonRosterManagement() {
     [editing, setEditing] = useState<Player | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const seasonPlayerIds = new Set(
+    roster
+      .filter((entry) => entry.seasonId === seasonId)
+      .map((entry) => entry.playerId),
+  );
+  const seasonPlayers = players.filter((player) => seasonPlayerIds.has(player.id));
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!editing) return;
@@ -430,7 +436,7 @@ function SeasonRosterManagement() {
             Add player
           </button>
           <div className="management-list">
-            {players.map((p) => (
+            {seasonPlayers.map((p) => (
               <button
                 key={p.id}
                 onClick={() => {
@@ -443,12 +449,7 @@ function SeasonRosterManagement() {
                     #{p.number} {p.name}
                   </strong>
                   <small>
-                    {roster.some(
-                      (sr) => sr.seasonId === seasonId && sr.playerId === p.id,
-                    )
-                      ? "On this season’s roster"
-                      : "Add to this season"}{" "}
-                    ·{" "}
+                    On this season’s roster ·{" "}
                     {p.isPublic === false
                       ? "Private profile"
                       : "Public profile"}
@@ -457,6 +458,12 @@ function SeasonRosterManagement() {
                 <span>Edit</span>
               </button>
             ))}
+            {!seasonPlayers.length && (
+              <p className="help-text">
+                No players on this season’s roster yet. Add a player to build
+                the squad.
+              </p>
+            )}
           </div>
         </div>
         {editing ? (
