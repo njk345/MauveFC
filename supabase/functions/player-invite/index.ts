@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 const site = "https://mauve-fc-club-prototype.deluxehill3.chatgpt.site";
 const allowedOrigins = new Set([
   site,
+  "https://mauve-fc-club-prototype.njk345.chatgpt.site",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://127.0.0.1:3000",

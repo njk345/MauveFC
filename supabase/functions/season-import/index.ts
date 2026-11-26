@@ -9,6 +9,7 @@ import {
 const site = "https://mauve-fc-club-prototype.deluxehill3.chatgpt.site";
 const origins = new Set([
   site,
+  "https://mauve-fc-club-prototype.njk345.chatgpt.site",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3100",
