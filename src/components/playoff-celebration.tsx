@@ -68,9 +68,11 @@ export function FinalsVictory({ match }: { match: Match }) {
 export function HomeChampions({
   match,
   season,
+  teamName,
 }: {
   match: Match;
   season: string;
+  teamName: string;
 }) {
   if (!isFinalsWin(match)) return null;
   return (
@@ -86,7 +88,7 @@ export function HomeChampions({
           <span className="eyebrow">{season} · LEAGUE CHAMPIONS</span>
           <h2>The league is ours.</h2>
           <p>
-            Finals · Mauve FC {match.result!.home}–{match.result!.away}{" "}
+            Finals · {teamName} {match.result!.home}–{match.result!.away}{" "}
             {match.opponent}
           </p>
           <ResultDecision result={match.result!} />

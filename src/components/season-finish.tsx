@@ -15,7 +15,13 @@ export function HomeSeasonFinish({
   const finish = seasonFinish(season, matches);
   if (!finish) return null;
   if (finish.kind === "champions")
-    return <HomeChampions season={season.name} match={finish.match} />;
+    return (
+      <HomeChampions
+        season={season.name}
+        teamName={season.teamName || "Mauve FC"}
+        match={finish.match}
+      />
+    );
   return (
     <section className="section home-season-finish" aria-label="Season finish">
       <div className="season-finish-banner">
