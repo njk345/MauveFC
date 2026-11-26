@@ -4771,6 +4771,63 @@ footer {
   gap: 30px;
   align-items: start;
 }
+.roster-add-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.roster-add-actions .button,
+.roster-directory-form .button {
+  font-size: 0.875rem;
+}
+.roster-directory-form {
+  min-width: 0;
+}
+.roster-directory-form .help-text,
+.roster-directory-form .form-field > span,
+.roster-directory-form .auth-error {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.roster-directory-form > .help-text {
+  margin: 16px 0;
+}
+.roster-directory-form .form-field {
+  margin-top: 20px;
+}
+.roster-directory-form input,
+.roster-directory-form select {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+.roster-directory-form select {
+  appearance: none;
+  padding-right: 2.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23705568' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.85rem center;
+  background-repeat: no-repeat;
+}
+.roster-directory-preview {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #eee8ed;
+  overflow-wrap: anywhere;
+}
+.roster-directory-preview strong {
+  font-size: 1rem;
+}
+.roster-directory-preview span,
+.roster-directory-preview p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
 .management-list {
   margin-top: 22px;
   border: 1px solid var(--line);

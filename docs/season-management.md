@@ -75,6 +75,12 @@ and guests remain distinct: add a non-roster substitute to individual games as
 usual. Creating a season does not create accounts or invitations and preserves
 all player privacy settings and captain-only contact details.
 
+In Captain → Roster, **Add from directory** searches known club players who
+are not already on the selected season’s roster. Choose a player and select
+**Add to season roster** to reuse their existing identity, profile and history.
+**Add player** still creates a new person. Roster additions do not create an
+account, send an invitation or change which profiles are public.
+
 Only captains can create seasons, stage/import previews, configure manual
 standings or write other-team results. Public projections expose season metadata,
 league team names and standings, never staged previews, job capabilities or

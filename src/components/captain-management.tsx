@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Plus, Save } from "lucide-react";
+import { Plus, Save, UserPlus } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
 import {
   PlayerDetailFields,
@@ -366,9 +366,12 @@ export function RosterManagement() {
   return <SeasonRosterManagement key={seasonId} />;
 }
 function SeasonRosterManagement() {
-  const { players, roster, seasonId, savePlayer, setNotice, live, refresh } =
+  const { players, roster, seasonId, seasons, savePlayer, setNotice, live, refresh } =
       usePrototype(),
     [editing, setEditing] = useState<Player | null>(null),
+    [directoryOpen, setDirectoryOpen] = useState(false),
+    [directoryQuery, setDirectoryQuery] = useState(""),
+    [selectedPlayerId, setSelectedPlayerId] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const seasonPlayerIds = new Set(
@@ -377,6 +380,38 @@ function SeasonRosterManagement() {
       .map((entry) => entry.playerId),
   );
   const seasonPlayers = players.filter((player) => seasonPlayerIds.has(player.id));
+  const season = seasons.find((entry) => entry.id === seasonId);
+  const directoryPlayers = players
+    .filter((player) => !seasonPlayerIds.has(player.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const matchingPlayers = directoryPlayers.filter((player) =>
+    player.name
+      .toLocaleLowerCase()
+      .includes(directoryQuery.trim().toLocaleLowerCase()),
+  );
+  const selectedPlayer = matchingPlayers.find(
+    (player) => player.id === selectedPlayerId,
+  );
+  async function addKnownPlayer(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy || !selectedPlayer) return;
+    setBusy(true);
+    setError("");
+    try {
+      await savePlayer(selectedPlayer);
+      setSelectedPlayerId("");
+      setDirectoryQuery("");
+      setNotice(
+        `${selectedPlayer.name} added to ${season?.name || "the season roster"}.`,
+      );
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Could not add this player to the roster.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!editing) return;
@@ -414,32 +449,56 @@ function SeasonRosterManagement() {
       />
       <div className="management-grid">
         <div>
-          <button
-            className="button"
-            onClick={() => {
-              setError("");
-              setEditing(
-                withEditableDetails({
-                  id: crypto.randomUUID(),
-                  name: "",
-                  number: 0,
-                  position: "Midfielder",
-                  initials: "FC",
-                  hometown: "",
-                  bio: "",
-                  isPublic: false,
-                }),
-              );
-            }}
-          >
-            <Plus size={16} />
-            Add player
-          </button>
+          <div className="roster-add-actions">
+            <button
+              type="button"
+              className="button"
+              disabled={busy}
+              aria-expanded={directoryOpen}
+              aria-controls="roster-directory-picker"
+              onClick={() => {
+                setEditing(null);
+                setError("");
+                setDirectoryQuery("");
+                setSelectedPlayerId("");
+                setDirectoryOpen(true);
+              }}
+            >
+              <UserPlus size={16} />
+              Add from directory
+            </button>
+            <button
+              type="button"
+              className="button secondary"
+              disabled={busy}
+              onClick={() => {
+                setDirectoryOpen(false);
+                setError("");
+                setEditing(
+                  withEditableDetails({
+                    id: crypto.randomUUID(),
+                    name: "",
+                    number: 0,
+                    position: "Midfielder",
+                    initials: "FC",
+                    hometown: "",
+                    bio: "",
+                    isPublic: false,
+                  }),
+                );
+              }}
+            >
+              <Plus size={16} />
+              Add player
+            </button>
+          </div>
           <div className="management-list">
             {seasonPlayers.map((p) => (
               <button
                 key={p.id}
+                disabled={busy}
                 onClick={() => {
+                  setDirectoryOpen(false);
                   setEditing(withEditableDetails(p));
                   setError("");
                 }}
@@ -466,7 +525,130 @@ function SeasonRosterManagement() {
             )}
           </div>
         </div>
-        {editing ? (
+        {directoryOpen ? (
+          <form
+            id="roster-directory-picker"
+            className="management-form roster-directory-form"
+            aria-label="Add an existing player"
+            onSubmit={addKnownPlayer}
+          >
+            <span className="eyebrow">CLUB DIRECTORY</span>
+            <h2>A familiar face.</h2>
+            <p className="help-text">
+              Add a known player to {season?.name || "this season"}. Their
+              existing profile and past appearances stay together.
+            </p>
+            {directoryPlayers.length ? (
+              <>
+                <label className="form-field">
+                  <span>Search directory</span>
+                  <input
+                    type="search"
+                    autoFocus
+                    placeholder="Search by player name"
+                    value={directoryQuery}
+                    disabled={busy}
+                    onChange={(e) => {
+                      setDirectoryQuery(e.target.value);
+                      setSelectedPlayerId("");
+                      setError("");
+                    }}
+                  />
+                </label>
+                <label className="form-field">
+                  <span>Known player</span>
+                  <select
+                    required
+                    value={selectedPlayerId}
+                    disabled={busy || !matchingPlayers.length}
+                    onChange={(e) => {
+                      setSelectedPlayerId(e.target.value);
+                      setError("");
+                    }}
+                  >
+                    <option value="">Choose a player</option>
+                    {matchingPlayers.map((player) => (
+                      <option key={player.id} value={player.id}>
+                        {player.name} · #{player.number} · {player.position}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {!matchingPlayers.length && (
+                  <p className="help-text" role="status">
+                    No players match this search. Try another name.
+                  </p>
+                )}
+                {selectedPlayer && (
+                  <div className="roster-directory-preview">
+                    <strong>{selectedPlayer.name}</strong>
+                    <span>
+                      #{selectedPlayer.number} · {selectedPlayer.position} ·{" "}
+                      {selectedPlayer.isPublic === false
+                        ? "Private profile"
+                        : "Public profile"}
+                    </span>
+                    <p>
+                      {roster.some((entry) => entry.playerId === selectedPlayer.id)
+                        ? "Previously on a season roster."
+                        : "Not yet on a season roster."}
+                    </p>
+                  </div>
+                )}
+                <p className="help-text">
+                  Players already on this season’s roster are excluded.
+                </p>
+              </>
+            ) : (
+              <p className="help-text" role="status">
+                {players.length
+                  ? "Every known player is already on this season’s roster."
+                  : "The club directory is empty. Use Add player to create the first profile."}
+              </p>
+            )}
+            {error && (
+              <div role="alert" className="auth-error">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  className="button secondary small"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true);
+                    void refresh()
+                      .then(() => {
+                        setSelectedPlayerId("");
+                        setError("");
+                      })
+                      .catch(() =>
+                        setError("Could not reload the directory. Try again."),
+                      )
+                      .finally(() => setBusy(false));
+                  }}
+                >
+                  Reload directory
+                </button>
+              </div>
+            )}
+            <div className="button-row">
+              <button className="button" disabled={busy || !selectedPlayer}>
+                <UserPlus size={16} />
+                {busy ? "Adding…" : "Add to season roster"}
+              </button>
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy}
+                onClick={() => {
+                  setDirectoryOpen(false);
+                  setError("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : editing ? (
           <form className="management-form" onSubmit={submit}>
             <h2>
               {players.some((p) => p.id === editing.id)
@@ -581,6 +763,7 @@ function SeasonRosterManagement() {
               <button
                 type="button"
                 className="button secondary"
+                disabled={busy}
                 onClick={() => setEditing(null)}
               >
                 Cancel
@@ -590,7 +773,10 @@ function SeasonRosterManagement() {
         ) : (
           <div className="management-empty">
             <h2>Everyone has a part to play.</h2>
-            <p>Choose a teammate or add a player to the selected season.</p>
+            <p>
+              Choose a teammate, add someone from the club directory, or create
+              a new player for this season.
+            </p>
           </div>
         )}
       </div>
