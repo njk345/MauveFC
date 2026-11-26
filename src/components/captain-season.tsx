@@ -8,6 +8,7 @@ import { ordinal } from "@/features/matches/season-finish";
 import type { LeagueConnection, Match, Season } from "@/lib/types";
 import { SeasonSetup } from "./season-setup";
 import { ManualSeasonStandings } from "./manual-season-standings";
+import { SeasonPropertiesForm, SeasonDeletePanel } from "./season-properties";
 
 export function CaptainSeason() {
   const [settingUp, setSettingUp] = useState(false);
@@ -41,6 +42,21 @@ export function CaptainSeason() {
           key={`${season.id}:${season.settingsRevision || 0}`}
           season={season}
         />
+      )}
+      {!settingUp && season && (
+        <SeasonDeletePanel
+          key={`${season.id}:${season.settingsRevision || 0}`}
+          season={season}
+        />
+      )}
+      {!settingUp && !season && (
+        <div className="section page-section">
+          <h1>A new season awaits.</h1>
+          <p>
+            Add a season to start the next chapter. All players remain in your
+            club directory.
+          </p>
+        </div>
       )}
     </>
   );
@@ -79,8 +95,12 @@ function SeasonForm({
     <div className="section page-section season-management">
       <PageHeading
         eyebrow="THE CAPTAIN’S CORNER"
-        title="Close a chapter in mauve."
-        description="Mark the season complete when the team’s campaign is finished."
+        title="Make this season yours."
+        description="Update season details, close the campaign, or manage its history."
+      />
+      <SeasonPropertiesForm
+        key={`${season.id}:${season.settingsRevision || 0}`}
+        season={season}
       />
       <form
         className="season-status-form"

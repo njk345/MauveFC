@@ -18,6 +18,7 @@ import type {
   CaptainPlayerDetails,
   PreferredPosition,
   SeasonSetupInput,
+  SeasonDetails,
   SeasonImportPreview,
   SeasonImportTeamChoice,
   ManualLeagueResult,
@@ -191,6 +192,25 @@ export async function configureManualStandings(
     p_expected_revision: season.settingsRevision || 0,
     p_enabled: enabled,
     p_team_names: teamNames,
+  });
+  if (error) throw new Error(error.message);
+}
+export async function writeSeasonDetails(
+  season: Season,
+  details: SeasonDetails,
+) {
+  const { error } = await getBrowserClient().rpc("update_season_details", {
+    p_season_id: season.id,
+    p_expected_revision: season.settingsRevision || 0,
+    p_details: details,
+  });
+  if (error) throw new Error(error.message);
+}
+export async function deleteClubSeason(season: Season, confirmation: string) {
+  const { error } = await getBrowserClient().rpc("delete_club_season", {
+    p_season_id: season.id,
+    p_expected_revision: season.settingsRevision || 0,
+    p_confirmation: confirmation,
   });
   if (error) throw new Error(error.message);
 }

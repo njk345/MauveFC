@@ -18,6 +18,7 @@ import { Crest } from "./brand";
 import { usePrototype } from "./prototype-provider";
 import { useAuth } from "./auth/auth-provider";
 import { useInstall } from "./install-provider";
+import { seasonSelectorLabel } from "@/features/seasons/details";
 const nav = [
   ["Home", "/"],
   ["Schedule", "/schedule/"],
@@ -45,6 +46,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false),
     [confirm, setConfirm] = useState(false);
   const selectedSeason = seasons.find((season) => season.id === seasonId);
+  const permitsEmptySeason =
+    pathname.replace(/\/$/, "") === "/captain/season" ||
+    pathname.startsWith("/players");
   const leagueWebsite =
     selectedSeason?.leagueWebsite ||
     league?.standingsUrl ||
@@ -96,12 +100,19 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <span className="sr-only">Season</span>
               <select
                 aria-label="Season"
+                title={
+                  selectedSeason
+                    ? seasonSelectorLabel(selectedSeason)
+                    : "No seasons"
+                }
                 value={seasonId}
+                disabled={!seasons.length}
                 onChange={(e) => setSeasonId(e.target.value)}
               >
+                {!seasons.length && <option value="">No seasons</option>}
                 {seasons.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name}
+                    {seasonSelectorLabel(s)}
                   </option>
                 ))}
               </select>
@@ -152,7 +163,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
         pathname !== "/login" &&
         pathname !== "/install/" &&
         pathname !== "/install" &&
-        (!ready || loadError || !seasons.length) ? (
+        (!ready || loadError || (!seasons.length && !permitsEmptySeason)) ? (
           <div className="section page-section">
             <div className="access-panel" role="status">
               <h1>
@@ -175,6 +186,16 @@ export function SiteShell({ children }: { children: ReactNode }) {
                 >
                   Try again
                 </button>
+              )}
+              {ready && !loadError && !seasons.length && auth.captain && (
+                <Link className="button" href="/captain/season/">
+                  Add a season
+                </Link>
+              )}
+              {ready && !loadError && !seasons.length && auth.member && (
+                <Link className="button secondary" href="/players/">
+                  View player directory
+                </Link>
               )}
             </div>
           </div>

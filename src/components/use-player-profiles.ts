@@ -18,7 +18,7 @@ export function usePlayerProfiles() {
   }>();
   const teamView = auth.live && !!auth.user && auth.member && !auth.loading;
   // Invalidate old-account data synchronously, before effect cleanup runs.
-  const owner = `${auth.user?.id || "public"}:${auth.member}:${auth.loading}:${revision}`;
+  const owner = `${auth.user?.id || "public"}:${auth.member}:${auth.loading}:${club.resetVersion}:${revision}`;
   useEffect(() => {
     setResponse(undefined);
     if (!teamView || !club.ready) return;

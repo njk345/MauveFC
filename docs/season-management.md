@@ -1,5 +1,32 @@
 # Seasons and historical imports
 
+## Editing and deleting seasons
+
+Captain → Season includes editable league name, league location, playing format,
+time zone, season label, year, season of year, team name and optional league
+website. Blank labels use the season and year. The global selector also includes
+the league name, without repeating it when the saved label already contains it.
+Edits use the season settings revision to reject stale changes. Manual standings
+retain their team IDs when our team is renamed. Saving a time zone changes the
+display and the zone used for future league refreshes, without directly changing
+saved fixture instants. A running refresh must finish before its zone changes.
+
+Delete season requires typing the saved season label and a fresh settings
+revision. Cleanup is atomic: fixtures (including removed fixtures), results,
+player stats, drafts, result history, RSVP and lineup records, roster entries,
+manual standings data, consumed previews and league source/job records are
+removed. The feed cannot recreate the season automatically. Player identities,
+private contact details, invitations and club memberships are retained, including
+players who only appeared in the deleted season. No existing season is deleted
+by installing this feature.
+
+After deletion the selector moves to another available season. If none remain,
+captains can still create a new season and team members can access the player
+directory; season-dependent pages show an empty state. Public and member stats
+and appearance history are queried from the remaining matches.
+
+## Creating a season
+
 Use **Captain → Season → Add a season**. Both sources follow the same three
 steps: season details, results/roster, then review/save. Creation selects the
 new season in the existing header selector. Its selection persists in this

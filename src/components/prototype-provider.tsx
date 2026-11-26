@@ -20,6 +20,7 @@ import type {
   PrototypeData,
   Result,
   Season,
+  SeasonDetails,
   GuestChange,
 } from "@/lib/types";
 import { validateDraft, validateResult } from "@/features/matches/validation";
@@ -35,6 +36,8 @@ import {
   writePlayer,
   type ClubSnapshot,
   writeMatchGuest,
+  writeSeasonDetails,
+  deleteClubSeason,
   type GuestInput,
 } from "@/lib/supabase/repository";
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
@@ -71,6 +74,8 @@ type Context = {
     completed: boolean,
   ) => Promise<void>;
   savePlayer: (player: Player) => Promise<void>;
+  saveSeasonDetails: (season: Season, details: SeasonDetails) => Promise<void>;
+  deleteSeason: (season: Season, confirmation: string) => Promise<void>;
   changeGuest: (
     matchId: string,
     revision: number,
@@ -458,6 +463,78 @@ export function PrototypeProvider({
           : [...(d.roster || []), { seasonId, playerId: player.id }],
       }));
   }
+  async function saveSeasonDetails(season: Season, details: SeasonDetails) {
+    if (auth.live) {
+      if (!auth.captain) throw new Error("Captain access required.");
+      await writeSeasonDetails(season, details);
+      await refresh();
+    } else {
+      const updated = seasons.map((entry) =>
+        entry.id === season.id
+          ? {
+              ...entry,
+              ...details,
+              name: details.name.trim() || `${details.term} ${details.year}`,
+              settingsRevision: (entry.settingsRevision || 0) + 1,
+              leagueTeams: entry.leagueTeams?.map((team) =>
+                team.isOurs ? { ...team, name: details.teamName } : team,
+              ),
+            }
+          : entry,
+      );
+      setSeasons(updated);
+      setData((previous) => ({ ...previous, seasons: updated }));
+    }
+    setResetVersion((version) => version + 1);
+  }
+  async function deleteSeason(season: Season, confirmation: string) {
+    if (confirmation.trim() !== season.name)
+      throw new Error("Type the season label to confirm deletion.");
+    if (auth.live) {
+      if (!auth.captain) throw new Error("Captain access required.");
+      await deleteClubSeason(season, confirmation);
+      await refresh();
+    } else {
+      const remaining = seasons.filter((entry) => entry.id !== season.id);
+      const removedIds = new Set([
+        ...data.matches
+          .filter((match) => match.seasonId === season.id)
+          .map((match) => match.id),
+        ...(data.removedFixtures || [])
+          .filter((match) => match.seasonId === season.id)
+          .map((match) => match.id),
+      ]);
+      setSeasons(remaining);
+      setSeasonId((selected) =>
+        selected === season.id ? remaining[0]?.id || "" : selected,
+      );
+      setConnections((current) =>
+        current.filter((connection) => connection.seasonId !== season.id),
+      );
+      setData((previous) => ({
+        ...previous,
+        seasons: remaining,
+        matches: previous.matches.filter(
+          (match) => match.seasonId !== season.id,
+        ),
+        removedFixtures: previous.removedFixtures?.filter(
+          (match) => match.seasonId !== season.id,
+        ),
+        roster: previous.roster?.filter(
+          (entry) => entry.seasonId !== season.id,
+        ),
+        drafts: Object.fromEntries(
+          Object.entries(previous.drafts || {}).filter(
+            ([id]) => !removedIds.has(id),
+          ),
+        ),
+        history: previous.history.filter(
+          (entry) => !removedIds.has(entry.matchId),
+        ),
+      }));
+    }
+    setResetVersion((version) => version + 1);
+  }
   function reset() {
     if (auth.live) return;
     setResetVersion((v) => v + 1);
@@ -486,6 +563,8 @@ export function PrototypeProvider({
         restoreFixture,
         setSeasonComplete,
         savePlayer,
+        saveSeasonDetails,
+        deleteSeason,
         changeGuest,
         refresh,
         reset,

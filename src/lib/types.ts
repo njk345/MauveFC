@@ -231,6 +231,18 @@ export type SeasonSetupInput = {
   teams: string[];
   rosterPlayerIds: string[];
 };
+export type SeasonDetails = Pick<
+  SeasonSetupInput,
+  | "name"
+  | "competition"
+  | "teamName"
+  | "location"
+  | "leagueWebsite"
+  | "timeZone"
+  | "format"
+  | "year"
+  | "term"
+>;
 export type SeasonImportPreview = {
   divisionName?: string;
   phase: "ready";

@@ -515,6 +515,14 @@ export type Database = {
       }
     }
     Functions: {
+      update_season_details: {
+        Args: { p_season_id: string; p_expected_revision: number; p_details: Json };
+        Returns: undefined;
+      }
+      delete_club_season: {
+        Args: { p_season_id: string; p_expected_revision: number; p_confirmation: string };
+        Returns: undefined;
+      }
       get_member_player_profiles: {
         Args: { p_club_id: string };
         Returns: Json;
