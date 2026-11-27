@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, LockKeyhole, LogOut, RefreshCw, Users } from "lucide-react";
 import { useAuth } from "./auth/auth-provider";
@@ -74,55 +74,61 @@ function TeamWorkspace() {
     [dirty, setDirty] = useState(false),
     [refreshing, setRefreshing] = useState(false),
     [guestBusy, setGuestBusy] = useState(false);
-  async function refresh() {
-    setRefreshing(true);
-    try {
-      const next = await readTeamClub();
-      setData(next);
-      setError("");
-    } catch (e) {
-      setData(null);
-      setError(e instanceof Error ? e.message : "Could not load the team.");
-      void auth.refreshAccess().catch(() => {});
-    } finally {
-      setRefreshing(false);
-    }
-  }
-  useEffect(() => {
-    let active = true;
-    async function load() {
+  const refreshAccess = auth.refreshAccess;
+  const latestRefresh = useRef(0);
+  const load = useCallback(
+    async (showProgress: boolean) => {
+      const request = ++latestRefresh.current;
+      if (showProgress) setRefreshing(true);
       try {
         const next = await readTeamClub();
-        if (active) {
-          setData(next);
-          setError("");
-        }
+        if (request !== latestRefresh.current) return;
+        setData(next);
+        setError("");
       } catch (e) {
-        if (active) {
-          setData(null);
-          setError(e instanceof Error ? e.message : "Could not load the team.");
-          void auth.refreshAccess().catch(() => {});
-        }
+        if (request !== latestRefresh.current) return;
+        setError(e instanceof Error ? e.message : "Could not load the team.");
+        void refreshAccess().catch(() => {});
+      } finally {
+        if (request === latestRefresh.current) setRefreshing(false);
       }
-    }
-    void load();
+    },
+    [refreshAccess],
+  );
+  const refresh = () => load(true);
+  useEffect(() => {
+    void load(false);
     const focus = () => {
-      if (document.visibilityState === "visible") void load();
+      if (document.visibilityState === "visible") void load(false);
     };
     const timer = setInterval(focus, 60000);
     window.addEventListener("focus", focus);
     return () => {
-      active = false;
+      latestRefresh.current++;
       clearInterval(timer);
       window.removeEventListener("focus", focus);
     };
-  }, []);
+  }, [load]);
   function switchView(action: () => void) {
     if (guestBusy) return;
     if (dirty && !window.confirm("Discard unsaved lineup changes?")) return;
     setDirty(false);
     action();
   }
+  const seasonFixtures =
+    data?.matches.filter((m) => m.seasonId === seasonId) || [];
+  const fixtures = orderMatches(seasonFixtures);
+  const upcoming = fixtures.filter(rsvpsOpen);
+  const match =
+    fixtures.find((m) => m.id === selected) ||
+    upcoming[0] ||
+    orderMatches(seasonFixtures, "newest-first")[0];
+  const matchId = match?.id;
+  useEffect(() => {
+    // Keep the initially displayed match selected if a refresh adds or
+    // reorders fixtures while someone is working on its lineup.
+    if (matchId) setSelected(matchId);
+  }, [matchId]);
   if (!data)
     return (
       <div className="section page-section">
@@ -144,14 +150,7 @@ function TeamWorkspace() {
         </div>
       </div>
     );
-  const seasonFixtures = data.matches.filter((m) => m.seasonId === seasonId);
-  const fixtures = orderMatches(seasonFixtures),
-    upcoming = fixtures.filter(rsvpsOpen),
-    match =
-      fixtures.find((m) => m.id === selected) ||
-      upcoming[0] ||
-      orderMatches(seasonFixtures, "newest-first")[0],
-    rosterPlayers = data.players.filter((p) =>
+  const rosterPlayers = data.players.filter((p) =>
       data.roster.some((r) => r.seasonId === seasonId && r.playerId === p.id),
     ),
     eligible = matchPlayers(data.players, data.roster, match);
@@ -203,6 +202,11 @@ function TeamWorkspace() {
           {refreshing ? "Refreshing…" : "Refresh team"}
         </button>
       </div>
+      {error && (
+        <p className="form-errors" role="status">
+          {error} Use Refresh team to try again.
+        </p>
+      )}
       {tab === "roster" ? (
         <div className="team-roster-grid">
           {rosterPlayers.map((p) => (
