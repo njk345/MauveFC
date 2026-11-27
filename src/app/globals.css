@@ -5291,6 +5291,199 @@ footer {
 .stats-page .private-stats-row .rank {display:inline-flex;align-items:center;justify-content:center;min-width:28px;min-height:28px;background:transparent;color:#827781;}
 .stats-table-hint {display:none;}
 
+.archive-scope {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.archive-scope .tabs,
+.career-seasons .tabs {
+  display: flex;
+  flex-wrap: wrap;
+}
+.archive-scope .tabs button,
+.career-seasons .tabs button {
+  font-size: .875rem;
+  min-height: 42px;
+}
+.archive-scope > span {
+  font-size: .875rem;
+  color: var(--muted);
+}
+.archive-season-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: .55rem 1rem;
+  min-width: 0;
+  margin: 0 0 1.5rem;
+  padding: .85rem 1rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.archive-season-options legend {
+  padding: 0 .4rem;
+  font-weight: 600;
+}
+.archive-season-options label {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  min-height: 38px;
+  font-size: .875rem;
+}
+.archive-season-options input {
+  accent-color: var(--plum);
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.archive-records {
+  color: #faf5ed;
+  background: #38283e;
+  border-radius: 12px;
+  margin: 0 0 1.5rem;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+.archive-records h2,
+.career-seasons h2 {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 3vw, 2.15rem);
+}
+.archive-records .panel-top,
+.career-seasons .panel-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.25rem;
+  align-items: center;
+}
+.archive-records ul,
+.career-seasons ol {
+  list-style: none;
+  margin: 1.1rem 0 0;
+  padding: 0;
+}
+.archive-records li {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.2fr) minmax(7rem, 1.5fr) minmax(10rem, auto);
+  align-items: center;
+  gap: .75rem 1.25rem;
+  padding: .75rem 0;
+  border-top: 1px solid #ffffff2a;
+}
+.archive-record-name strong,
+.archive-record-name small,
+.appearance-season {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.archive-record-name small,
+.archive-record-totals {
+  font-size: .875rem;
+  color: #ecdee9;
+}
+.archive-record-name small { margin-top: .25rem; }
+.record-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+.record-legend span {
+  padding: .3rem .55rem;
+  border-radius: 4px;
+  font-size: .8125rem;
+}
+.record-win { background: #dbeaab; color: #29351c; }
+.record-draw { background: #e6cee1; color: #3c213d; }
+.record-loss { background: #9c5876; color: #fff9f8; }
+.record-track,
+.career-track {
+  display: flex;
+  min-width: 0;
+  background: #ffffff22;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.record-track { min-height: 1.45rem; }
+.record-track span {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.archive-exports {
+  margin-top: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+.archive-exports h2 { margin-bottom: .85rem; font-size: 1.25rem; }
+.archive-exports .button-row { flex-wrap: wrap; }
+.archive-coverage {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  padding: 0;
+  margin: .65rem 0;
+  font-size: .875rem;
+}
+.career-totals-heading {
+  font-size: 1.15rem;
+  margin-top: 1.4rem;
+}
+.career-totals-heading + .profile-totals { margin-top: .85rem; gap: clamp(.8rem, 4vw, 2.5rem); }
+.career-totals-heading + .profile-totals span { font-size: .6875rem; }
+.career-seasons {
+  padding: clamp(1rem, 3vw, 2rem);
+  margin: 0 0 2rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fcfbf7;
+}
+.career-seasons li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, .85fr) minmax(4rem, .6fr);
+  gap: .5rem 1.25rem;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding: .8rem 0;
+}
+.career-season-name h3 { font-size: 1rem; overflow-wrap: anywhere; }
+.career-season-name p, .career-caption, .appearance-season {
+  margin-top: .25rem;
+  color: var(--muted);
+  font-size: .8125rem;
+}
+.career-caption { margin: .75rem 0 0; }
+.career-season-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  text-align: center;
+}
+.career-season-stats div { padding: .35rem .25rem; border-radius: 6px; }
+.career-season-stats strong,
+.career-season-stats span { display: block; }
+.career-season-stats span { font-size: .75rem; }
+.career-season-stats strong { font-size: 1.15rem; }
+.career-active-metric { background: #eee3ee; }
+.career-track { background: #ece5ec; height: .65rem; }
+.career-track span { background: #87557f; }
+.career-history-filter { margin: 0; max-width: 100%; }
+.career-history-filter select { max-width: 100%; }
+.directory-player-heading h3 a { text-decoration: underline; text-underline-offset: .2em; }
+.player-directory-tabs { flex-wrap: wrap; }
+@media (max-width: 700px) {
+  .archive-records li,
+  .career-seasons li { grid-template-columns: minmax(0, 1fr); }
+  .archive-record-totals { margin-top: -.25rem; }
+  .career-season-stats { margin: .2rem 0; }
+  .appearance-season { font-size: .6875rem; }
+}
+
 .playoff-settings {min-width:0;border:1px solid #d9cbd5;border-radius:10px;background:#f5eff3;padding:1.25rem;margin:0 0 1.5rem;}
 .fixture-remove-zone{border-top:1px solid #e2d7df;padding-top:1.25rem;margin-top:1.5rem;}
 .fixture-remove-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;color:#8c374c;}

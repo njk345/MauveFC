@@ -556,6 +556,7 @@ export type Database = {
       add_match_guest: { Args: { p_match_id: string; p_expected_revision: number; p_player_id?: string | null; p_player?: Json | null; p_allow_same_name?: boolean }; Returns: Json }
       remove_match_guest: { Args: { p_match_id: string; p_expected_revision: number; p_player_id: string }; Returns: Json }
       get_season_stats: { Args: { p_club_id: string; p_season_id: string }; Returns: Json }
+      get_archive_stats: { Args: { p_club_id: string; p_season_ids: string[] }; Returns: Json }
       get_team_access: { Args: { p_club_id: string }; Returns: Json }
       get_team_club: { Args: { p_club_id: string }; Returns: Json }
       get_lineup_posts: { Args: { p_club_id: string }; Returns: Json }

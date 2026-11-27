@@ -2,13 +2,13 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "./auth/auth-provider";
 import { usePrototype } from "./prototype-provider";
-import { readSeasonStats } from "@/lib/supabase/repository";
+import { readArchiveStats, readSeasonStats } from "@/lib/supabase/repository";
 import { sampleSeasonStats } from "@/features/stats/queries";
 import type { SeasonStatsSnapshot } from "@/lib/types";
 
-export function useSeasonStats() {
+export function useSeasonStats(seasonIds: string[]) {
   const auth = useAuth();
-  const { live, ready, seasonId, resetVersion, matches, players, roster } =
+  const { live, ready, resetVersion, matches, players, roster } =
     usePrototype();
   const [revision, setRevision] = useState(0);
   const [response, setResponse] = useState<{
@@ -17,12 +17,16 @@ export function useSeasonStats() {
     error?: string;
   }>();
   // Hide the previous identity/season synchronously, before effect cleanup runs.
-  const owner = `${auth.user?.id || "public"}:${auth.member}:${auth.loading}:${seasonId}:${resetVersion}:${revision}`;
+  const scope = seasonIds.join(",");
+  const owner = `${auth.user?.id || "public"}:${auth.member}:${auth.loading}:${scope}:${resetVersion}:${revision}`;
   useEffect(() => {
     setResponse(undefined);
-    if (!live || !ready || auth.loading || !seasonId) return;
+    if (!live || !ready || auth.loading || !scope) return;
     let active = true;
-    void readSeasonStats(seasonId).then(
+    const ids = scope.split(",");
+    const request =
+      ids.length === 1 ? readSeasonStats(ids[0]) : readArchiveStats(ids);
+    void request.then(
       (data) => {
         if (active) setResponse({ owner, data });
       },
@@ -40,19 +44,20 @@ export function useSeasonStats() {
     return () => {
       active = false;
     };
-  }, [live, ready, auth.loading, seasonId, owner]);
+  }, [live, ready, auth.loading, scope, owner]);
   if (!live)
     return {
       data: sampleSeasonStats(
-        matches.filter((m) => m.seasonId === seasonId),
+        matches.filter((m) => seasonIds.includes(m.seasonId)),
         players.filter(
           (p) =>
             roster.some(
-              (r) => r.seasonId === seasonId && r.playerId === p.id,
+              (r) => seasonIds.includes(r.seasonId) && r.playerId === p.id,
             ) ||
             matches.some(
               (m) =>
-                m.seasonId === seasonId && m.guestPlayerIds?.includes(p.id),
+                seasonIds.includes(m.seasonId) &&
+                m.guestPlayerIds?.includes(p.id),
             ),
         ),
       ),
@@ -64,7 +69,7 @@ export function useSeasonStats() {
     response?.owner === owner && !auth.loading ? response : undefined;
   return {
     data: current?.data,
-    loading: !current,
+    loading: !!scope && !current,
     error: current?.error || "",
     reload: () => setRevision((v) => v + 1),
   };

@@ -63,6 +63,8 @@ export type PlayerSeasonStats = Pick<
 export type SeasonStatsSnapshot = {
   teamView: boolean;
   privatePlayerCount: number;
+  appearanceRecords?: number;
+  goalRecords?: number;
   assistsTotal: number | null;
   assistsRecordedMatches: number;
   assistsCompleteMatches: number;

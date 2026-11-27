@@ -39,35 +39,38 @@ export function playerStats(matches: Match[], roster: Player[] = players) {
   const played = publishedMatches(matches);
   return roster
     .map((p) => {
-      const rows = played.flatMap((m) =>
-        m.result!.stats.filter((s) => s.playerId === p.id),
-      );
-      const appearances = rows.filter((s) => s.appeared).length;
+      const rows = played.flatMap((m) => {
+        const result = m.result!;
+        return result.stats
+          .filter((s) => s.playerId === p.id)
+          .map((stat) => ({ stat, result }));
+      });
+      const appearances = rows.filter(({ stat }) => stat.appeared).length;
       return {
         ...p,
         appearances,
-        goals: rows.reduce((n, s) => n + s.goals, 0),
-        assists: rows.reduce((n, s) => n + (s.assists ?? 0), 0),
-        assistsKnown: played.some(
-          (m) =>
-            m.result!.assists !== "unrecorded" &&
-            m.result!.stats.some(
-              (s) => s.playerId === p.id && s.assists !== null,
-            ),
+        goals: rows.reduce(
+          (n, { stat, result }) =>
+            n + (result.scorers === "unrecorded" ? 0 : stat.goals),
+          0,
         ),
-        appearancesKnown: played.some((m) =>
-          m.result!.stats.some(
-            (s) =>
-              s.playerId === p.id &&
-              (s.appeared || m.result!.attendance === "complete"),
-          ),
+        assists: rows.reduce(
+          (n, { stat, result }) =>
+            n + (result.assists === "unrecorded" ? 0 : (stat.assists ?? 0)),
+          0,
         ),
-        goalsKnown: played.some((m) =>
-          m.result!.stats.some(
-            (s) =>
-              s.playerId === p.id &&
-              (s.goals > 0 || m.result!.scorers === "complete"),
-          ),
+        assistsKnown: rows.some(
+          ({ stat, result }) =>
+            result.assists !== "unrecorded" && stat.assists !== null,
+        ),
+        appearancesKnown: rows.some(
+          ({ stat, result }) =>
+            stat.appeared || result.attendance === "complete",
+        ),
+        goalsKnown: rows.some(
+          ({ stat, result }) =>
+            result.scorers !== "unrecorded" &&
+            (stat.goals > 0 || result.scorers === "complete"),
         ),
       };
     })
@@ -98,6 +101,11 @@ export function sampleSeasonStats(
     privatePlayerCount: teamView
       ? 0
       : roster.filter((p) => p.isPublic === false).length,
+    appearanceRecords: played.filter(
+      (m) => m.result!.attendance !== "unrecorded",
+    ).length,
+    goalRecords: played.filter((m) => m.result!.scorers !== "unrecorded")
+      .length,
     assistsTotal: knownAssists
       ? played.reduce(
           (n, m) =>

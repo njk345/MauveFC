@@ -32,6 +32,8 @@ import { isFinalsWin } from "@/features/matches/playoffs";
 import { ResultDecision } from "./result-decision";
 import { usePlayerProfiles } from "./use-player-profiles";
 import { useSeasonTeamName } from "./use-season-team-name";
+import { seasonSelectorLabel } from "@/features/seasons/details";
+import { PlayerCareer } from "./player-career";
 export function PageHeading({
   eyebrow,
   title,
@@ -424,12 +426,14 @@ export function PlayersPage() {
     [search, setSearch] = useState(""),
     [position, setPosition] = useState("All positions"),
     roster = playerStats(
-      matches.filter((m) => m.seasonId === seasonId),
-      players.filter((p) =>
-        seasonRoster.some(
-          (sr) => sr.seasonId === seasonId && sr.playerId === p.id,
-        ),
-      ),
+      view === "all" ? matches : matches.filter((m) => m.seasonId === seasonId),
+      view === "all"
+        ? players
+        : players.filter((p) =>
+            seasonRoster.some(
+              (sr) => sr.seasonId === seasonId && sr.playerId === p.id,
+            ),
+          ),
     ).sort((a, b) => a.number - b.number),
     filtered = roster.filter(
       (p) =>
@@ -443,16 +447,24 @@ export function PlayersPage() {
         title="Meet the Mauve."
         description="The players behind the club, season after season."
       />
-      {profiles.teamView && (
-        <div className="tabs player-directory-tabs" aria-label="Player views">
-          <button
-            type="button"
-            className={view === "season" ? "selected" : ""}
-            aria-pressed={view === "season"}
-            onClick={() => setView("season")}
-          >
-            Season profiles
-          </button>
+      <div className="tabs player-directory-tabs" aria-label="Player views">
+        <button
+          type="button"
+          className={view === "season" ? "selected" : ""}
+          aria-pressed={view === "season"}
+          onClick={() => setView("season")}
+        >
+          Season profiles
+        </button>
+        <button
+          type="button"
+          className={view === "all" ? "selected" : ""}
+          aria-pressed={view === "all"}
+          onClick={() => setView("all")}
+        >
+          All profiles
+        </button>
+        {profiles.teamView && (
           <button
             type="button"
             className={view === "directory" ? "selected" : ""}
@@ -461,8 +473,8 @@ export function PlayersPage() {
           >
             Club directory
           </button>
-        </div>
-      )}
+        )}
+      </div>
       {profiles.teamView && view === "directory" ? (
         <PlayerDirectory key={auth.user?.id} />
       ) : profiles.loading ? (
@@ -535,10 +547,10 @@ export function PlayersPage() {
                   <h2>{p.name}</h2>
                   <div className="player-mini-stats">
                     <span>
-                      <b>{p.appearances}</b> APPS
+                      <b>{p.appearancesKnown ? p.appearances : "—"}</b> APPS
                     </span>
                     <span>
-                      <b>{p.goals}</b> GOALS
+                      <b>{p.goalsKnown ? p.goals : "—"}</b> GOALS
                     </span>
                     <span>
                       <b>{p.assistsKnown ? p.assists : "—"}</b> ASSISTS
@@ -568,7 +580,9 @@ export function PlayersPage() {
             {live
               ? "Player profiles and shirt illustrations."
               : "Sample profiles and shirt illustrations."}{" "}
-            Player totals reflect the selected season’s published results.
+            {view === "all"
+              ? "Career totals reflect all published results."
+              : "Player totals reflect the selected season’s published results."}
           </p>
         </>
       )}
@@ -577,10 +591,10 @@ export function PlayersPage() {
 }
 export function PlayerProfile({ id }: { id: string }) {
   const profiles = usePlayerProfiles();
-  const { matches, players } = profiles,
-    { seasonId, seasons, live } = usePrototype(),
-    fixtures = matches.filter((m) => m.seasonId === seasonId),
-    p = playerStats(fixtures, players).find((p) => p.id === id);
+  const [historySeason, setHistorySeason] = useState("");
+  const { matches, players, roster } = profiles;
+  const { seasons, live } = usePrototype();
+  const player = players.find((p) => p.id === id);
   if (profiles.loading)
     return (
       <div className="section page-section" role="status">
@@ -602,15 +616,37 @@ export function PlayerProfile({ id }: { id: string }) {
         </div>
       </div>
     );
-  if (!p)
+  if (!player)
     return (
       <div className="section page-section">
         <h1>Player not found.</h1>
         <Link href="/players/">Back to the squad</Link>
       </div>
     );
-  const appearances = publishedMatches(fixtures, "newest-first").filter((m) =>
-    m.result!.stats.some((s) => s.playerId === id && s.appeared),
+  const p = playerStats(matches, [player])[0];
+  const playerMatches = publishedMatches(matches, "newest-first").filter((m) =>
+    m.result!.stats.some((s) => s.playerId === id),
+  );
+  const records = seasons.flatMap((season) => {
+    const rostered = roster.some(
+      (entry) => entry.seasonId === season.id && entry.playerId === id,
+    );
+    const playedInSeason = playerMatches.filter(
+      (match) => match.seasonId === season.id,
+    );
+    return rostered || playedInSeason.length
+      ? [{ season, rostered, stats: playerStats(playedInSeason, [player])[0] }]
+      : [];
+  });
+  const appearanceSeason = records.some(
+    ({ season }) => season.id === historySeason,
+  )
+    ? historySeason
+    : "";
+  const appearances = playerMatches.filter(
+    (m) =>
+      (!appearanceSeason || m.seasonId === appearanceSeason) &&
+      m.result!.stats.some((stat) => stat.playerId === id && stat.appeared),
   );
   return (
     <div className="section page-section">
@@ -627,11 +663,13 @@ export function PlayerProfile({ id }: { id: string }) {
             {p.position} / {live ? "MAUVE FC" : "SAMPLE PLAYER"}
           </span>
           <h1>{p.name}</h1>
-          <p>{p.bio}</p>
-          <span className="muted hometown">
-            <MapPin size={15} />
-            {p.hometown}
-          </span>
+          {p.bio && <p>{p.bio}</p>}
+          {p.hometown && (
+            <span className="muted hometown">
+              <MapPin size={15} />
+              {p.hometown}
+            </span>
+          )}
           {profiles.teamView && !!p.preferredPositions?.length && (
             <div className="profile-preferred-positions">
               <span className="small-text muted">PREFERRED POSITIONS</span>
@@ -642,13 +680,14 @@ export function PlayerProfile({ id }: { id: string }) {
               </div>
             </div>
           )}
+          <h2 className="career-totals-heading">Career totals</h2>
           <div className="profile-totals">
             <div>
-              <strong>{p.appearances}</strong>
+              <strong>{p.appearancesKnown ? p.appearances : "—"}</strong>
               <span>APPEARANCES</span>
             </div>
             <div>
-              <strong>{p.goals}</strong>
+              <strong>{p.goalsKnown ? p.goals : "—"}</strong>
               <span>GOALS</span>
             </div>
             <div>
@@ -657,32 +696,65 @@ export function PlayerProfile({ id }: { id: string }) {
             </div>
           </div>
           <p className="small-text muted">
-            Recorded totals · {seasons.find((s) => s.id === seasonId)?.name}.
-            Unknown assists are excluded.
+            {records.length} {records.length === 1 ? "season" : "seasons"} on
+            record · Includes playoffs and guest appearances
           </p>
         </div>
       </div>
+      <PlayerCareer records={records} />
       <div className="section-heading">
         <div>
-          <span className="eyebrow">IN THE MAUVE SHIRT</span>
-          <h2>Match by match.</h2>
+          <h2>Appearance history</h2>
         </div>
+        {records.length > 1 && (
+          <label className="form-field career-history-filter">
+            <span>Appearance season</span>
+            <select
+              value={appearanceSeason}
+              onChange={(e) => setHistorySeason(e.target.value)}
+            >
+              <option value="">All seasons</option>
+              {records.map(({ season }) => (
+                <option key={season.id} value={season.id}>
+                  {seasonSelectorLabel(season)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
       <div className="match-list">
         {appearances.length ? (
-          appearances.map((m) => (
-            <div className="appearance-row" key={m.id}>
-              <span>{date(m.kickoff)}</span>
-              <strong>{m.opponent}</strong>
-              <span>
-                {m.result!.stats.find((s) => s.playerId === id)?.goals} goals
-              </span>
-              <FormBadge value={outcome(m)} />
-            </div>
-          ))
+          appearances.map((m) => {
+            const season = seasons.find((entry) => entry.id === m.seasonId);
+            const stat = m.result!.stats.find((row) => row.playerId === id)!;
+            return (
+              <div className="appearance-row" key={m.id}>
+                <span>{date(m.kickoff)}</span>
+                <strong>
+                  {m.opponent}
+                  {season && (
+                    <small className="appearance-season">
+                      {seasonSelectorLabel(season)}
+                    </small>
+                  )}
+                </strong>
+                <span>
+                  {m.result!.scorers !== "unrecorded" &&
+                  (m.result!.scorers === "complete" || stat.goals > 0)
+                    ? `${stat.goals} ${stat.goals === 1 ? "goal" : "goals"}`
+                    : "—"}
+                </span>
+                <FormBadge value={outcome(m)} />
+              </div>
+            );
+          })
         ) : (
           <div className="empty-state">
-            <p>No recorded appearances this season.</p>
+            <p>
+              No recorded appearances {appearanceSeason ? "this season" : "yet"}
+              .
+            </p>
           </div>
         )}
       </div>

@@ -285,6 +285,17 @@ export async function readSeasonStats(
     throw new Error("Player stats could not be loaded. Please try again.");
   return data as SeasonStatsSnapshot;
 }
+export async function readArchiveStats(
+  seasonIds: readonly string[],
+): Promise<SeasonStatsSnapshot> {
+  const { data, error } = await getBrowserClient().rpc("get_archive_stats", {
+    p_club_id: clubId,
+    p_season_ids: seasonIds,
+  });
+  if (error)
+    throw new Error("Archive stats could not be loaded. Please try again.");
+  return data as SeasonStatsSnapshot;
+}
 export async function readPlayerDirectory(): Promise<DirectoryPlayer[]> {
   const { data, error } = await getBrowserClient().rpc("get_player_directory", {
     p_club_id: clubId,

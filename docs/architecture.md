@@ -361,10 +361,14 @@ Work through these milestones in order, with a reviewable slice at each step:
    players, and preview historical imports before saving. Reuse stable player
    identities; distinguish missing stats from recorded zeroes. Keep standings
    sourced from the league, and preserve playoff/removal rules.
-2. **Career stats and richer player cards.** Offer season/career totals, seasons
-   played, milestones and club records. Keep unknown historical data unknown and
-   retain public/member visibility rules. Add captain exports for results/player
-   stats and verify backup/recovery alongside the season work.
+2. **Club archive and career profiles.** Compare the current season, all seasons
+   or a selected set on Stats. Show goals for/against and win/draw/loss records
+   using official published results. Use stable player IDs to count teammates
+   and guests once across seasons. Individual profiles show career totals, a
+   season-by-season chart and filterable appearance history alongside the bio.
+   Preserve unknown values and public/member visibility. Captains can export
+   scoped results and recorded player rows as CSV. Verify restore from a
+   managed database backup in an isolated project before relying on it for recovery.
 3. **Player personalization.** Let members edit their own photo, bio, contact
    email/phone, preferred positions and other approved fields. Captains retain
    roster membership and public-profile approval. Relationship notes remain
@@ -378,6 +382,21 @@ Work through these milestones in order, with a reviewable slice at each step:
 5. **Matchday stories and awards.** Add shareable result cards, captain-approved
    recap drafts grounded in recorded facts, and private player-of-the-match
    voting/team awards.
+
+### Mauve FC first, then a second-club pilot
+
+Run the weekly workflow with Mauve FC on phones. Follow a fixture from
+availability and unanswered RSVPs through the shared lineup, then publish the
+result and stats after the match. Shorten that entry flow before adding opt-in
+reminders. Start player personalization with photo, bio and preferred positions.
+
+After Mauve can create, run and close out a season comfortably, invite one
+other captain for a pilot. Choose the club from the route or signed-in account
+instead of the build-time club ID, and configure club name, crest and colors.
+Verify that one account can have different roles in different clubs, and that
+each club's private rosters, notes, stats and imports stay isolated. Ask the
+pilot captain to create a season, invite a player and publish a result without
+assistance. Use that onboarding experience before opening self-service club creation.
 
 ## Open decisions
 

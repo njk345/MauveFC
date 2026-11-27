@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { playerHref } from "@/lib/player-link";
 import { useEffect, useState } from "react";
 import { LockKeyhole, Search } from "lucide-react";
 import { useAuth } from "./auth/auth-provider";
@@ -252,7 +254,9 @@ export function PlayerDirectory() {
                 <div className="directory-player-heading">
                   <span className="initial-avatar">{p.initials}</span>
                   <div>
-                    <h3>{p.name}</h3>
+                    <h3>
+                      <Link href={playerHref(p.id)}>{p.name}</Link>
+                    </h3>
                     <p>
                       #{p.number} · {p.position}
                     </p>
