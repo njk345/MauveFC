@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { Plus, Save, UserPlus } from "lucide-react";
+import { PositionGroupFields } from "./position-group-fields";
+import { positionGroupLabel } from "@/lib/player-positions";
 import { usePrototype } from "./prototype-provider";
 import {
   PlayerDetailFields,
@@ -366,8 +368,16 @@ export function RosterManagement() {
   return <SeasonRosterManagement key={seasonId} />;
 }
 function SeasonRosterManagement() {
-  const { players, roster, seasonId, seasons, savePlayer, setNotice, live, refresh } =
-      usePrototype(),
+  const {
+      players,
+      roster,
+      seasonId,
+      seasons,
+      savePlayer,
+      setNotice,
+      live,
+      refresh,
+    } = usePrototype(),
     [editing, setEditing] = useState<Player | null>(null),
     [directoryOpen, setDirectoryOpen] = useState(false),
     [directoryQuery, setDirectoryQuery] = useState(""),
@@ -379,7 +389,9 @@ function SeasonRosterManagement() {
       .filter((entry) => entry.seasonId === seasonId)
       .map((entry) => entry.playerId),
   );
-  const seasonPlayers = players.filter((player) => seasonPlayerIds.has(player.id));
+  const seasonPlayers = players.filter((player) =>
+    seasonPlayerIds.has(player.id),
+  );
   const season = seasons.find((entry) => entry.id === seasonId);
   const directoryPlayers = players
     .filter((player) => !seasonPlayerIds.has(player.id))
@@ -406,7 +418,9 @@ function SeasonRosterManagement() {
       );
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "Could not add this player to the roster.",
+        e instanceof Error
+          ? e.message
+          : "Could not add this player to the roster.",
       );
     } finally {
       setBusy(false);
@@ -569,7 +583,8 @@ function SeasonRosterManagement() {
                     <option value="">Choose a player</option>
                     {matchingPlayers.map((player) => (
                       <option key={player.id} value={player.id}>
-                        {player.name} · #{player.number} · {player.position}
+                        {player.name} · #{player.number} ·{" "}
+                        {positionGroupLabel(player)}
                       </option>
                     ))}
                   </select>
@@ -583,13 +598,16 @@ function SeasonRosterManagement() {
                   <div className="roster-directory-preview">
                     <strong>{selectedPlayer.name}</strong>
                     <span>
-                      #{selectedPlayer.number} · {selectedPlayer.position} ·{" "}
+                      #{selectedPlayer.number} ·{" "}
+                      {positionGroupLabel(selectedPlayer)} ·{" "}
                       {selectedPlayer.isPublic === false
                         ? "Private profile"
                         : "Public profile"}
                     </span>
                     <p>
-                      {roster.some((entry) => entry.playerId === selectedPlayer.id)
+                      {roster.some(
+                        (entry) => entry.playerId === selectedPlayer.id,
+                      )
                         ? "Previously on a season roster."
                         : "Not yet on a season roster."}
                     </p>
@@ -666,39 +684,20 @@ function SeasonRosterManagement() {
                 }
               />
             </label>
-            <div className="field-pair">
-              <label className="form-field">
-                <span>Shirt number</span>
-                <input
-                  required
-                  type="number"
-                  min="0"
-                  max="99"
-                  value={editing.number}
-                  onChange={(e) =>
-                    setEditing({ ...editing, number: e.target.valueAsNumber })
-                  }
-                />
-              </label>
-              <label className="form-field">
-                <span>Position</span>
-                <select
-                  value={editing.position}
-                  onChange={(e) =>
-                    setEditing({
-                      ...editing,
-                      position: e.target.value as Player["position"],
-                    })
-                  }
-                >
-                  {["Forward", "Midfielder", "Defender", "Goalkeeper"].map(
-                    (p) => (
-                      <option key={p}>{p}</option>
-                    ),
-                  )}
-                </select>
-              </label>
-            </div>
+            <label className="form-field">
+              <span>Shirt number</span>
+              <input
+                required
+                type="number"
+                min="0"
+                max="99"
+                value={editing.number}
+                onChange={(e) =>
+                  setEditing({ ...editing, number: e.target.valueAsNumber })
+                }
+              />
+            </label>
+            <PositionGroupFields player={editing} onChange={setEditing} />
             <label className="form-field">
               <span>Hometown · optional</span>
               <input

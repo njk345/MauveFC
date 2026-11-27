@@ -1,5 +1,9 @@
-import { formations } from "./formations";
-import { formationRows, positionSubstitutes, sheetName } from "./lineup-sheet";
+import {
+  formationRows,
+  positionSubstitutes,
+  sheetName,
+  slotPosition,
+} from "./lineup-sheet";
 import type { LineupPayload, Match, Player } from "./types";
 import { date, time } from "./format";
 
@@ -80,7 +84,7 @@ export async function createLineupImage(
     bench
       .map((p) => {
         const index = payload.benchPositions?.[p.id];
-        return `${hideNumbers ? "" : `#${p.number} `}${sheetName(p, firstNames)}${index !== undefined ? ` (${formations[payload.formation][index].label})` : ""}`;
+        return `${hideNumbers ? "" : `#${p.number} `}${sheetName(p, firstNames)}${index !== undefined ? ` (${slotPosition(payload, index).code})` : ""}`;
       })
       .join("  ·  ") || "No substitutes named.";
   const benchLines = wrap(benchText, 24, 1080);
@@ -153,7 +157,14 @@ export async function createLineupImage(
   for (const row of rows) {
     for (const cell of row.cells) {
       const x = px + (pw * cell.slot.x) / 100;
-      text(cell.slot.label, x, top + 20, 20, "#ded5e1", "center");
+      text(
+        slotPosition(payload, cell.slot.index).code,
+        x,
+        top + 20,
+        20,
+        "#ded5e1",
+        "center",
+      );
       if (!hideNumbers) {
         box(x - 31, top + 36, 62, 58, "#e3edb8", 12);
         text(

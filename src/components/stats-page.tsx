@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { playerHref } from "@/lib/player-link";
+import { positionGroupLabel } from "@/lib/player-positions";
 import { useState } from "react";
 import {
   ArrowUpRight,
@@ -382,7 +383,7 @@ export function StatsPage() {
                       <span>
                         <strong>{p.name}</strong>
                         <small>
-                          #{p.number} · {p.position}
+                          #{p.number} · {positionGroupLabel(p)}
                           {p.isGuest ? " · Guest" : ""}
                         </small>
                       </span>
@@ -393,7 +394,7 @@ export function StatsPage() {
                       <span>
                         <strong>{p.name}</strong>
                         <small>
-                          #{p.number} · {p.position}
+                          #{p.number} · {positionGroupLabel(p)}
                           {p.isGuest ? " · Guest" : ""}
                         </small>
                       </span>

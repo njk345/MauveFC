@@ -321,6 +321,7 @@ export type Database = {
           name: string
           number: number
           position: string
+          secondary_position: string | null
         }
         Insert: {
           bio?: string
@@ -332,6 +333,7 @@ export type Database = {
           name: string
           number: number
           position: string
+          secondary_position?: string | null
         }
         Update: {
           bio?: string
@@ -343,6 +345,7 @@ export type Database = {
           name?: string
           number?: number
           position?: string
+          secondary_position?: string | null
         }
         Relationships: [
           {

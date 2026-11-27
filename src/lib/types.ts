@@ -1,17 +1,31 @@
 export type Capture = "unrecorded" | "partial" | "complete";
-export const preferredPositions = [
+export const positionCodes = {
+  Goalkeeper: "GK",
+  "Center back": "CB",
+  "Left back": "LB",
+  "Right back": "RB",
+  "Defensive midfield": "DM",
+  "Central midfield": "CM",
+  "Attacking midfield": "AM",
+  "Left midfield": "LM",
+  "Right midfield": "RM",
+  "Left wing": "LW",
+  "Right wing": "RW",
+  Striker: "ST",
+  "Left striker": "LS",
+  "Right striker": "RS",
+} as const;
+export type PreferredPosition = keyof typeof positionCodes;
+export const preferredPositions = Object.keys(
+  positionCodes,
+) as PreferredPosition[];
+export const positionGroups = [
+  "Forward",
+  "Midfielder",
+  "Defender",
   "Goalkeeper",
-  "Center back",
-  "Left back",
-  "Right back",
-  "Defensive midfield",
-  "Central midfield",
-  "Attacking midfield",
-  "Left wing",
-  "Right wing",
-  "Striker",
 ] as const;
-export type PreferredPosition = (typeof preferredPositions)[number];
+export type PositionGroup = (typeof positionGroups)[number];
 export type CaptainPlayerDetails = {
   email: string;
   phone: string;
@@ -26,7 +40,8 @@ export type Player = {
   id: string;
   name: string;
   number: number;
-  position: "Forward" | "Midfielder" | "Defender" | "Goalkeeper";
+  position: PositionGroup;
+  secondaryPosition?: PositionGroup | null;
   initials: string;
   hometown: string;
   bio: string;
@@ -50,7 +65,13 @@ export type GuestChange = {
 };
 export type PlayerSeasonStats = Pick<
   Player,
-  "id" | "name" | "number" | "position" | "initials" | "isPublic"
+  | "id"
+  | "name"
+  | "number"
+  | "position"
+  | "secondaryPosition"
+  | "initials"
+  | "isPublic"
 > & {
   isGuest?: boolean;
   appearances: number;
@@ -84,6 +105,7 @@ export type LineupPayload = {
   starters: (string | null)[];
   bench: string[];
   benchPositions?: Record<string, number>;
+  slotPositions?: Partial<Record<number, PreferredPosition>>;
   firstNamesOnly?: boolean;
   hideNumbers?: boolean;
 };

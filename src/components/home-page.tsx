@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { positionGroupLabel } from "@/lib/player-positions";
 import { playerHref } from "@/lib/player-link";
 import { ArrowRight, ArrowUpRight, MoveUpRight } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
@@ -235,7 +236,7 @@ export function HomePage() {
                 </div>
                 <div className="leader-preview-info">
                   <div>
-                    <span className="eyebrow">{p.position}</span>
+                    <span className="eyebrow">{positionGroupLabel(p)}</span>
                     <h3>{p.name}</h3>
                   </div>
                   <div className="preview-goals">

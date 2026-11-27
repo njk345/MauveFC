@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Modal } from "./modal";
 import Link from "next/link";
 import { playerHref } from "@/lib/player-link";
+import { positionGroupLabel } from "@/lib/player-positions";
 import {
   ArrowUpRight,
   Check,
@@ -438,7 +439,9 @@ export function PlayersPage() {
     filtered = roster.filter(
       (p) =>
         p.name.toLowerCase().includes(search.toLowerCase()) &&
-        (position === "All positions" || p.position === position),
+        (position === "All positions" ||
+          p.position === position ||
+          p.secondaryPosition === position),
     );
   return (
     <div className="section page-section">
@@ -543,7 +546,7 @@ export function PlayersPage() {
                   <ArrowUpRight size={20} />
                 </div>
                 <div className="player-info">
-                  <span className="eyebrow">{p.position}</span>
+                  <span className="eyebrow">{positionGroupLabel(p)}</span>
                   <h2>{p.name}</h2>
                   <div className="player-mini-stats">
                     <span>
@@ -660,7 +663,7 @@ export function PlayerProfile({ id }: { id: string }) {
         </div>
         <div className="profile-bio">
           <span className="eyebrow">
-            {p.position} / {live ? "MAUVE FC" : "SAMPLE PLAYER"}
+            {positionGroupLabel(p)} · {live ? "MAUVE FC" : "SAMPLE PLAYER"}
           </span>
           <h1>{p.name}</h1>
           {p.bio && <p>{p.bio}</p>}

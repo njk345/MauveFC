@@ -67,6 +67,20 @@ remain captain-only when member personalization is introduced.
 
 ## Matches and lineups
 
+The private roster links directly to career profiles. Captains can set a
+primary position group and one distinct optional second group in the roster,
+directory, and new guest forms. Both groups appear on approved profiles and
+match the Players position filter.
+
+**Customize position roles** uses the detailed preference list, with the
+goalkeeper slot fixed. Each slot's role applies to its starter and assigned
+subs and appears on the exported team sheet. The private
+`latest_official_lineup_positions` view exposes one assignment per player and
+match from the current shared official sheet, including legacy sheets with
+default roles. Unsharing clears the current assignments. Attendance, general
+bench places, drafts and member suggestions do not supply a position. The
+view is reserved for future stats work.
+
 Players can change only their own **In / Maybe / Out** response for a scheduled,
 future fixture on their season roster. A kickoff change marks existing replies
 as needing confirmation. Cancelled, completed and past fixtures are closed.

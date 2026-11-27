@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { playerHref } from "@/lib/player-link";
+import { positionGroupLabel } from "@/lib/player-positions";
 import { Check, LockKeyhole, LogOut, RefreshCw, Users } from "lucide-react";
 import { useAuth } from "./auth/auth-provider";
 import { usePrototype } from "./prototype-provider";
@@ -210,21 +212,25 @@ function TeamWorkspace() {
       {tab === "roster" ? (
         <div className="team-roster-grid">
           {rosterPlayers.map((p) => (
-            <article key={p.id} className="team-player-card">
+            <Link
+              key={p.id}
+              className="team-player-card team-profile-link"
+              href={playerHref(p.id)}
+            >
               <div className="team-shirt-number">{p.number}</div>
               <div>
                 <h2>
                   {p.name}
                   {p.id === auth.playerId && <span className="pill">YOU</span>}
                 </h2>
-                <span className="eyebrow">{p.position}</span>
+                <span className="eyebrow">{positionGroupLabel(p)}</span>
                 {p.hometown && <p>{p.hometown}</p>}
                 {p.bio && <p>{p.bio}</p>}
                 <small>
                   {p.isPublic ? "Public profile approved" : "Team-only profile"}
                 </small>
               </div>
-            </article>
+            </Link>
           ))}
           {!rosterPlayers.length && (
             <p>No players have been added to this season.</p>

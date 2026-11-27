@@ -1,7 +1,11 @@
-import type { Formation } from "./types";
+import type { Formation, positionCodes } from "./types";
 export const formations: Record<
   Formation,
-  { label: string; x: number; y: number }[]
+  {
+    label: (typeof positionCodes)[keyof typeof positionCodes];
+    x: number;
+    y: number;
+  }[]
 > = {
   "2-3-1": [
     { label: "GK", x: 50, y: 88 },

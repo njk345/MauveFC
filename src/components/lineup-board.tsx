@@ -7,6 +7,7 @@ import {
   changeFormation,
   formationRows,
   positionSubstitutes,
+  slotPosition,
   sheetName,
   withoutBenchPosition,
 } from "@/lib/lineup-sheet";
@@ -16,13 +17,15 @@ import {
   unshareLineup,
   writeLineup,
 } from "@/lib/supabase/repository";
-import type {
-  Formation,
-  LineupPayload,
-  LineupPost,
-  Match,
-  MatchLineup,
-  Player,
+import {
+  preferredPositions,
+  type PreferredPosition,
+  type Formation,
+  type LineupPayload,
+  type LineupPost,
+  type Match,
+  type MatchLineup,
+  type Player,
 } from "@/lib/types";
 
 const empty = (): LineupPayload => ({
@@ -328,6 +331,46 @@ export function LineupBoard({
               ))}
             </select>
           </label>
+          <details className="lineup-position-roles">
+            <summary>Customize position roles</summary>
+            <div className="lineup-position-fields">
+              {formations[payload.formation].map(
+                (slot, index) =>
+                  slot.label !== "GK" && (
+                    <label key={slot.label} className="form-field">
+                      <span>{slot.label} position role</span>
+                      <select
+                        disabled={busy}
+                        value={payload.slotPositions?.[index] || ""}
+                        onChange={(e) => {
+                          const slotPositions = { ...payload.slotPositions };
+                          if (e.target.value)
+                            slotPositions[index] = e.target
+                              .value as PreferredPosition;
+                          else delete slotPositions[index];
+                          change({ ...payload, slotPositions });
+                        }}
+                      >
+                        <option value="">
+                          Default ·{" "}
+                          {
+                            slotPosition(
+                              { formation: payload.formation },
+                              index,
+                            ).name
+                          }
+                        </option>
+                        {preferredPositions
+                          .filter((position) => position !== "Goalkeeper")
+                          .map((position) => (
+                            <option key={position}>{position}</option>
+                          ))}
+                      </select>
+                    </label>
+                  ),
+              )}
+            </div>
+          </details>
           <p className="help-text">
             {auth.captain
               ? "Save a private draft, post an idea, or publish an official lineup. The team sees only posted versions."
@@ -386,9 +429,12 @@ export function LineupBoard({
               const i = slot.index,
                 player = players.find((p) => p.id === payload.starters[i]);
               const subs = positionSubstitutes(payload, i, players);
+              const role = slotPosition(payload, i);
               return (
                 <div className="formation-slot" key={i} data-slot={slot.label}>
-                  <span className="formation-position">{slot.label}</span>
+                  <span className="formation-position" title={role.name}>
+                    {role.code}
+                  </span>
                   {!hideNumbers && (
                     <span className="formation-player-number">
                       {player?.number ?? "—"}
@@ -514,7 +560,7 @@ export function LineupBoard({
                           <option value="">General substitutes</option>
                           {formations[payload.formation].map((slot, i) => (
                             <option key={i} value={i}>
-                              {slot.label}
+                              {slotPosition(payload, i).name} · {slot.label}
                             </option>
                           ))}
                         </select>
@@ -538,7 +584,7 @@ export function LineupBoard({
                   <span>{sheetName(player, firstNames)}</span>
                   {index !== undefined && (
                     <span className="bench-role">
-                      {formations[payload.formation][index]?.label}
+                      {slotPosition(payload, index).code}
                     </span>
                   )}
                 </li>

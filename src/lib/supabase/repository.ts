@@ -314,12 +314,16 @@ export async function writePlayerDetails(player: Player) {
     p_details: {
       ...player.captainDetails,
       preferredPositions: player.preferredPositions || [],
+      position: player.position,
+      secondaryPosition: player.secondaryPosition ?? null,
     },
   });
   if (error) throw new Error(error.message);
   return data as {
     captainDetails: CaptainPlayerDetails;
     preferredPositions: PreferredPosition[];
+    position: Player["position"];
+    secondaryPosition: Player["secondaryPosition"];
   };
 }
 export async function readMemberPlayerProfiles(): Promise<ClubSnapshot> {
@@ -337,7 +341,7 @@ export async function readMemberPlayerProfiles(): Promise<ClubSnapshot> {
 }
 export type GuestInput = {
   playerId?: string;
-  player?: Pick<Player, "name" | "number" | "position">;
+  player?: Pick<Player, "name" | "number" | "position" | "secondaryPosition">;
   allowSameName?: boolean;
   remove?: boolean;
 };

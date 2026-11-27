@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { playerHref } from "@/lib/player-link";
+import { positionGroupLabel } from "@/lib/player-positions";
+import { PositionGroupFields } from "./position-group-fields";
 import { useEffect, useState } from "react";
 import { LockKeyhole, Search } from "lucide-react";
 import { useAuth } from "./auth/auth-provider";
@@ -58,6 +60,7 @@ function DirectoryDetailsEditor({
         Update this player’s club record across every season and guest
         appearance.
       </p>
+      <PositionGroupFields player={editing} onChange={setEditing} />
       <PlayerDetailFields player={editing} onChange={setEditing} />
       {error && (
         <div className="form-errors" role="alert">
@@ -258,7 +261,7 @@ export function PlayerDirectory() {
                       <Link href={playerHref(p.id)}>{p.name}</Link>
                     </h3>
                     <p>
-                      #{p.number} · {p.position}
+                      #{p.number} · {positionGroupLabel(p)}
                     </p>
                   </div>
                 </div>

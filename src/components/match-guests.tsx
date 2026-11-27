@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { Plus, Search, UserPlus } from "lucide-react";
+import { positionGroupLabel } from "@/lib/player-positions";
+import { positionGroups } from "@/lib/types";
 import { useAuth } from "./auth/auth-provider";
 import { usePrototype } from "./prototype-provider";
 import { readPlayerDirectory } from "@/lib/supabase/repository";
@@ -37,7 +39,10 @@ export function MatchGuests({
     [selected, setSelected] = useState("");
   const [name, setName] = useState(""),
     [number, setNumber] = useState("0"),
-    [position, setPosition] = useState<Player["position"]>("Midfielder");
+    [position, setPosition] = useState<Player["position"]>("Midfielder"),
+    [secondaryPosition, setSecondaryPosition] = useState<
+      Player["position"] | ""
+    >("");
   const [allowSameName, setAllowSameName] = useState(false),
     [busy, setBusy] = useState(false);
   const [error, setError] = useState(""),
@@ -111,6 +116,7 @@ export function MatchGuests({
       setSelected("");
       setName("");
       setNumber("0");
+      setSecondaryPosition("");
       setAllowSameName(false);
     } catch (e) {
       if (active.current)
@@ -155,7 +161,7 @@ export function MatchGuests({
               <span>
                 <strong>{p.name}</strong>
                 <small>
-                  Guest · #{p.number} · {p.position}
+                  Guest · #{p.number} · {positionGroupLabel(p)}
                 </small>
               </span>
               <button
@@ -298,15 +304,36 @@ export function MatchGuests({
                       aria-label="Guest position"
                       disabled={busy}
                       value={position}
+                      onChange={(e) => {
+                        const group = e.target.value as Player["position"];
+                        setPosition(group);
+                        if (group === secondaryPosition)
+                          setSecondaryPosition("");
+                      }}
+                    >
+                      {positionGroups.map((p) => (
+                        <option key={p}>{p}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="form-field">
+                    <span>Second position group · optional</span>
+                    <select
+                      form={formId}
+                      disabled={busy}
+                      value={secondaryPosition}
                       onChange={(e) =>
-                        setPosition(e.target.value as Player["position"])
+                        setSecondaryPosition(
+                          e.target.value as Player["position"] | "",
+                        )
                       }
                     >
-                      {["Forward", "Midfielder", "Defender", "Goalkeeper"].map(
-                        (p) => (
-                          <option key={p}>{p}</option>
-                        ),
-                      )}
+                      <option value="">None</option>
+                      {positionGroups
+                        .filter((group) => group !== position)
+                        .map((group) => (
+                          <option key={group}>{group}</option>
+                        ))}
                     </select>
                   </label>
                   {!!sameNames.length && (
@@ -339,7 +366,12 @@ export function MatchGuests({
                     }
                     onClick={() =>
                       void change({
-                        player: { name, number: Number(number), position },
+                        player: {
+                          name,
+                          number: Number(number),
+                          position,
+                          ...(secondaryPosition ? { secondaryPosition } : {}),
+                        },
                         allowSameName,
                       })
                     }

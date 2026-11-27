@@ -1,5 +1,25 @@
 import { formations } from "./formations";
-import type { Formation, LineupPayload, Player } from "./types";
+import {
+  positionCodes,
+  preferredPositions,
+  type Formation,
+  type LineupPayload,
+  type Player,
+  type PreferredPosition,
+} from "./types";
+
+const positionNames = new Map(
+  preferredPositions.map((name) => [positionCodes[name], name]),
+);
+
+export function slotPosition(
+  payload: Pick<LineupPayload, "formation" | "slotPositions">,
+  index: number,
+) {
+  const slot = formations[payload.formation][index];
+  const name = payload.slotPositions?.[index] ?? positionNames.get(slot.label)!;
+  return { name, code: positionCodes[name] };
+}
 
 export function sheetName(player: Player, firstNamesOnly = false) {
   const name = player.name.trim();
@@ -40,9 +60,21 @@ export function changeFormation(
   const before = formations[payload.formation],
     after = formations[formation];
   const benchPositions: Record<string, number> = {};
+  const slotPositions: Partial<Record<number, PreferredPosition>> = {};
   for (const [id, index] of Object.entries(payload.benchPositions || {})) {
     const next = after.findIndex((slot) => slot.label === before[index]?.label);
     if (next !== -1) benchPositions[id] = next;
   }
-  return { ...payload, formation, benchPositions };
+  for (const [index, position] of Object.entries(payload.slotPositions || {})) {
+    const next = after.findIndex(
+      (slot) => slot.label === before[Number(index)]?.label,
+    );
+    if (next !== -1) slotPositions[next] = position;
+  }
+  return {
+    ...payload,
+    formation,
+    benchPositions,
+    ...(payload.slotPositions ? { slotPositions } : {}),
+  };
 }
