@@ -78,8 +78,15 @@ subs and appears on the exported team sheet. The private
 `latest_official_lineup_positions` view exposes one assignment per player and
 match from the current shared official sheet, including legacy sheets with
 default roles. Unsharing clears the current assignments. Attendance, general
-bench places, drafts and member suggestions do not supply a position. The
-view is reserved for future stats work.
+bench places, drafts and member suggestions do not supply a position.
+
+**Position breakdown** on member-visible player profiles charts these
+assignments by role and season, distinguishing starters from position subs.
+The selected role shows recorded goals and assists, the team's win/draw/loss
+record, and goal difference per match. These use published whole-match
+results, including playoffs and excluding forfeits. Scheduled assignments
+count toward lineup frequency. Missing individual stat records are shown
+separately from recorded zeroes.
 
 Players can change only their own **In / Maybe / Out** response for a scheduled,
 future fixture on their season roster. A kickoff change marks existing replies

@@ -29,10 +29,11 @@ test("position names match the lineup editor and the database, and overrides fol
   const uuid = (id: number) =>
     `11111111-1111-4111-8111-${String(id).padStart(12, "0")}`;
   const [club, season, match, cap, member] = [1, 2, 3, 4, 5].map(uuid);
+  const outsider = uuid(6);
   const ids = Array.from({ length: 9 }, (_, j) => uuid(j + 10));
   await db.exec(`
     insert into clubs(id,name) values ('${club}','Club');
-    insert into auth.users(id) values ('${cap}'),('${member}');
+    insert into auth.users(id) values ('${cap}'),('${member}'),('${outsider}');
     insert into club_memberships(club_id,user_id,role) values ('${club}','${cap}','captain'),('${club}','${member}','player');
     insert into seasons(id,club_id,name,competition,format) values ('${season}','${club}','Fall','League','7v7');
     insert into matches(id,club_id,season_id,opponent,opponent_code,venue,round) values ('${match}','${club}','${season}','Other FC','OFC','Field',1);
@@ -190,6 +191,15 @@ test("position names match the lineup editor and the database, and overrides fol
   await call("save_match_lineup", [match, 1, custom, false]);
   await as("authenticated", member);
   await call("post_lineup_suggestion", [match, custom]);
+  assert.deepEqual(await call("get_player_lineup_roles", [club, ids[4]]), [
+    { matchId: match, position: "Central midfield", assignment: "starter" },
+  ]);
+  assert.deepEqual(await call("get_player_lineup_roles", [club, ids[8]]), []);
+  await as("authenticated", outsider);
+  await assert.rejects(call("get_player_lineup_roles", [club, ids[4]]), /Team membership required/);
+  await as("anon");
+  await assert.rejects(call("get_player_lineup_roles", [club, ids[0]]), /permission denied/);
+  await as("authenticated", member);
   await assert.rejects(
     call("post_lineup_suggestion", [
       match,
@@ -221,6 +231,9 @@ test("position names match the lineup editor and the database, and overrides fol
     },
     true,
   ]);
+  assert.deepEqual(await call("get_player_lineup_roles", [club, ids[7]]), [
+    { matchId: match, position: "Defensive midfield", assignment: "substitute" },
+  ]);
   await as("postgres");
   const latest = (await assignments()).rows;
   assert.equal(latest.length, 8);
@@ -239,6 +252,7 @@ test("position names match the lineup editor and the database, and overrides fol
   );
   await as("authenticated", cap);
   await call("unshare_match_lineup", [match, 3]);
+  assert.deepEqual(await call("get_player_lineup_roles", [club, ids[4]]), []);
   await as("postgres");
   assert.equal((await assignments()).rows.length, 0);
   await db.close();

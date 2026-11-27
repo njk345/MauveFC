@@ -530,6 +530,10 @@ export type Database = {
         Args: { p_club_id: string };
         Returns: Json;
       }
+      get_player_lineup_roles: {
+        Args: { p_club_id: string; p_player_id: string };
+        Returns: Json;
+      }
       set_fixture_removed: {
         Args: { p_match_id: string; p_expected_revision: number; p_removed: boolean };
         Returns: undefined;

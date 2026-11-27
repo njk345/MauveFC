@@ -52,6 +52,11 @@ export type PlayerStat = {
   goals: number;
   assists: number | null;
 };
+export type PlayerLineupRole = {
+  matchId: string;
+  position: PreferredPosition;
+  assignment: "starter" | "substitute";
+};
 export type DirectoryPlayer = Player & {
   rosterSeasonIds: string[];
   guestGames: number;

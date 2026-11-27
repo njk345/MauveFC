@@ -17,6 +17,7 @@ import type {
   GuestChange,
   CaptainPlayerDetails,
   PreferredPosition,
+  PlayerLineupRole,
   SeasonSetupInput,
   SeasonDetails,
   SeasonImportPreview,
@@ -338,6 +339,16 @@ export async function readMemberPlayerProfiles(): Promise<ClubSnapshot> {
       "Team player profiles could not be loaded. Check your team access and try again.",
     );
   return data as ClubSnapshot;
+}
+export async function readPlayerLineupRoles(
+  playerId: string,
+): Promise<PlayerLineupRole[]> {
+  const { data, error } = await getBrowserClient().rpc(
+    "get_player_lineup_roles",
+    { p_club_id: clubId, p_player_id: playerId },
+  );
+  if (error) throw new Error("Position stats could not be loaded.");
+  return data as PlayerLineupRole[];
 }
 export type GuestInput = {
   playerId?: string;

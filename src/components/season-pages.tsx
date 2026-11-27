@@ -35,6 +35,7 @@ import { usePlayerProfiles } from "./use-player-profiles";
 import { useSeasonTeamName } from "./use-season-team-name";
 import { seasonSelectorLabel } from "@/features/seasons/details";
 import { PlayerCareer } from "./player-career";
+import { PlayerPositionStats } from "./player-position-stats";
 export function PageHeading({
   eyebrow,
   title,
@@ -705,6 +706,9 @@ export function PlayerProfile({ id }: { id: string }) {
         </div>
       </div>
       <PlayerCareer records={records} />
+      {profiles.teamView && (
+        <PlayerPositionStats key={id} playerId={id} matches={matches} seasons={seasons} />
+      )}
       <div className="section-heading">
         <div>
           <h2>Appearance history</h2>
