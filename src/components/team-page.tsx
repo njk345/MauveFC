@@ -1,23 +1,32 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { playerHref } from "@/lib/player-link";
 import { positionGroupLabel } from "@/lib/player-positions";
-import { Check, LockKeyhole, LogOut, RefreshCw, Users } from "lucide-react";
+import {
+  CalendarDays, Check, Clock3, LockKeyhole, LogOut, MapPin, RefreshCw, Users,
+} from "lucide-react";
 import { useAuth } from "./auth/auth-provider";
 import { usePrototype } from "./prototype-provider";
 import { PageHeading } from "./season-pages";
 import { date, time } from "@/lib/format";
 import { LineupBoard } from "./lineup-board";
+import { CaptainPage } from "./captain-page";
+import { Crest, OpponentBadge } from "./brand";
+import { PlayoffBadge } from "./playoff-celebration";
+import { ResultDecision } from "./result-decision";
 import { MatchGuests } from "./match-guests";
+import { matchdayHref } from "@/lib/matchday-link";
 import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 import { orderMatches } from "@/features/matches/order";
+import { captureSummary } from "@/features/matches/player-stats";
 import {
   readTeamClub,
   writeRsvp,
   type TeamSnapshot,
 } from "@/lib/supabase/repository";
-import type { Match, MatchRsvp, Player, RsvpResponse } from "@/lib/types";
+import type { GuestChange, Match, MatchRsvp, Player, RsvpResponse } from "@/lib/types";
 const choices = [
   ["in", "In"],
   ["maybe", "Maybe"],
@@ -29,8 +38,23 @@ function rsvpsOpen(match: Match) {
     (!match.kickoff || Date.parse(match.kickoff) > Date.now())
   );
 }
+function canReport(match: Match) {
+  return match.status !== "cancelled" && (
+    match.status === "completed" ||
+    !!match.result?.published ||
+    (match.status === "scheduled" && !rsvpsOpen(match))
+  );
+}
+function fixtureStatus(match: Match) {
+  if (match.status === "cancelled") return "Cancelled";
+  if (match.result?.published) return "Full time";
+  if (match.status === "postponed") return "Postponed";
+  return canReport(match) ? "Awaiting result" : "Upcoming";
+}
 export function TeamPage() {
   const auth = useAuth();
+  const params = useSearchParams();
+  const matchRequest = params.get("match");
   if (auth.loading)
     return (
       <div className="section page-section" role="status">
@@ -57,7 +81,12 @@ export function TeamPage() {
               Sign out
             </button>
           ) : (
-            <Link className="button" href="/login/">
+            <Link
+              className="button"
+              href={matchRequest
+                ? matchdayHref(matchRequest, params.get("view") === "report", "/login/")
+                : "/login/"}
+            >
               Team sign-in
             </Link>
           )}
@@ -68,14 +97,22 @@ export function TeamPage() {
 }
 function TeamWorkspace() {
   const auth = useAuth(),
-    { seasonId, setNotice } = usePrototype(),
+    { seasonId, setSeasonId, setNotice, matches: clubMatches, refresh: refreshClub } = usePrototype(),
     [data, setData] = useState<TeamSnapshot | null>(null),
     [error, setError] = useState(""),
     [tab, setTab] = useState("matches"),
     [selected, setSelected] = useState(""),
-    [dirty, setDirty] = useState(false),
+    [view, setView] = useState<"lineup" | "report">("lineup"),
+    [lineupDirty, setLineupDirty] = useState(false),
+    [reportDirty, setReportDirty] = useState(false),
+    [reportBusy, setReportBusy] = useState(false),
+    [openingReport, setOpeningReport] = useState(false),
     [refreshing, setRefreshing] = useState(false),
     [guestBusy, setGuestBusy] = useState(false);
+  const params = useSearchParams();
+  const requested = params.toString();
+  const requestedMatch = params.get("match");
+  const handledRequest = useRef<string | undefined>(undefined);
   const refreshAccess = auth.refreshAccess;
   const latestRefresh = useRef(0);
   const load = useCallback(
@@ -112,25 +149,93 @@ function TeamWorkspace() {
     };
   }, [load]);
   function switchView(action: () => void) {
-    if (guestBusy) return;
-    if (dirty && !window.confirm("Discard unsaved lineup changes?")) return;
-    setDirty(false);
+    if (guestBusy || reportBusy || openingReport) return;
+    if (lineupDirty && !window.confirm("Discard unsaved lineup changes?")) return;
+    if (reportDirty && !window.confirm("Discard unsaved match report changes?")) return;
     action();
+  }
+  function clearEdits() {
+    setLineupDirty(false);
+    setReportDirty(false);
+  }
+  function openTab(next: string) {
+    if (tab === next) return;
+    switchView(() => {
+      clearEdits();
+      setTab(next);
+    });
+  }
+  function openMatch(id: string, nextView: "lineup" | "report") {
+    switchView(() => {
+      function select() {
+        clearEdits();
+        const href = matchdayHref(id, nextView === "report");
+        handledRequest.current = href.split("?")[1];
+        window.history.replaceState(null, "", href);
+        setSelected(id);
+        setView(nextView);
+      }
+      if (nextView === "lineup") {
+        select();
+        return;
+      }
+      setOpeningReport(true);
+      void refreshClub()
+        .then(select, () => setNotice("Could not load the latest match report. Try again."))
+        .finally(() => setOpeningReport(false));
+    });
+  }
+  function changeGuest(change: GuestChange) {
+    setData((current) =>
+      current
+        ? {
+            ...current,
+            players: [
+              ...current.players.filter((p) => p.id !== change.player.id),
+              change.player,
+            ],
+            matches: current.matches.map((m) => applyGuestToMatch(m, change)),
+          }
+        : current,
+    );
   }
   const seasonFixtures =
     data?.matches.filter((m) => m.seasonId === seasonId) || [];
   const fixtures = orderMatches(seasonFixtures);
-  const upcoming = fixtures.filter(rsvpsOpen);
   const match =
     fixtures.find((m) => m.id === selected) ||
-    upcoming[0] ||
+    fixtures.find(rsvpsOpen) ||
     orderMatches(seasonFixtures, "newest-first")[0];
   const matchId = match?.id;
   useEffect(() => {
+    if (!data || !seasonId) return;
+    // Read the actual URL after hydration so links work on the static site.
+    const query = new URLSearchParams(window.location.search);
+    if (query.toString() !== handledRequest.current) {
+      handledRequest.current = query.toString();
+      const linked = data.matches.find((m) => m.id === query.get("match"));
+      if (linked) {
+        if (linked.seasonId !== seasonId) setSeasonId(linked.seasonId);
+        setSelected(linked.id);
+        setTab("matches");
+        setView(auth.captain && query.get("view") === "report" && canReport(linked) ? "report" : "lineup");
+        return;
+      }
+    }
     // Keep the initially displayed match selected if a refresh adds or
     // reorders fixtures while someone is working on its lineup.
-    if (matchId) setSelected(matchId);
-  }, [matchId]);
+    if (matchId !== selected) {
+      setSelected(matchId || "");
+      setView("lineup");
+      setReportDirty(false);
+      setReportBusy(false);
+      if (matchId && query.has("match") && data.matches.some((m) => m.id === query.get("match"))) {
+        const href = matchdayHref(matchId);
+        handledRequest.current = href.split("?")[1];
+        window.history.replaceState(null, "", href);
+      }
+    }
+  }, [auth.captain, data, matchId, requested, seasonId, selected, setSeasonId]);
   if (!data)
     return (
       <div className="section page-section">
@@ -156,12 +261,20 @@ function TeamWorkspace() {
       data.roster.some((r) => r.seasonId === seasonId && r.playerId === p.id),
     ),
     eligible = matchPlayers(data.players, data.roster, match);
+  const season = data.seasons.find((s) => s.id === seasonId);
+  const posts = data.lineupPosts.filter((p) => p.matchId === match?.id);
+  const latestOfficial = posts.find((p) => p.kind === "official");
+  const captainMatch = auth.captain ? clubMatches.find((m) => m.id === match?.id) : undefined;
+  const showReport = !!match && auth.captain && canReport(match);
+  const reportOpen = showReport && view === "report" && selected === match.id;
+  const busy = guestBusy || reportBusy || openingReport;
+  const missingMatch = requestedMatch && !data.matches.some((m) => m.id === requestedMatch);
   return (
     <div className="section page-section team-page">
       <PageHeading
         eyebrow="MEMBERS ONLY / THE DRESSING ROOM"
         title="Our club. Our corner."
-        description="Your squad, your availability, and the plan for Thursday."
+        description="Your fixtures, RSVP, and the captain’s match plan."
       >
         <button
           className="text-link"
@@ -183,22 +296,25 @@ function TeamWorkspace() {
           <button
             className={tab === "matches" ? "selected" : ""}
             aria-pressed={tab === "matches"}
-            onClick={() => switchView(() => setTab("matches"))}
+            onClick={() => openTab("matches")}
           >
-            Matches & lineups
+            Matchday
           </button>
           <button
             className={tab === "roster" ? "selected" : ""}
             aria-pressed={tab === "roster"}
-            onClick={() => switchView(() => setTab("roster"))}
+            onClick={() => openTab("roster")}
           >
             Private roster ({rosterPlayers.length})
           </button>
         </div>
         <button
           className="text-link"
-          disabled={refreshing}
-          onClick={() => void refresh()}
+          disabled={refreshing || busy}
+          onClick={() => {
+            void refresh();
+            if (auth.captain) void refreshClub().catch((e) => setNotice(e.message));
+          }}
         >
           <RefreshCw size={14} />
           {refreshing ? "Refreshing…" : "Refresh team"}
@@ -237,125 +353,150 @@ function TeamWorkspace() {
           )}
         </div>
       ) : (
-        <>
-          <section className="team-upcoming" aria-label="Upcoming fixtures">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow">THE NEXT WHISTLE</span>
-                <h2>Who’s coming?</h2>
-              </div>
+        <section className="team-match-section" aria-labelledby="matchday-title">
+          <div className="team-match-heading">
+            <div>
+              <h2 id="matchday-title">Matchday hub</h2>
+              {season && <p>{season.name} · {season.competition}</p>}
             </div>
-            {!upcoming.length ? (
-              <div className="team-empty">
-                <Users size={24} />
-                <h3>No upcoming fixtures yet.</h3>
-                <p>
-                  RSVPs will open when the next fixture is announced. You can
-                  still view past match lineups below.
-                </p>
-              </div>
-            ) : (
-              upcoming.map((m) => (
-                <article className="team-fixture" key={m.id}>
-                  <div>
-                    <span className="eyebrow">
-                      MATCHDAY {m.round} · {date(m.kickoff, "long")}
-                    </span>
-                    <h3>{m.opponent}</h3>
-                    <p>
-                      {time(m.kickoff)} · {m.venue}
-                    </p>
-                    <button
-                      className="text-link"
-                      onClick={() => switchView(() => setSelected(m.id))}
-                    >
-                      See availability & lineup
-                    </button>
+            {match && (
+              <label className="form-field">
+                <span>Match</span>
+                <select
+                  value={match.id}
+                  disabled={busy}
+                  onChange={(e) => openMatch(e.target.value, "lineup")}
+                >
+                  {fixtures.map((m) => (
+                    <option value={m.id} key={m.id}>
+                      {date(m.kickoff, "short", season?.timeZone)} · {m.opponent}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+          {missingMatch && (
+            <p className="form-errors" role="status">That fixture is unavailable. Choose a match from the current season.</p>
+          )}
+          {!match ? (
+            <div className="team-empty">
+              <Users size={24} />
+              <h3>No fixtures for this season.</h3>
+              <p>Choose another season to see its matchdays.</p>
+            </div>
+          ) : (
+            <>
+              <article className="matchday-fixture" aria-labelledby="matchday-fixture-title">
+                <div className="matchday-fixture-main">
+                  <div className="matchday-fixture-status">
+                    <span className="pill">{fixtureStatus(match)}</span>
+                    <span>Matchday {match.round}</span>
+                    <PlayoffBadge match={match} />
                   </div>
+                  <div className="matchday-teams">
+                    <Crest small />
+                    <h3 id="matchday-fixture-title">
+                      {season?.teamName || "Mauve FC"}
+                      <span className="matchday-score">
+                        {match.result?.published ? `${match.result.home} – ${match.result.away}` : "vs"}
+                      </span>
+                      {match.opponent}
+                    </h3>
+                    <OpponentBadge small code={match.opponentCode} color={match.color} />
+                  </div>
+                  {match.result?.published && <ResultDecision result={match.result} />}
+                  <ul className="matchday-details">
+                    <li><CalendarDays size={16} /> {date(match.kickoff, "long", season?.timeZone)}</li>
+                    <li><Clock3 size={16} /> {time(match.kickoff, season?.timeZone)}</li>
+                    <li><MapPin size={16} /> {match.venue || "Venue to be confirmed"}</li>
+                  </ul>
+                </div>
+                {rsvpsOpen(match) && (
                   <RsvpControl
-                    match={m}
+                    key={match.id}
+                    match={match}
                     reply={data.rsvps.find(
-                      (r) => r.matchId === m.id && r.playerId === auth.playerId,
+                      (r) => r.matchId === match.id && r.playerId === auth.playerId,
                     )}
                     eligible={rosterPlayers.some((p) => p.id === auth.playerId)}
                     onRefresh={refresh}
                   />
-                </article>
-              ))
-            )}
-          </section>
-          {match && (
-            <section className="team-match-section">
-              <div className="team-match-heading">
-                <div>
-                  <span className="eyebrow">THE MATCH PLAN</span>
-                  <h2>Availability & lineup</h2>
+                )}
+              </article>
+              {showReport && (
+                <div className="matchday-controls">
+                  <div className="tabs" aria-label="Matchday views">
+                    <button
+                      type="button"
+                      className={!reportOpen ? "selected" : ""}
+                      aria-pressed={!reportOpen}
+                      disabled={busy}
+                      onClick={() => {
+                        if (reportOpen) openMatch(match.id, "lineup");
+                      }}
+                    >
+                      Availability & lineup
+                    </button>
+                    <button
+                      type="button"
+                      className={reportOpen ? "selected" : ""}
+                      aria-pressed={reportOpen}
+                      disabled={busy}
+                      onClick={() => {
+                        if (!reportOpen) openMatch(match.id, "report");
+                      }}
+                    >
+                      {openingReport ? "Opening report…" : "Result & player stats"}
+                    </button>
+                  </div>
+                  <span role="status">
+                    {captainMatch?.needsReview ? "LeagueApps score needs review" : `Player stats: ${captureSummary(match).toLowerCase()}`}
+                  </span>
                 </div>
-                <label className="form-field">
-                  <span>Match</span>
-                  <select
-                    value={match.id}
-                    disabled={guestBusy}
-                    onChange={(e) =>
-                      switchView(() => setSelected(e.target.value))
-                    }
-                  >
-                    {fixtures.map((m) => (
-                      <option value={m.id} key={m.id}>
-                        MD {m.round} · {m.opponent}
-                        {rsvpsOpen(m) ? "" : " · Past / closed"}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <p className="muted">
-                {date(match.kickoff, "long")} · {time(match.kickoff)} ·{" "}
-                {match.venue}
-              </p>
-              <MatchGuests
-                key={`guests-${match.id}`}
-                match={match}
-                players={data.players}
-                canRemove={!dirty}
-                onBusy={setGuestBusy}
-                onChange={(change) => {
-                  setData((current) =>
-                    current
-                      ? {
-                          ...current,
-                          players: [
-                            ...current.players.filter(
-                              (p) => p.id !== change.player.id,
-                            ),
-                            change.player,
-                          ],
-                          matches: current.matches.map((m) =>
-                            applyGuestToMatch(m, change),
-                          ),
-                        }
-                      : current,
-                  );
-                }}
-              />
-              <div className="team-match-grid">
-                <Availability
-                  players={rosterPlayers}
-                  rsvps={data.rsvps.filter((r) => r.matchId === match.id)}
-                />
-                <LineupBoard
+              )}
+              {reportOpen ? (
+                <CaptainPage
                   key={match.id}
-                  match={match}
-                  lineup={data.lineups.find((l) => l.matchId === match.id)}
-                  players={eligible}
-                  posts={data.lineupPosts.filter((p) => p.matchId === match.id)}
-                  onRefresh={refresh}
-                  onDirty={setDirty}
+                  matchday={{
+                    matchId: match.id,
+                    officialLineup: latestOfficial?.payload,
+                    onDirty: setReportDirty,
+                    onBusy: setReportBusy,
+                    onGuestChange: changeGuest,
+                    onPublished: refresh,
+                  }}
                 />
-              </div>
-            </section>
+              ) : (
+                <div inert={openingReport}>
+                  <MatchGuests
+                    key={`guests-${match.id}`}
+                    match={match}
+                    players={data.players}
+                    canRemove={!lineupDirty}
+                    onBusy={setGuestBusy}
+                    onChange={changeGuest}
+                  />
+                  <div className="team-match-grid">
+                    <Availability
+                      players={rosterPlayers}
+                      rsvps={data.rsvps.filter((r) => r.matchId === match.id)}
+                    />
+                    <LineupBoard
+                      key={match.id}
+                      match={match}
+                      lineup={data.lineups.find((l) => l.matchId === match.id)}
+                      players={eligible}
+                      posts={posts}
+                      onRefresh={refresh}
+                      onDirty={setLineupDirty}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
-        </>
+        </section>
       )}
     </div>
   );
@@ -463,9 +604,7 @@ function Availability({
     <article className="availability-panel">
       <span className="eyebrow">THE HEADCOUNT</span>
       <h3>Match availability</h3>
-      <p className="help-text">
-        Availability is a plan, not a record of who played.
-      </p>
+      <p className="help-text">RSVPs show who plans to come.</p>
       <div className="availability-counts">
         {choices.map(([id, label]) => (
           <div key={id} className={`count-${id}`}>

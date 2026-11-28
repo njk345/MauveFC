@@ -1,19 +1,30 @@
 "use client";
 import { Check } from "lucide-react";
-import type { Capture, Player, PlayerStat, Result } from "@/lib/types";
-import { blankResult } from "@/features/matches/player-stats";
+import type { Capture, LineupPayload, Player, PlayerStat, Result } from "@/lib/types";
+import { blankResult, prefillStarterAttendance } from "@/features/matches/player-stats";
 
 export function MatchPlayerEditor({
   players,
   result: r,
   onChange,
   guestPlayerIds = [],
+  officialLineup,
 }: {
   players: Player[];
   result: Result;
   onChange: (fields: Partial<Result>) => void;
   guestPlayerIds?: string[];
+  officialLineup?: LineupPayload;
 }) {
+  const canPrefill =
+    officialLineup &&
+    r.basis !== "forfeit" &&
+    r.attendance !== "complete" &&
+    players.some(
+      (player) =>
+        officialLineup.starters.includes(player.id) &&
+        !r.stats.some((stat) => stat.playerId === player.id && stat.appeared),
+    );
   function updatePlayer(id: string, fields: Partial<PlayerStat>) {
     onChange({
       stats: r.stats.some((s) => s.playerId === id)
@@ -75,6 +86,23 @@ export function MatchPlayerEditor({
   }
   return (
     <div className="match-player-editor">
+      {officialLineup && r.basis !== "forfeit" && (
+        <div className="matchday-attendance">
+          <div>
+            <strong>Official lineup checklist</strong>
+            <p>Check who actually played, including any subs. Attendance goes live when you publish the report.</p>
+          </div>
+          {canPrefill && (
+            <button
+              className="button secondary"
+              type="button"
+              onClick={() => onChange(prefillStarterAttendance(r, players, officialLineup))}
+            >
+              Prefill with starters
+            </button>
+          )}
+        </div>
+      )}
       <div className="capture-controls">
         {(
           [
@@ -113,6 +141,13 @@ export function MatchPlayerEditor({
           <span>ASSISTS</span>
         </div>
         {players.map((p) => {
+          const lineupRole = r.basis !== "forfeit" && (
+            officialLineup?.starters.includes(p.id)
+              ? "Lineup starter"
+              : officialLineup?.bench.includes(p.id)
+                ? "Lineup sub"
+                : null
+          );
           const s = r.stats.find((s) => s.playerId === p.id) || {
             playerId: p.id,
             appeared: false,
@@ -132,6 +167,7 @@ export function MatchPlayerEditor({
                     <span className="guest-player-badge">Guest</span>
                   )}
                 </strong>
+                {lineupRole && <span className="matchday-roster-role">{lineupRole}</span>}
               </span>
               <label className="attendance-check">
                 <span className="sr-only">{p.name} played</span>

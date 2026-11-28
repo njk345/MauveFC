@@ -1,4 +1,4 @@
-import type { Match, Player, Result } from "@/lib/types";
+import type { LineupPayload, Match, Player, Result } from "@/lib/types";
 
 export function blankResult(players: Player[]): Result {
   return {
@@ -33,6 +33,20 @@ export function expandResult(result: Result, players: Player[]): Result {
           goals: 0,
           assists: result.assists === "complete" ? 0 : null,
         },
+    ),
+  };
+}
+
+export function prefillStarterAttendance(
+  result: Result,
+  players: Player[],
+  lineup: LineupPayload,
+): Partial<Result> {
+  const starters = new Set(lineup.starters);
+  return {
+    attendance: result.attendance === "unrecorded" ? "partial" : result.attendance,
+    stats: expandResult(result, players).stats.map((stat) =>
+      starters.has(stat.playerId) ? { ...stat, appeared: true } : stat,
     ),
   };
 }

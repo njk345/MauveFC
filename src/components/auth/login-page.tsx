@@ -6,6 +6,7 @@ import { ArrowRight, Mail, ShieldCheck } from "lucide-react";
 import { getBrowserClient } from "@/lib/supabase/client";
 import { useAuth } from "./auth-provider";
 import { clubId } from "@/lib/supabase/config";
+import { matchdayHref } from "@/lib/matchday-link";
 export function LoginPage() {
   const auth = useAuth(),
     router = useRouter(),
@@ -17,6 +18,7 @@ export function LoginPage() {
       token_hash: string;
       type: "invite" | "recovery";
     } | null>(null),
+    [matchdayPath, setMatchdayPath] = useState<string>(),
     [code, setCode] = useState(""),
     [sent, setSent] = useState(false),
     [codeMode, setCodeMode] = useState(false),
@@ -24,6 +26,9 @@ export function LoginPage() {
     [error, setError] = useState(""),
     [cooldown, setCooldown] = useState(false);
   useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const match = query.get("match");
+    if (match) setMatchdayPath(matchdayHref(match, query.get("view") === "report"));
     const params = new URLSearchParams(window.location.hash.slice(1)),
       token_hash = params.get("token_hash"),
       type = params.get("type");
@@ -44,7 +49,7 @@ export function LoginPage() {
       throw new Error(
         "Your account signed in, but team access could not be checked. Try again.",
       );
-    router.push(data?.role === "captain" ? "/captain/" : "/team/");
+    router.push(matchdayPath ?? (data?.role === "captain" ? "/captain/" : "/team/"));
     router.refresh();
   }
   async function acceptInvitation() {
@@ -90,7 +95,7 @@ export function LoginPage() {
       auth.finishPasswordSetup();
       setPassword("");
       setConfirmPassword("");
-      router.push("/team/");
+      router.push(matchdayPath ?? "/team/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save password.");
     } finally {
@@ -242,8 +247,8 @@ export function LoginPage() {
         ) : auth.user ? (
           <>
             <p>You’re already signed in.</p>
-            <Link className="button" href="/team/">
-              Open team area <ArrowRight size={15} />
+            <Link className="button" href={matchdayPath ?? "/team/"}>
+              {matchdayPath ? "Open matchday hub" : "Open team area"} <ArrowRight size={15} />
             </Link>
             {auth.captain && (
               <Link className="text-link" href="/captain/">

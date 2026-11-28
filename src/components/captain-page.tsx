@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { usePrototype } from "./prototype-provider";
 import { date } from "@/lib/format";
-import type { Match, Result } from "@/lib/types";
+import type { GuestChange, LineupPayload, Match, Result } from "@/lib/types";
 import { validateDraft, validateResult } from "@/features/matches/validation";
 import { PageHeading } from "./season-pages";
 import { Crest, OpponentBadge } from "./brand";
@@ -29,7 +29,16 @@ import { applyGuestToMatch, matchPlayers } from "@/lib/match-players";
 import { ResultDecision } from "./result-decision";
 import { useSeasonTeamName } from "./use-season-team-name";
 import { orderMatches } from "@/features/matches/order";
-export function CaptainPage() {
+type MatchdayEntry = {
+  matchId: string;
+  officialLineup?: LineupPayload;
+  onDirty: (dirty: boolean) => void;
+  onBusy: (busy: boolean) => void;
+  onGuestChange: (change: GuestChange) => void;
+  onPublished: () => Promise<void>;
+};
+
+export function CaptainPage({ matchday }: { matchday?: MatchdayEntry } = {}) {
   const teamName = useSeasonTeamName();
   const {
       matches,
@@ -40,13 +49,16 @@ export function CaptainPage() {
       setSeasonId,
       drafts,
       saveResult,
+      refresh,
       setNotice,
       ready,
       resetVersion,
     } = usePrototype(),
     fixtures = orderMatches(
       matches.filter(
-        (m) => m.seasonId === seasonId && m.status !== "cancelled",
+        (m) =>
+          m.status !== "cancelled" &&
+          (matchday ? m.id === matchday.matchId : m.seasonId === seasonId),
       ),
     ),
     [selectedId, setSelectedId] = useState(""),
@@ -56,11 +68,16 @@ export function CaptainPage() {
     [success, setSuccess] = useState(false),
     [dirty, setDirty] = useState(false),
     [saving, setSaving] = useState(false),
+    [reportReload, setReportReload] = useState(0),
     [guestBusy, setGuestBusy] = useState(false);
   const matchQuery = useSearchParams().get("match");
   const handledRequest = useRef<string | null | undefined>(undefined);
   const match = fixtures.find((m) => m.id === selectedId);
   const players = matchPlayers(allPlayers, roster, match);
+  const reportId = matchday?.matchId;
+  const reportReady = !!fixtures[0];
+  const reportDirty = matchday?.onDirty;
+  const reportBusy = matchday?.onBusy;
   function load(m: Match) {
     const players = matchPlayers(allPlayers, roster, m);
     setSelectedId(m.id);
@@ -82,6 +99,10 @@ export function CaptainPage() {
   }
   useEffect(() => {
     if (!ready) return;
+    if (reportId) {
+      if (fixtures[0]) load(fixtures[0]);
+      return;
+    }
     // Observe router query changes, but read the actual URL here: static
     // exports can initially hydrate with an empty query from the built page.
     const requestedId = new URLSearchParams(window.location.search).get(
@@ -109,7 +130,13 @@ export function CaptainPage() {
       if (!newRequest && requested && requested.seasonId !== seasonId)
         syncMatchUrl(chosen.id);
     }
-  }, [matchQuery, seasonId, ready, resetVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [matchQuery, seasonId, ready, resetVersion, reportId, reportReady, reportReload]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    reportDirty?.(dirty);
+  }, [reportDirty, dirty]);
+  useEffect(() => {
+    reportBusy?.(saving || guestBusy);
+  }, [reportBusy, saving, guestBusy]);
   useEffect(() => {
     function warn(e: BeforeUnloadEvent) {
       if (dirty) {
@@ -132,8 +159,20 @@ export function CaptainPage() {
         : {}),
     });
   }
+  async function reloadReport() {
+    if (dirty && !window.confirm("Discard the unsaved edits and load the latest match report?")) return;
+    setSaving(true);
+    try {
+      await refresh();
+      setReportReload((version) => version + 1);
+    } catch {
+      setErrors((current) => [...current, "Could not refresh the report. Try again."]);
+    } finally {
+      setSaving(false);
+    }
+  }
   async function save(published: boolean) {
-    if (saving || guestBusy) return;
+    if (!match || saving || guestBusy) return;
     const next = { ...r, published },
       issues = published
         ? validateResult(next, players)
@@ -158,6 +197,7 @@ export function CaptainPage() {
             ? "Result published. Club record and player stats updated."
             : "Sample result published. Club record and player stats updated.",
         );
+        await matchday?.onPublished();
       } else
         setNotice(
           live
@@ -199,13 +239,22 @@ export function CaptainPage() {
   }
   const goals = r.stats.reduce((n, s) => n + s.goals, 0),
     attended = r.stats.filter((s) => s.appeared).length;
+  if (matchday && !ready) return <p role="status">Loading match report…</p>;
+  if (matchday && !reportReady)
+    return <p role="status">This fixture’s captain record is unavailable. Refresh the team to try again.</p>;
+  if (matchday && !match) return <p role="status">Loading match report…</p>;
   return (
-    <div id="result-editor" className="section page-section captain-page">
-      <PageHeading
-        eyebrow="THE CAPTAIN’S CORNER"
-        title="From final whistle to final score."
-        description="A minute for the basics. A little more for the moments that mattered."
-      />
+    <div
+      id="result-editor"
+      className={matchday ? "captain-page matchday-entry" : "section page-section captain-page"}
+    >
+      {!matchday && (
+        <PageHeading
+          eyebrow="THE CAPTAIN’S CORNER"
+          title="From final whistle to final score."
+          description="A minute for the basics. A little more for the moments that mattered."
+        />
+      )}
       {!live && (
         <div className="prototype-notice">
           <ShieldCheck size={20} />
@@ -218,7 +267,7 @@ export function CaptainPage() {
           </div>
         </div>
       )}
-      {live && match?.source && (
+      {live && match?.source && !matchday && (
         <p className="help-text">
           {match.needsReview
             ? `LeagueApps currently reports ${match.leagueScore ? `${match.leagueScore.home}–${match.leagueScore.away}` : "no final score"}. Your published result is preserved for review.`
@@ -264,41 +313,48 @@ export function CaptainPage() {
       ) : (
         <div className="entry-layout">
           <section className="entry-main">
-            <label className="fixture-select">
-              <span className="eyebrow">CHOOSE A MATCH</span>
-              <select
-                aria-label="Choose a match"
-                disabled={saving || guestBusy}
-                value={selectedId}
-                onChange={(e) => {
-                  if (
-                    dirty &&
-                    !window.confirm(
-                      "Leave these unsaved changes? Save a draft to keep them.",
+            {!matchday ? (
+              <label className="fixture-select">
+                <span className="eyebrow">CHOOSE A MATCH</span>
+                <select
+                  aria-label="Choose a match"
+                  disabled={saving || guestBusy}
+                  value={selectedId}
+                  onChange={(e) => {
+                    if (
+                      dirty &&
+                      !window.confirm(
+                        "Leave these unsaved changes? Save a draft to keep them.",
+                      )
                     )
-                  )
-                    return;
-                  const m = fixtures.find((m) => m.id === e.target.value);
-                  if (m) {
-                    load(m);
-                    // Keep the URL in sync so returning to the same review
-                    // link works after choosing another match here.
-                    syncMatchUrl(m.id);
-                  }
-                }}
-              >
-                {fixtures.map((m) => (
-                  <option value={m.id} key={m.id}>
-                    {date(m.kickoff)} · {m.opponent}
-                    {drafts[m.id]
-                      ? " · Draft"
-                      : m.result?.published
-                        ? " · Published"
-                        : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
+                      return;
+                    const m = fixtures.find((m) => m.id === e.target.value);
+                    if (m) {
+                      load(m);
+                      // Keep the URL in sync so returning to the same review
+                      // link works after choosing another match here.
+                      syncMatchUrl(m.id);
+                    }
+                  }}
+                >
+                  {fixtures.map((m) => (
+                    <option value={m.id} key={m.id}>
+                      {date(m.kickoff)} · {m.opponent}
+                      {drafts[m.id]
+                        ? " · Draft"
+                        : m.result?.published
+                          ? " · Published"
+                          : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <div className="matchday-report-heading">
+                <h3>Match report</h3>
+                {match && drafts[match.id] && <span className="pill">Private draft</span>}
+              </div>
+            )}
             {match && (
               <MatchGuests
                 key={match.id}
@@ -321,6 +377,7 @@ export function CaptainPage() {
                     ...expand(current, pool),
                     baseRevision: change.revision,
                   }));
+                  matchday?.onGuestChange(change);
                   setErrors([]);
                 }}
               />
@@ -344,15 +401,51 @@ export function CaptainPage() {
                     <li key={e}>{e}</li>
                   ))}
                 </ul>
+                {matchday && errors.some((error) => error.includes("changed since")) && (
+                  <button
+                    type="button"
+                    className="text-link"
+                    disabled={saving}
+                    onClick={() => void reloadReport()}
+                  >
+                    Reload latest report
+                  </button>
+                )}
               </div>
             )}
             {step === 0 && (
               <div className="entry-step">
                 <span className="eyebrow">01 / THE SCORE</span>
-                <h2>How did we finish?</h2>
+                <h2>{matchday && match?.source ? "Review the final score" : "How did we finish?"}</h2>
                 <p>
                   Enter the official result. You can add player details next.
                 </p>
+                {matchday && match?.source && (
+                  <div className="matchday-feed-review">
+                    <strong>
+                      {match.leagueScore
+                        ? `LeagueApps reports ${match.leagueScore.home}–${match.leagueScore.away}${match.leagueScore.basis === "forfeit" ? " (forfeit)" : ""}`
+                        : "LeagueApps has no final score"}
+                    </strong>
+                    {match.needsReview && (
+                      <p>The published score is held for review. Confirm the score you want to keep.</p>
+                    )}
+                    {match.leagueScore?.basis === "played" &&
+                      r.basis === "played" &&
+                      (r.home !== match.leagueScore.home || r.away !== match.leagueScore.away) && (
+                        <button
+                          type="button"
+                          className="text-link"
+                          onClick={() => {
+                            const { home, away } = match.leagueScore!;
+                            patch({ home, away, onFieldHome: home, onFieldAway: away });
+                          }}
+                        >
+                          Use LeagueApps score
+                        </button>
+                      )}
+                  </div>
+                )}
                 <div className="score-entry">
                   <label>
                     <Crest />
@@ -530,6 +623,7 @@ export function CaptainPage() {
                   guestPlayerIds={match?.guestPlayerIds}
                   result={r}
                   onChange={patch}
+                  officialLineup={matchday?.officialLineup}
                 />
               </div>
             )}
@@ -652,40 +746,42 @@ export function CaptainPage() {
               </div>
             </div>
           </section>
-          <aside className="entry-aside">
-            <span className="eyebrow">A GOOD MATCH REPORT</span>
-            <h3>
-              Keep it simple.
-              <br />
-              Make it count.
-            </h3>
-            <div>
-              <span className="aside-step">01</span>
-              <p>
-                <strong>Start with the score.</strong>The result is enough to
-                update the club record.
+          {!matchday && (
+            <aside className="entry-aside">
+              <span className="eyebrow">A GOOD MATCH REPORT</span>
+              <h3>
+                Keep it simple.
+                <br />
+                Make it count.
+              </h3>
+              <div>
+                <span className="aside-step">01</span>
+                <p>
+                  <strong>Start with the score.</strong>The result is enough to
+                  update the club record.
+                </p>
+              </div>
+              <div>
+                <span className="aside-step">02</span>
+                <p>
+                  <strong>Capture what you know.</strong>Unknown stats stay
+                  unknown. You can add the details later.
+                </p>
+              </div>
+              <div>
+                <span className="aside-step">03</span>
+                <p>
+                  <strong>Preview, then publish.</strong>Corrections update every
+                  affected view.
+                </p>
+              </div>
+              <p className="aside-note">
+                {live
+                  ? "Private drafts and corrections are saved to the club account."
+                  : "Demo drafts and corrections are saved in this browser. Reset the demo any time."}
               </p>
-            </div>
-            <div>
-              <span className="aside-step">02</span>
-              <p>
-                <strong>Capture what you know.</strong>Unknown stats stay
-                unknown. You can add the details later.
-              </p>
-            </div>
-            <div>
-              <span className="aside-step">03</span>
-              <p>
-                <strong>Preview, then publish.</strong>Corrections update every
-                affected view.
-              </p>
-            </div>
-            <p className="aside-note">
-              {live
-                ? "Private drafts and corrections are saved to the club account."
-                : "Demo drafts and corrections are saved in this browser. Reset the demo any time."}
-            </p>
-          </aside>
+            </aside>
+          )}
         </div>
       )}
     </div>

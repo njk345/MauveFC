@@ -67,6 +67,15 @@ remain captain-only when member personalization is introduced.
 
 ## Matches and lineups
 
+The Team tab opens the **Matchday hub**, with the next scheduled fixture
+selected when available. Each match has a direct link, kickoff details in its
+season time zone, the member’s RSVP, and availability and lineups. Captains can
+open **Result & player stats** after kickoff or once a result exists. They can
+review the LeagueApps score and publish the match report from the hub. The
+latest published official lineup can prefill starters in the attendance
+checklist. Captains confirm who played, including substitutes, before
+publishing. Saving a draft keeps it private.
+
 The private roster links directly to career profiles. Captains can set a
 primary position group and one distinct optional second group in the roster,
 directory, and new guest forms. Both groups appear on approved profiles and

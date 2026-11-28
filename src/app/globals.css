@@ -4974,14 +4974,9 @@ footer {
 .team-privacy svg {flex:none;}
 .team-toolbar,.team-match-heading,.lineup-heading {display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;}
 .team-toolbar {margin-bottom:2rem;}
-.team-upcoming {margin:2.5rem 0;}
-.team-upcoming .section-heading {margin-bottom:1rem;}
 .team-empty {padding:2rem;border:1px dashed #cdbecd;border-radius:7px;background:#fbf9f6;text-align:center;}
 .team-empty h3 {margin:.75rem 0 .5rem;font-size:1.35rem;}
 .team-empty p {margin:.5rem auto;max-width:36rem;color:#726777;line-height:1.6;}
-.team-fixture {display:flex;justify-content:space-between;align-items:center;gap:1.5rem;background:#fcfaf7;border:1px solid var(--line);border-radius:6px;padding:1.5rem;margin:1rem 0;}
-.team-fixture h3 {font-size:1.5rem;margin:.5rem 0;}
-.team-fixture p {font-size:.85rem;color:#726777;}
 .rsvp-control {min-width:240px;max-width:360px;}
 .rsvp-buttons {display:flex;gap:.4rem;margin:.65rem 0;}
 .rsvp-buttons button {display:flex;align-items:center;justify-content:center;gap:.25rem;background:transparent;border:1px solid #cfc5ce;border-radius:5px;font:inherit;font-size:.85rem;padding:.65rem 1rem;min-width:70px;}
@@ -4993,6 +4988,104 @@ footer {
 .team-match-section {padding-top:2rem;border-top:1px solid var(--line);}
 .team-match-heading h2 {margin:.4rem 0;font-size:2rem;}
 .team-match-heading .form-field {min-width:240px;max-width:390px;flex:1;}
+.team-match-heading p { margin: .2rem 0; color: var(--muted); }
+.team-page .team-match-heading select { padding-right: 2.85rem; text-overflow: ellipsis; }
+.matchday-fixture {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  margin: 1.1rem 0 1.45rem;
+  padding: clamp(1rem, 3.5vw, 2.25rem);
+  border-radius: 12px;
+  background: #39273e;
+  color: #faf5ed;
+}
+.matchday-fixture-main { flex: 1 1 20rem; min-width: 0; }
+.matchday-fixture-status,
+.matchday-teams,
+.matchday-details,
+.matchday-controls,
+.matchday-report-heading,
+.matchday-attendance,
+.matchday-fixture-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.matchday-fixture-status { gap: .45rem .8rem; color: #eaddeb; }
+.matchday-fixture-status .pill { background: #e7d4e4; color: #422a44; }
+.matchday-teams {
+  gap: .5rem .9rem;
+  margin: .72rem 0;
+}
+.matchday-teams h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .05rem .65rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--display);
+  font-size: clamp(1.65rem, 3.4vw, 3rem);
+  line-height: 1.05;
+}
+.matchday-score { color: #e4bddb; white-space: nowrap; }
+.matchday-details {
+  list-style: none;
+  padding: 0;
+  margin: .75rem 0 0;
+  gap: .5rem 1.1rem;
+  color: #f3e8f1;
+}
+.matchday-details li { display: flex; gap: .4rem; align-items: center; }
+.matchday-details svg { flex: none; color: #d5b5d2; }
+.matchday-fixture .rsvp-control {
+  min-width: 0;
+  max-width: 100%;
+  padding: 1rem;
+  border-radius: 8px;
+  background: #fbf7f8;
+  color: var(--plum);
+}
+.matchday-fixture .rsvp-control .eyebrow { color: #63445f; }
+.matchday-fixture .rsvp-buttons button { min-width: 0; padding-inline: .8rem; }
+.matchday-controls, .matchday-report-heading, .matchday-attendance {
+  justify-content: space-between;
+  gap: .6rem 1rem;
+}
+.matchday-controls { margin-bottom: 1.25rem; }
+.matchday-controls .tabs { flex-wrap: wrap; max-width: 100%; }
+.matchday-controls .tabs button { min-height: 42px; }
+.matchday-controls > span { color: var(--muted); }
+.matchday-entry .entry-layout { grid-template-columns: minmax(0, 1fr); }
+.matchday-entry .entry-main { border-radius: 10px; }
+.matchday-report-heading { padding: 1rem clamp(1rem, 3vw, 1.75rem); border-bottom: 1px solid var(--line); }
+.matchday-report-heading h3 { font-size: 1.3rem; }
+.matchday-feed-review, .matchday-attendance {
+  margin: 1rem 0;
+  padding: .9rem;
+  border: 1px solid #e1d3df;
+  border-radius: 6px;
+  background: #f3eaf2;
+}
+.matchday-feed-review .text-link { display: block; margin-top: .55rem; }
+.entry-step .matchday-feed-review p, .entry-step .matchday-attendance p {
+  margin: .35rem 0 0;
+  font-size: .875rem;
+}
+.matchday-roster-role { color: #72536c; font-size: .8125rem; }
+.matchday-fixture-actions { gap: .6rem; }
+@media (max-width: 480px) {
+  .matchday-teams {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    justify-items: start;
+  }
+  .matchday-teams > :last-child { grid-column: 2; grid-row: 1; }
+  .matchday-teams h3 { grid-column: 1 / -1; grid-row: 2; }
+}
 .team-match-grid {display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,1.4fr);gap:1.5rem;margin-top:1.4rem;align-items:start;}
 .availability-panel,.lineup-panel {border:1px solid var(--line);border-radius:7px;padding:1.5rem;background:#fcfaf7;min-width:0;}
 .availability-panel h3,.lineup-panel h3 {font-size:1.5rem;margin:.4rem 0;}
@@ -5153,7 +5246,7 @@ footer {
   .team-page select option:hover {background:#f0f3df;}
 }
 @media(max-width:900px){.team-roster-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.team-match-grid {grid-template-columns:minmax(0,1fr);}.availability-panel {order:2;}.lineup-panel {order:1;}.account-grid {grid-template-columns:minmax(0,1fr);}.account-intro {min-height:0;}}
-@media(max-width:600px){.team-toolbar .tabs {flex-wrap:wrap;}.team-fixture {align-items:start;flex-direction:column;padding:1.1rem;}.rsvp-control {min-width:0;width:100%;max-width:none;}.rsvp-buttons button {flex:1;}.team-roster-grid {grid-template-columns:minmax(0,1fr);}.team-match-heading .form-field {min-width:0;max-width:100%;width:100%;}.team-match-heading {align-items:start;flex-direction:column;}.availability-panel,.lineup-panel {padding:1.1rem;}.formation-pitch {min-height:420px;}.account-management select,.account-form input,.team-page .form-field select {font-size:1rem;}.team-page .formation-slot select {font-size:.7rem;}.bench-options {grid-template-columns:minmax(0,1fr);}.lineup-panel .button-row {gap:.6rem;flex-wrap:wrap;}.captain-navigation {align-items:start;gap:1rem;}.captain-navigation nav {gap:.7rem;}.account-grid {gap:1.5rem;}.account-grid .management-form {padding:1.5rem;}.account-list {--access-columns:minmax(0,1fr) 8.75rem;}.account-list-head,.account-list article {column-gap:1rem;}.account-list-head>span:last-child {display:none;}.account-list article {row-gap:.9rem;align-items:start;}.account-list .account-actions {grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:1rem;}}
+@media(max-width:600px){.team-toolbar .tabs {flex-wrap:wrap;}.rsvp-control {min-width:0;width:100%;max-width:none;}.rsvp-buttons button {flex:1;}.team-roster-grid {grid-template-columns:minmax(0,1fr);}.team-match-heading .form-field {min-width:0;max-width:100%;width:100%;}.team-match-heading {align-items:start;flex-direction:column;}.availability-panel,.lineup-panel {padding:1.1rem;}.formation-pitch {min-height:420px;}.account-management select,.account-form input,.team-page .form-field select {font-size:1rem;}.team-page .formation-slot select {font-size:.7rem;}.bench-options {grid-template-columns:minmax(0,1fr);}.lineup-panel .button-row {gap:.6rem;flex-wrap:wrap;}.captain-navigation {align-items:start;gap:1rem;}.captain-navigation nav {gap:.7rem;}.account-grid {gap:1.5rem;}.account-grid .management-form {padding:1.5rem;}.account-list {--access-columns:minmax(0,1fr) 8.75rem;}.account-list-head,.account-list article {column-gap:1rem;}.account-list-head>span:last-child {display:none;}.account-list article {row-gap:.9rem;align-items:start;}.account-list .account-actions {grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:1rem;}}
 
 .lineup-selectors {display:grid;gap:1rem;margin:1.5rem 0 1rem;}
 .lineup-selectors .form-field {margin:0;min-width:0;}

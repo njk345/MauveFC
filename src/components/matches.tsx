@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { playerHref } from "@/lib/player-link";
+import { matchdayHref } from "@/lib/matchday-link";
 import { ArrowUpRight, CalendarPlus, MapPin } from "lucide-react";
 import { Crest, OpponentBadge } from "./brand";
 import { date, day, month, time } from "@/lib/format";
@@ -11,6 +12,7 @@ import { isFinalsWin } from "@/features/matches/playoffs";
 import { PlayoffBadge, FinalsVictory } from "./playoff-celebration";
 import { ResultDecision } from "./result-decision";
 import { useSeasonTeamName } from "./use-season-team-name";
+import { useAuth } from "./auth/auth-provider";
 export function FormBadge({ value }: { value: string | null }) {
   return <span className={`form-badge form-${value}`}>{value || "—"}</span>;
 }
@@ -178,6 +180,7 @@ export function CalendarButton({
 }
 export function FixtureCard({ match }: { match: Match }) {
   const teamName = useSeasonTeamName(match.seasonId);
+  const auth = useAuth();
   return (
     <article className="fixture-card">
       <div className="card-eyebrow">
@@ -206,7 +209,14 @@ export function FixtureCard({ match }: { match: Match }) {
         <MapPin size={14} />
         {match.venue}
       </p>
-      <CalendarButton match={match} />
+      <div className="matchday-fixture-actions">
+        <CalendarButton match={match} />
+        {auth.member && (
+          <Link className="button light" href={matchdayHref(match.id)}>
+            Matchday hub
+          </Link>
+        )}
+      </div>
     </article>
   );
 }

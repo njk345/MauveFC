@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Modal } from "./modal";
 import Link from "next/link";
 import { playerHref } from "@/lib/player-link";
+import { matchdayHref } from "@/lib/matchday-link";
 import { positionGroupLabel } from "@/lib/player-positions";
 import {
   ArrowUpRight,
@@ -66,6 +67,7 @@ export function MatchDetails({
   onClose: () => void;
 }) {
   const { players, live } = usePrototype();
+  const auth = useAuth();
   const teamName = useSeasonTeamName(match.seasonId);
   const r = match.result?.published ? match.result : undefined;
   return (
@@ -171,6 +173,11 @@ export function MatchDetails({
             </div>
             <CalendarButton match={match} compact />
           </>
+        )}
+        {auth.member && (
+          <Link className="button secondary" href={matchdayHref(match.id)}>
+            Open matchday hub
+          </Link>
         )}
         <span className="dialog-sample">
           {live
